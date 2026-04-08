@@ -142,7 +142,7 @@ export const CourseCard = ({ course, index = 0 }: CourseCardProps) => {
 					{/* Title Section - Responsive */}
 					<div className="space-y-0.5 flex-1 min-h-0 overflow-hidden">
 						<h3
-							className="text-[10px] sm:text-xs md:text-sm font-semibold text-foreground line-clamp-2 leading-tight group-hover:text-primary transition-colors duration-300"
+							className="text-[10px] sm:text-xs md:text-sm font-semibold text-foreground leading-tight whitespace-normal words group-hover:text-primary transition-colors duration-300"
 							title={course.course_name}
 						>
 							{course.course_name}

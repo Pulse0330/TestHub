@@ -10,7 +10,6 @@ import {
 	Dialog,
 	DialogContent,
 	DialogDescription,
-	DialogFooter,
 	DialogHeader,
 	DialogTitle,
 } from "@/components/ui/dialog";
@@ -77,8 +76,7 @@ export default function Sorillists() {
 	const lessons = useMemo(() => lessonData?.RetData || [], [lessonData]);
 
 	const openSorils = useMemo(
-		// Зөвхөн isopensoril биш, төлбөр нь төлөгдсөн (ispay) сорилуудыг нээлттэй гэж үзнэ
-		() => data.filter((e) => e.isopensoril === 1 || e.ispay === 1),
+		() => data.filter((e) => e.isopensoril === 1 || e.paid === 1),
 		[data],
 	);
 
@@ -102,7 +100,14 @@ export default function Sorillists() {
 	// Handlers
 	const handleSorilClick = useCallback(
 		(soril: SorillistsData) => {
-			if (soril.isopensoril !== 1) {
+			console.log("Clicked soril:", JSON.stringify(soril, null, 2)); // ← нэм
+			const isLocked =
+				soril.isguitset !== 1 &&
+				soril.isopensoril !== 1 &&
+				soril.ispay === 1 &&
+				soril.paid === 0;
+
+			if (isLocked) {
 				setSelectedSoril(soril);
 				setShowPaymentDialog(true);
 				return;
@@ -279,31 +284,30 @@ export default function Sorillists() {
 				<DialogContent className="sm:max-w-md">
 					<DialogHeader>
 						<DialogTitle>Төлбөртэй сорил</DialogTitle>
-						<DialogDescription className="pt-4 space-y-2">
-							{selectedSoril?.soril_name}
-							<p>
-								Энэхүү сорил төлбөртэй юм. Үргэлжлүүлэхийн тулд төлбөр төлөх
-								шаардлагатай.
-							</p>
+						<DialogDescription asChild>
+							<div className="pt-4 space-y-2">
+								<span className="block font-medium">
+									{selectedSoril?.soril_name}
+								</span>
+								<span className="block">
+									Энэхүү сорил төлбөртэй юм. Үргэлжлүүлэхийн тулд төлбөр төлөх
+									шаардлагатай.
+								</span>
+							</div>
 						</DialogDescription>
 					</DialogHeader>
-					<DialogFooter className="flex-row gap-2 sm:gap-0">
+					<div className="flex flex-row justify-end gap-2 pt-4">
 						<Button
 							type="button"
 							variant="outline"
 							onClick={handlePaymentCancel}
-							className="flex-1 sm:flex-none"
 						>
 							Цуцлах
 						</Button>
-						<Button
-							type="button"
-							onClick={handlePaymentConfirm}
-							className="flex-1 sm:flex-none"
-						>
+						<Button type="button" onClick={handlePaymentConfirm}>
 							Төлбөр төлөх
 						</Button>
-					</DialogFooter>
+					</div>
 				</DialogContent>
 			</Dialog>
 		</div>
