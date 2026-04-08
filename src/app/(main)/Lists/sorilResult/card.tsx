@@ -152,7 +152,7 @@ export const ExamResultCard: React.FC<ExamResultCardProps> = ({
 				<div className="p-1.5 sm:p-2 md:p-2.5 pb-10 sm:pb-12 md:pb-14 flex flex-col flex-1 space-y-1 sm:space-y-1.5">
 					{/* Title with Tooltip */}
 					<div className="relative group/title">
-						<h3 className="text-[10px] sm:text-xs md:text-sm font-semibold text-foreground line-clamp-1 leading-tight group-hover:text-primary transition-colors duration-300">
+						<h3 className="text-[10px] sm:text-xs md:text-sm font-semibold text-foreground leading-tight whitespace-normal break-words group-hover:text-primary transition-colors duration-300">
 							{exam.title}
 						</h3>
 						{/* Tooltip */}

@@ -1,10 +1,12 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { AlertCircle, BookOpen } from "lucide-react";
-import { useMemo, useState } from "react";
+import { AlertCircle, BookOpen, ChevronLeft, ChevronRight } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 import LessonFilter from "@/components/LessonFilter";
+import { Button } from "@/components/ui/button";
 import { getFilteredContnView, getTestFilter } from "@/lib/api";
+import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/stores/useAuthStore";
 import type { CourseListResponse } from "@/types/course/courseList";
 import { CourseCard } from "./card";
@@ -25,18 +27,19 @@ interface TestFilterResponse {
 	RetData: Lesson[];
 }
 
+const ITEMS_PER_PAGE = 18;
+
 const CourseListPage = () => {
 	const { userId } = useAuthStore();
 	const [selectedLessonId, setSelectedLessonId] = useState<number>(0);
+	const [currentPage, setCurrentPage] = useState(1);
 
-	// Хичээлийн жагсаалт татах
 	const { data: lessonData } = useQuery<TestFilterResponse>({
 		queryKey: ["testFilter", userId],
 		queryFn: () => getTestFilter(userId || 0),
 		enabled: !!userId,
 	});
 
-	// Хичээлээр шүүсэн course жагсаалт татах
 	const {
 		data: queryData,
 		isPending,
@@ -52,16 +55,26 @@ const CourseListPage = () => {
 
 	const lessons = useMemo(() => lessonData?.RetData || [], [lessonData]);
 
-	// API алдаа биш ResponseType false ирсэн тохиолдолд хоосон массив буцаах
 	const courses = useMemo(() => {
 		if (!queryData) return [];
 		if (!queryData.RetResponse.ResponseType) return [];
 		return queryData.RetData || [];
 	}, [queryData]);
 
+	const paginatedCourses = useMemo(() => {
+		const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+		return courses.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+	}, [courses, currentPage]);
+
+	const totalPages = Math.ceil(courses.length / ITEMS_PER_PAGE);
+
+	// Шүүлтүүр өөрчлөгдөхөд хуудсыг 1 рүү буцаах
+	useEffect(() => {
+		setCurrentPage(1);
+	}, []);
+
 	const skeletonIds = [1, 2, 3, 4, 5, 6, 7, 8];
 
-	// Loading state
 	if (isPending) {
 		return (
 			<div className="min-h-screen flex flex-col overflow-auto">
@@ -71,7 +84,6 @@ const CourseListPage = () => {
 							Миний хичээлүүд
 						</h1>
 					</header>
-
 					<div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-6 xl:grid-cols-8 gap-3 sm:gap-4 pb-4 auto-rows-fr">
 						{skeletonIds.map((id) => (
 							<SkeletonCard key={id} />
@@ -82,7 +94,6 @@ const CourseListPage = () => {
 		);
 	}
 
-	// Error state
 	if (isError) {
 		return (
 			<div className="min-h-screen flex items-center justify-center px-4">
@@ -101,7 +112,6 @@ const CourseListPage = () => {
 		);
 	}
 
-	// No user ID state
 	if (!userId) {
 		return (
 			<div className="min-h-screen flex items-center justify-center">
@@ -116,21 +126,19 @@ const CourseListPage = () => {
 
 	return (
 		<div className="min-h-screen flex flex-col overflow-auto">
-			<div className=" mx-auto w-full flex flex-col gap-4 sm:gap-6 px-3 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
-				<header className=" space-y-1">
+			<div className="mx-auto w-full flex flex-col gap-4 sm:gap-6 px-3 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
+				<header className="space-y-1">
 					<h3 className="text-lg sm:text-2xl font-extrabold bg-linear-to-r from-primary to-primary/70 bg-clip-text text-transparent">
 						Миний хичээлүүд
 					</h3>
 				</header>
 
-				{/* Хичээлийн filter */}
 				<LessonFilter
 					lessons={lessons}
 					selectedLessonId={selectedLessonId}
 					onLessonSelect={setSelectedLessonId}
 				/>
 
-				{/* Results info */}
 				{selectedLessonId !== 0 && (
 					<div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
 						<AlertCircle size={16} />
@@ -147,14 +155,56 @@ const CourseListPage = () => {
 					</div>
 				)}
 
-				{/* Course grid */}
-				<div className="grid grid-cols-4 sm:grid-cols-4 md:grid-cols-4 lg:grid-cols-7 xl:grid-cols-7 gap-3 sm:gap-4 pb-4 auto-rows-fr">
-					{courses.map((course, idx) => (
+				<div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 sm:gap-3 md:gap-4 pb-4 content-start">
+					{paginatedCourses.map((course, idx) => (
 						<CourseCard key={course.content_id} course={course} index={idx} />
 					))}
 				</div>
 
-				{/* No results */}
+				{/* Pagination */}
+				{totalPages > 1 && (
+					<div className="flex items-center justify-center gap-2 mt-8 mb-10">
+						<Button
+							variant="outline"
+							size="icon"
+							onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+							disabled={currentPage === 1}
+							className="rounded-full"
+						>
+							<ChevronLeft size={18} />
+						</Button>
+
+						<div className="flex items-center gap-1">
+							{Array.from({ length: totalPages }, (_, i) => i + 1).map(
+								(page) => (
+									<Button
+										key={page}
+										variant={currentPage === page ? "default" : "ghost"}
+										size="sm"
+										onClick={() => setCurrentPage(page)}
+										className={cn(
+											"w-9 h-9 rounded-full",
+											currentPage === page && "shadow-md",
+										)}
+									>
+										{page}
+									</Button>
+								),
+							)}
+						</div>
+
+						<Button
+							variant="outline"
+							size="icon"
+							onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+							disabled={currentPage === totalPages}
+							className="rounded-full"
+						>
+							<ChevronRight size={18} />
+						</Button>
+					</div>
+				)}
+
 				{courses.length === 0 && (
 					<div className="text-center py-12 space-y-3">
 						<div className="mb-6 p-6 bg-gray-100 dark:bg-gray-800/50 rounded-full inline-block">
