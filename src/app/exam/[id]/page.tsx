@@ -41,6 +41,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { deleteExamAnswer, getExamById, saveExamAnswer } from "@/lib/api";
 import { useAuthStore } from "@/stores/useAuthStore";
 import type { AnswerValue } from "@/types/exam/exam";
+import { AdvancedExamProctor } from "../component/examguard";
 import { ExamHeader } from "../component/examUtils/examInfo";
 import MathContent from "../component/examUtils/MathContent";
 import { SourceBlock } from "../component/examUtils/sourceCard";
@@ -1087,11 +1088,11 @@ export default function ExamPage() {
 								</div>
 							)}
 
-							{/* <AdvancedExamProctor
+							<AdvancedExamProctor
 								maxViolations={10000}
 								strictMode={true}
 								enableFullscreen={true}
-							/> */}
+							/>
 						</div>
 					</aside>
 
@@ -1175,7 +1176,9 @@ export default function ExamPage() {
 											</span>
 
 											<span className="text-red-500 font-bold">
-												Шалгалтыг нэг эхлүүлсэн тохиолдолд системийн хугацаа үргэлжлэн тоологдох бөгөөд шалгалтаас гарах эсвэл цонх хаасан ч хугацаа зогсохгүйг анхаарна уу.
+												Шалгалтыг нэг эхлүүлсэн тохиолдолд системийн хугацаа
+												үргэлжлэн тоологдох бөгөөд шалгалтаас гарах эсвэл цонх
+												хаасан ч хугацаа зогсохгүйг анхаарна уу.
 											</span>
 										</AlertDialogDescription>
 									</AlertDialogHeader>
@@ -1363,6 +1366,14 @@ export default function ExamPage() {
 								/>
 							)}
 						</div>
+						<Button
+							variant="outline"
+							onClick={() => setShowExitConfirm(true)}
+							className="w-full font-semibold border-red-300 text-red-600 hover:bg-red-50 dark:border-red-700 dark:text-red-400 dark:hover:bg-red-950/20"
+						>
+							<LogOut className="w-4 h-4 mr-2" />
+							Шалгалтаас гарах
+						</Button>
 					</div>
 				</div>
 
