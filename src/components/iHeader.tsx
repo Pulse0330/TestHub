@@ -326,7 +326,8 @@ const MobileMenu: React.FC<{
 								alt="ECM Logo"
 								width={40}
 								height={40}
-								className="object-contain"
+								priority
+								style={{ width: "40px", height: "40px", objectFit: "contain" }} // ✅
 							/>
 							<h2 className="text-lg font-bold">Цэс</h2>
 						</div>
@@ -561,8 +562,8 @@ export const Navbar01: React.FC = () => {
 							alt="ECM Logo"
 							width={48}
 							height={48}
-							className="object-contain"
 							priority
+							style={{ width: "48px", height: "48px", objectFit: "contain" }} // ✅
 						/>
 					</Link>
 
