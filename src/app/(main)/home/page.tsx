@@ -147,6 +147,7 @@ const ExamCard = memo(
 										className={`object-cover transition-all duration-700 ${isLocked ? "brightness-75 group-hover:brightness-90" : ""}`}
 										sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1024px) 25vw, (max-width: 1280px) 20vw, 16vw"
 										quality={90}
+										priority={index < 6}
 									/>
 								) : (
 									<div className="absolute inset-0 bg-linear-to-br from-primary/20 via-primary/10 to-background" />
@@ -341,11 +342,7 @@ export default function HomePage() {
 			refetchOnWindowFocus: false,
 		});
 
-	const {
-		data: examList = [],
-		isLoading,
-		isFetched,
-	} = useQuery({
+	void useQuery({
 		queryKey: ["get_exam_v2", userId],
 		queryFn: () =>
 			getExamTime({
@@ -366,6 +363,7 @@ export default function HomePage() {
 
 	// myExamInfo-с exam_date_id авах
 	const examDateId = myExamInfo?.[0]?.exam_date_id;
+	//biome-ignore lint/correctness/noUnusedVariables: ExamVerifyDialog, MnExamPrint-д ашиглана
 	const { data: printData } = useQuery({
 		queryKey: ["mn_print", userId, user?.examinee_number, examDateId],
 		queryFn: () =>

@@ -65,8 +65,7 @@ export const loginTokenRequest = async (
 	password: string,
 	deviceid: string,
 	devicemodel: string,
-	isweb:Number,
-	
+	isweb: number,
 ): Promise<LoginTokenResponse<User>> => {
 	const { data } = await api.post<LoginTokenResponse<User>>("/weblogin", {
 		username,
@@ -127,7 +126,7 @@ export const registerSysUserRequest = async (
 	lastname: string,
 	phone: string,
 	password: string,
-	ugroup:string,
+	ugroup: string,
 ): Promise<RegisterSysUserResponse> => {
 	const { data } = await api.post<RegisterSysUserResponse>(
 		"/register_sysuser",
@@ -137,7 +136,7 @@ export const registerSysUserRequest = async (
 			lastname: lastname,
 			phone: phone,
 			password: password,
-			ugroup:ugroup,
+			ugroup: ugroup,
 		},
 	);
 
