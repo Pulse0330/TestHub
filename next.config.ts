@@ -10,7 +10,6 @@ const nextConfig: NextConfig = {
 		unoptimized: true,
 		qualities: [75, 90],
 	},
-	
 	reactStrictMode: true,
 
 	compiler: {
