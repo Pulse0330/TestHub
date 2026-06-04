@@ -2,7 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import axios from "axios";
-import { Loader2, MessageSquare, ShieldCheck } from "lucide-react";
+import { Loader2, MessageSquare, ShieldCheck, X } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -10,7 +10,6 @@ import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { UAParser } from "ua-parser-js";
 import * as z from "zod";
-
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import {
@@ -68,17 +67,20 @@ const isMobileDevice = () => {
 	return device.type === "mobile" || device.type === "tablet" ? 1 : 0;
 };
 
-export function SignForm() {
+interface SignFormProps {
+	onClose?: () => void;
+}
+
+export function SignForm({ onClose }: SignFormProps) {
 	const router = useRouter();
 	const [isPending, setIsPending] = useState(false);
-
-	// OTP States
 	const [isWaitingForSMS, setIsWaitingForSMS] = useState(false);
 	const [isVerified, setIsVerified] = useState(false);
 	const [isChecking, setIsChecking] = useState(false);
 	const [verificationCode, setVerificationCode] = useState("");
 	const [timeLeft, setTimeLeft] = useState(0);
 	const [isTeacher, setIsTeacher] = useState(false);
+
 	const form = useForm<z.infer<typeof formSchema>>({
 		resolver: zodResolver(formSchema),
 		defaultValues: {
@@ -92,7 +94,6 @@ export function SignForm() {
 		mode: "onSubmit",
 	});
 
-	// OTP Timer
 	useEffect(() => {
 		if (timeLeft <= 0) return;
 		const timer = setInterval(() => {
@@ -107,12 +108,10 @@ export function SignForm() {
 		return () => clearInterval(timer);
 	}, [timeLeft]);
 
-	// OTP Request Code
 	const handleRequestCode = async () => {
 		const phone = form.getValues("phone");
 		const phoneValidation = await form.trigger("phone");
 		if (!phoneValidation) return;
-
 		setIsChecking(true);
 		try {
 			const response = await axios.post("/api/otp/getcode", {
@@ -122,12 +121,9 @@ export function SignForm() {
 				devicemodel: getDeviceInfo(),
 				ismob: isMobileDevice(),
 			});
-
 			if (response.data.RetResponse?.ResponseType) {
-				const code = response.data.RetResponse.RtrGenCode;
-				const seconds = response.data.RetResponse.RtrGenCodeSeconds || 180;
-				setVerificationCode(code);
-				setTimeLeft(Number(seconds));
+				setVerificationCode(response.data.RetResponse.RtrGenCode);
+				setTimeLeft(Number(response.data.RetResponse.RtrGenCodeSeconds || 180));
 				setIsWaitingForSMS(true);
 				toast.success(response.data.RetResponse.ResponseMessage);
 			} else {
@@ -136,29 +132,24 @@ export function SignForm() {
 						"Код үүсгэхэд алдаа гарлаа",
 				);
 			}
-		} catch (error) {
-			console.error("Код үүсгэх алдаа:", error);
+		} catch {
 			toast.error("Код үүсгэхэд алдаа гарлаа");
 		} finally {
 			setIsChecking(false);
 		}
 	};
 
-	// OTP Check Verification
 	const handleCheckVerification = async () => {
-		const phone = form.getValues("phone");
 		if (!verificationCode) {
 			toast.error("Эхлээд код үүсгэнэ үү");
 			return;
 		}
-
 		setIsChecking(true);
 		try {
 			const response = await axios.post("/api/otp/smscheck", {
-				phone: Number(phone),
+				phone: Number(form.getValues("phone")),
 				code: Number(verificationCode),
 			});
-
 			if (response.data.RetResponse?.ResponseType) {
 				toast.success("Утасны дугаар баталгаажлаа!");
 				setIsVerified(true);
@@ -167,23 +158,19 @@ export function SignForm() {
 			} else {
 				toast.error("Баталгаажуулалт амжилтгүй");
 			}
-		} catch (error) {
-			console.error("Баталгаажуулах алдаа:", error);
+		} catch {
 			toast.error("Баталгаажуулахад алдаа гарлаа");
 		} finally {
 			setIsChecking(false);
 		}
 	};
 
-	// Бүртгэл хийх
 	const onSubmit = async (values: z.infer<typeof formSchema>) => {
 		if (!isVerified) {
 			toast.error("Эхлээд утасны дугаараа баталгаажуулна уу");
 			return;
 		}
-
 		setIsPending(true);
-
 		try {
 			const data = await registerSysUserRequest(
 				values.email,
@@ -193,7 +180,6 @@ export function SignForm() {
 				values.password,
 				isTeacher ? "4" : "0",
 			);
-
 			if (data?.RetResponse?.ResponseType) {
 				toast.success("Амжилттай бүртгэгдлээ! Нэвтрэнэ үү.");
 				router.push("/login");
@@ -202,8 +188,7 @@ export function SignForm() {
 					data?.RetResponse?.ResponseMessage || "Бүртгэл үүсгэхэд алдаа гарлаа",
 				);
 			}
-		} catch (error) {
-			console.error("Registration error:", error);
+		} catch {
 			toast.error("Серверт холбогдоход алдаа гарлаа");
 		} finally {
 			setIsPending(false);
@@ -218,7 +203,17 @@ export function SignForm() {
 
 	return (
 		<Card className="w-full max-w-md bg-white/60 dark:bg-gray-900/60 backdrop-blur-xl border border-gray-200/50 dark:border-gray-700/50 shadow-xl">
-			<CardHeader className="space-y-1">
+			<CardHeader className="space-y-1 relative">
+				{onClose && (
+					<button
+						type="button"
+						onClick={onClose}
+						className="absolute top-0 right-0 w-7 h-7 rounded-md flex items-center justify-center text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-all"
+						aria-label="Хаах"
+					>
+						<X className="w-4 h-4" />
+					</button>
+				)}
 				<CardTitle className="text-2xl font-semibold">Бүртгүүлэх</CardTitle>
 				<CardDescription>Шинэ бүртгэл үүсгэх</CardDescription>
 			</CardHeader>
@@ -226,7 +221,6 @@ export function SignForm() {
 			<Form {...form}>
 				<form onSubmit={form.handleSubmit(onSubmit)}>
 					<CardContent className="grid gap-4">
-						{/* Утасны дугаар */}
 						<FormField
 							control={form.control}
 							name="phone"
@@ -248,7 +242,6 @@ export function SignForm() {
 							)}
 						/>
 
-						{/* OTP Баталгаажуулалт */}
 						{!isVerified && (
 							<div className="space-y-3">
 								<Button
@@ -270,12 +263,10 @@ export function SignForm() {
 										"Баталгаажуулах код авах"
 									)}
 								</Button>
-
 								{isWaitingForSMS && verificationCode && (
 									<Alert className="bg-blue-50/50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800 shadow-sm">
 										<AlertDescription className="py-2">
 											<div className="space-y-4">
-												{/* Зааварчилгаа */}
 												<div className="flex gap-3">
 													<div className="shrink-0 w-6 h-6 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-bold">
 														1
@@ -288,17 +279,11 @@ export function SignForm() {
 														дугаарт мессежээр илгээнэ үү.
 													</p>
 												</div>
-
-												{/* Код харуулах болон Хуулах хэсэг */}
-												<div className="relative group">
-													<div className="bg-white dark:bg-slate-900 border-2 border-dashed border-blue-300 dark:border-blue-700 rounded-xl p-4 flex flex-col items-center justify-center gap-2 transition-all group-hover:border-blue-400">
-														<span className="text-3xl font-black tracking-widest text-blue-600 dark:text-blue-400 select-all">
-															{verificationCode}
-														</span>
-													</div>
+												<div className="bg-white dark:bg-slate-900 border-2 border-dashed border-blue-300 dark:border-blue-700 rounded-xl p-4 flex items-center justify-center">
+													<span className="text-3xl font-black tracking-widest text-blue-600 dark:text-blue-400 select-all">
+														{verificationCode}
+													</span>
 												</div>
-
-												{/* Шалгах алхам */}
 												<div className="flex gap-3 pt-2">
 													<div className="shrink-0 w-6 h-6 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-bold">
 														2
@@ -310,7 +295,7 @@ export function SignForm() {
 														</p>
 														<Button
 															type="button"
-															className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold shadow-md shadow-blue-200 dark:shadow-none transition-all active:scale-[0.98]"
+															className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold"
 															onClick={handleCheckVerification}
 															disabled={isChecking}
 														>
@@ -332,7 +317,6 @@ export function SignForm() {
 							</div>
 						)}
 
-						{/* Баталгаажсан мэдэгдэл */}
 						{isVerified && (
 							<Alert className="bg-green-50 dark:bg-green-950 border-green-200 dark:border-green-800">
 								<ShieldCheck className="h-4 w-4 text-green-600 dark:text-green-400" />
@@ -342,7 +326,6 @@ export function SignForm() {
 							</Alert>
 						)}
 
-						{/* ✅ Бусад талбарууд - зөвхөн баталгаажсаны дараа харагдана */}
 						{isVerified && (
 							<>
 								<FormField
@@ -362,7 +345,6 @@ export function SignForm() {
 										</FormItem>
 									)}
 								/>
-
 								<FormField
 									control={form.control}
 									name="firstname"
@@ -380,7 +362,6 @@ export function SignForm() {
 										</FormItem>
 									)}
 								/>
-
 								<FormField
 									control={form.control}
 									name="email"
@@ -433,7 +414,6 @@ export function SignForm() {
 										</FormItem>
 									)}
 								/>
-
 								<FormField
 									control={form.control}
 									name="confirmPassword"
@@ -452,8 +432,6 @@ export function SignForm() {
 										</FormItem>
 									)}
 								/>
-
-								{/* Бүртгүүлэх товч */}
 								<Button
 									type="submit"
 									className="w-full h-11"
@@ -479,7 +457,6 @@ export function SignForm() {
 						<span className="bg-card px-2 text-muted-foreground">Эсвэл</span>
 					</div>
 				</div>
-
 				<p className="text-sm text-center text-muted-foreground">
 					Бүртгэлтэй юу?{" "}
 					<Button asChild variant="link" className="p-0 h-auto">

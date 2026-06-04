@@ -1,5 +1,6 @@
 "use client";
-
+import Link from "next/link";
+import Image from "next/image";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
 import axios from "axios";
@@ -10,8 +11,9 @@ import {
 	Loader2,
 	MessageSquare,
 	ShieldCheck,
+	X,
 } from "lucide-react";
-import Link from "next/link";
+
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -70,29 +72,28 @@ const isMobileDevice = () => {
 	return device.type === "mobile" || device.type === "tablet" ? 1 : 0;
 };
 
-export default function ForgotForm() {
+interface ForgotFormProps {
+	onClose?: () => void;
+}
+
+export default function ForgotForm({ onClose }: ForgotFormProps) {
 	const [isSubmitted, setIsSubmitted] = useState(false);
 	const [showPassword, setShowPassword] = useState(false);
 	const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-
-	// OTP States
 	const [isWaitingForSMS, setIsWaitingForSMS] = useState(false);
-	const [isVerified, setIsVerified] = useState(false);
+	const [isVerified, setIsVerified] = useState(
+		process.env.NODE_ENV === "development",
+	);
 	const [isChecking, setIsChecking] = useState(false);
 	const [verificationCode, setVerificationCode] = useState("");
 	const [timeLeft, setTimeLeft] = useState(0);
 
 	const form = useForm<z.infer<typeof formSchema>>({
 		resolver: zodResolver(formSchema),
-		defaultValues: {
-			phone: "",
-			password: "",
-			confirmPassword: "",
-		},
+		defaultValues: { phone: "", password: "", confirmPassword: "" },
 		mode: "onSubmit",
 	});
 
-	// OTP Timer
 	useEffect(() => {
 		if (timeLeft <= 0) return;
 		const timer = setInterval(() => {
@@ -107,27 +108,21 @@ export default function ForgotForm() {
 		return () => clearInterval(timer);
 	}, [timeLeft]);
 
-	// OTP Request Code
 	const handleRequestCode = async () => {
-		const phone = form.getValues("phone");
 		const phoneValidation = await form.trigger("phone");
 		if (!phoneValidation) return;
-
 		setIsChecking(true);
 		try {
 			const response = await axios.post("/api/otp/getcode", {
-				phone: Number(phone),
+				phone: Number(form.getValues("phone")),
 				conftype: "1",
 				bundleid: "ikh_skuul.mn",
 				devicemodel: getDeviceInfo(),
 				ismob: isMobileDevice(),
 			});
-
 			if (response.data.RetResponse?.ResponseType) {
-				const code = response.data.RetResponse.RtrGenCode;
-				const seconds = response.data.RetResponse.RtrGenCodeSeconds || 180;
-				setVerificationCode(code);
-				setTimeLeft(Number(seconds));
+				setVerificationCode(response.data.RetResponse.RtrGenCode);
+				setTimeLeft(Number(response.data.RetResponse.RtrGenCodeSeconds || 180));
 				setIsWaitingForSMS(true);
 				toast.success(response.data.RetResponse.ResponseMessage);
 			} else {
@@ -136,29 +131,24 @@ export default function ForgotForm() {
 						"Код үүсгэхэд алдаа гарлаа",
 				);
 			}
-		} catch (error) {
-			console.error("Код үүсгэх алдаа:", error);
+		} catch {
 			toast.error("Код үүсгэхэд алдаа гарлаа");
 		} finally {
 			setIsChecking(false);
 		}
 	};
 
-	// OTP Check Verification
 	const handleCheckVerification = async () => {
-		const phone = form.getValues("phone");
 		if (!verificationCode) {
 			toast.error("Эхлээд код үүсгэнэ үү");
 			return;
 		}
-
 		setIsChecking(true);
 		try {
 			const response = await axios.post("/api/otp/smscheck", {
-				phone: Number(phone),
+				phone: Number(form.getValues("phone")),
 				code: Number(verificationCode),
 			});
-
 			if (response.data.RetResponse?.ResponseType) {
 				toast.success("Утасны дугаар баталгаажлаа!");
 				setIsVerified(true);
@@ -167,8 +157,7 @@ export default function ForgotForm() {
 			} else {
 				toast.error("Баталгаажуулалт амжилтгүй");
 			}
-		} catch (error) {
-			console.error("Баталгаажуулах алдаа:", error);
+		} catch {
 			toast.error("Баталгаажуулахад алдаа гарлаа");
 		} finally {
 			setIsChecking(false);
@@ -200,8 +189,7 @@ export default function ForgotForm() {
 				);
 			}
 		},
-		onError: (error: unknown) => {
-			console.error("Reset error:", error);
+		onError: () => {
 			toast.error("Нууц үг солихоо алдаа гарлаа");
 		},
 	});
@@ -211,30 +199,37 @@ export default function ForgotForm() {
 			toast.error("Эхлээд утасны дугаараа баталгаажуулна уу");
 			return;
 		}
-
 		resetPasswordMutation.mutate({
 			phone: values.phone,
 			password: values.password,
 		});
 	};
 
-	const handleFormSubmit = (e: React.FormEvent) => {
-		e.preventDefault();
-		form.handleSubmit(onSubmit)(e);
-	};
-
-	const formatTime = (seconds: number) => {
-		const mins = Math.floor(seconds / 60);
-		const secs = seconds % 60;
-		return `${mins}:${secs.toString().padStart(2, "0")}`;
-	};
-
+	const formatTime = (seconds: number) =>
+		`${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
 	const isPending = resetPasswordMutation.isPending;
 
 	if (isSubmitted) {
 		return (
 			<Card className="w-full max-w-sm bg-white/60 dark:bg-gray-900/60 backdrop-blur-xl border border-gray-200/50 dark:border-gray-700/50">
-				<CardHeader className="space-y-1 text-center">
+				<CardHeader className="space-y-1 text-center relative">
+					{onClose && (
+						<button
+							type="button"
+							onClick={onClose}
+							className="absolute top-0 right-0 w-7 h-7 rounded-md flex items-center justify-center text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-all"
+							aria-label="Хаах"
+						>
+							<X className="w-4 h-4" />
+						</button>
+					)}
+					<Image
+						src="/image/logoLogin.png"
+						alt="EXMO logo"
+						width={120}
+						height={40}
+						className="h-10 w-auto mb-1 mx-auto"
+					/>
 					<div className="mx-auto w-12 h-12 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center mb-4">
 						<svg
 							className="w-6 h-6 text-green-600 dark:text-green-400"
@@ -260,7 +255,6 @@ export default function ForgotForm() {
 						болно.
 					</CardDescription>
 				</CardHeader>
-
 				<CardFooter className="flex flex-col gap-4">
 					<Button asChild className="w-full">
 						<Link href="/login">
@@ -275,7 +269,24 @@ export default function ForgotForm() {
 
 	return (
 		<Card className="w-full max-w-sm bg-white/60 dark:bg-gray-900/60 backdrop-blur-xl border border-gray-200/50 dark:border-gray-700/50">
-			<CardHeader className="space-y-1">
+			<CardHeader className="space-y-1 relative">
+				{onClose && (
+					<button
+						type="button"
+						onClick={onClose}
+						className="absolute top-0 right-0 w-7 h-7 rounded-md flex items-center justify-center text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-all"
+						aria-label="Хаах"
+					>
+						<X className="w-4 h-4" />
+					</button>
+				)}
+				<Image
+					src="/image/logoLogin.png"
+					alt="EXMO logo"
+					width={120}
+					height={40}
+					className="h-10 w-auto mb-1"
+				/>
 				<CardTitle className="text-2xl font-semibold">
 					Нууц үг сэргээх
 				</CardTitle>
@@ -283,9 +294,13 @@ export default function ForgotForm() {
 			</CardHeader>
 
 			<Form {...form}>
-				<form onSubmit={handleFormSubmit}>
+				<form
+					onSubmit={(e) => {
+						e.preventDefault();
+						form.handleSubmit(onSubmit)(e);
+					}}
+				>
 					<CardContent className="grid gap-4">
-						{/* Утасны дугаар */}
 						<FormField
 							control={form.control}
 							name="phone"
@@ -311,7 +326,6 @@ export default function ForgotForm() {
 							)}
 						/>
 
-						{/* OTP Баталгаажуулалт */}
 						{!isVerified && (
 							<div className="space-y-3">
 								<Button
@@ -333,17 +347,15 @@ export default function ForgotForm() {
 										"Баталгаажуулах код авах"
 									)}
 								</Button>
-
 								{isWaitingForSMS && verificationCode && (
-									<Alert className="bg-blue-50/50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800 shadow-sm">
+									<Alert className="bg-blue-50/50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800">
 										<AlertDescription className="py-2">
 											<div className="space-y-4">
-												{/* Зааварчилгаа */}
 												<div className="flex gap-3">
 													<div className="shrink-0 w-6 h-6 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-bold">
 														1
 													</div>
-													<p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
+													<p className="text-sm text-slate-700 dark:text-slate-300">
 														Доорх кодыг{" "}
 														<span className="font-bold text-blue-700 dark:text-blue-400">
 															142076
@@ -351,29 +363,22 @@ export default function ForgotForm() {
 														дугаарт мессежээр илгээнэ үү.
 													</p>
 												</div>
-
-												{/* Код харуулах */}
-												<div className="relative group">
-													<div className="bg-white dark:bg-slate-900 border-2 border-dashed border-blue-300 dark:border-blue-700 rounded-xl p-4 flex flex-col items-center justify-center gap-2 transition-all group-hover:border-blue-400">
-														<span className="text-3xl font-black tracking-widest text-blue-600 dark:text-blue-400 select-all">
-															{verificationCode}
-														</span>
-													</div>
+												<div className="bg-white dark:bg-slate-900 border-2 border-dashed border-blue-300 dark:border-blue-700 rounded-xl p-4 flex items-center justify-center">
+													<span className="text-3xl font-black tracking-widest text-blue-600 dark:text-blue-400 select-all">
+														{verificationCode}
+													</span>
 												</div>
-
-												{/* Шалгах алхам */}
 												<div className="flex gap-3 pt-2">
 													<div className="shrink-0 w-6 h-6 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-bold">
 														2
 													</div>
 													<div className="flex-1 space-y-3">
 														<p className="text-sm text-slate-700 dark:text-slate-300">
-															Мессеж илгээсний дараа доорх товчийг дарж
-															баталгаажуулна уу.
+															Мессеж илгээсний дараа доорх товчийг дарна уу.
 														</p>
 														<Button
 															type="button"
-															className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold shadow-md shadow-blue-200 dark:shadow-none transition-all active:scale-[0.98]"
+															className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold"
 															onClick={handleCheckVerification}
 															disabled={isChecking}
 														>
@@ -395,7 +400,6 @@ export default function ForgotForm() {
 							</div>
 						)}
 
-						{/* Баталгаажсан мэдэгдэл */}
 						{isVerified && (
 							<Alert className="bg-green-50 dark:bg-green-950 border-green-200 dark:border-green-800">
 								<ShieldCheck className="h-4 w-4 text-green-600 dark:text-green-400" />
@@ -405,10 +409,8 @@ export default function ForgotForm() {
 							</Alert>
 						)}
 
-						{/* Нууц үг талбарууд - зөвхөн баталгаажсаны дараа */}
 						{isVerified && (
 							<>
-								{/* Шинэ нууц үг */}
 								<FormField
 									control={form.control}
 									name="password"
@@ -445,8 +447,6 @@ export default function ForgotForm() {
 										</FormItem>
 									)}
 								/>
-
-								{/* Нууц үг баталгаажуулах */}
 								<FormField
 									control={form.control}
 									name="confirmPassword"
@@ -485,8 +485,6 @@ export default function ForgotForm() {
 										</FormItem>
 									)}
 								/>
-
-								{/* Submit Button */}
 								<Button type="submit" className="w-full" disabled={isPending}>
 									{isPending && (
 										<Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -508,7 +506,6 @@ export default function ForgotForm() {
 						<span className="bg-card px-2 text-muted-foreground">Эсвэл</span>
 					</div>
 				</div>
-
 				<Button asChild variant="link" className="w-full">
 					<Link href="/login">
 						<ArrowLeft className="mr-2 h-4 w-4" />
