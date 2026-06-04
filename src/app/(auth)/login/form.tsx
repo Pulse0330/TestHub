@@ -37,7 +37,7 @@ import { Input } from "@/components/ui/input";
 import { createSessionRequest, loginToken, loginTokenRequest } from "@/lib/api";
 import { setCookie } from "@/lib/cookie";
 import { useAuthStore } from "@/stores/useAuthStore";
-import { UserCheckForm } from "./mnUserchek";
+
 
 const formSchema = z.object({
 	username: z.string().min(1, { message: "Нэвтрэх нэр оруулна уу." }),
@@ -450,9 +450,7 @@ export function LoginForm() {
 							Та бүртгэлээ шалгахын тулд регистерийн дугаараа оруулна уу.
 						</DialogDescription>
 					</DialogHeader>
-					<div className="flex-1 overflow-y-auto overflow-x-hidden px-6 py-4">
-						<UserCheckForm onClose={() => setOpen(false)} />
-					</div>
+			
 				</DialogContent>
 			</Dialog>
 			<Dialog open={guideOpen} onOpenChange={setGuideOpen}>
