@@ -117,7 +117,7 @@ export default function RegistrationForm() {
 			<CardHeader className="space-y-1">
 				<div className="flex items-center gap-2">
 					<CardTitle className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-						SKUUL.MN
+						EXMO
 					</CardTitle>
 					<span className="text-2xl">✌️</span>
 				</div>

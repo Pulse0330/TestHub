@@ -267,7 +267,7 @@ export function ExamVerifyDialog({
 					<AlertDialogHeader>
 						<AlertDialogTitle>
 							<span className="bg-green-500/10 text-green-600 border-none px-1">
-								Та Skuul.mn системд амжилттай нэвтэрлээ
+								Та EXMO системд амжилттай нэвтэрлээ
 							</span>
 						</AlertDialogTitle>
 						<AlertDialogDescription asChild>

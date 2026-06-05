@@ -17,10 +17,10 @@ interface RootLayoutProps {
 }
 
 export const metadata: Metadata = {
-	title: "Skuul",
+	title: "EXMO",
 	icons: {
-		icon: "/image/logoLogin.png",
-		apple: "/image/logoLogin.png",
+		icon: "/image/asd.png",
+		apple: "/image/asd.png",
 	},
 	description: "Онлайн сургалтын платформ | Онлайн сургалт | ...",
 };
