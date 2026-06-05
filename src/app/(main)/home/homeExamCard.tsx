@@ -37,18 +37,9 @@ interface ExamListProps {
 }
 
 const MONGOLIAN_MONTHS = [
-	"1-р сарын",
-	"2-р сарын",
-	"3-р сарын",
-	"4-р сарын",
-	"5-р сарын",
-	"6-р сарын",
-	"7-р сарын",
-	"8-р сарын",
-	"9-р сарын",
-	"10-р сарын",
-	"11-р сарын",
-	"12-р сарын",
+	"1-р сарын","2-р сарын","3-р сарын","4-р сарын",
+	"5-р сарын","6-р сарын","7-р сарын","8-р сарын",
+	"9-р сарын","10-р сарын","11-р сарын","12-р сарын",
 ] as const;
 
 const dateFormatCache = new Map<string, { date: string; time: string }>();
@@ -75,52 +66,24 @@ function computeExamStatus(exam: Exam) {
 	return { isActive, isPaid, isPurchased, isLocked, canTakeExam };
 }
 
-// flag: 0 = Эхлээгүй (хөх), 1 = Идэвхтэй (ногоон), 2+ = Дууссан (саарал)
 const getFlagConfig = (flag: number) => {
 	switch (flag) {
-		case 1:
-			return {
-				label: "Идэвхтэй",
-				Icon: Zap,
-				badgeClass: "bg-emerald-500 hover:bg-emerald-600 text-white",
-				cardBorder:
-					"border-border/40 hover:border-emerald-400/40 hover:shadow-emerald-500/10",
-				headerGradient: "from-emerald-500/80 via-emerald-500/30",
-				titleHover: "group-hover:text-emerald-500",
-				arrowBg: "bg-muted/50 group-hover:bg-emerald-500 group-hover:scale-110",
-				arrowIconClass: "text-muted-foreground group-hover:text-white",
-			};
-		case 0:
-			return {
-				label: "Эхлээгүй",
-				Icon: Timer,
-				badgeClass: "bg-blue-500/90 hover:bg-blue-600 text-white",
-				cardBorder:
-					"border-border/40 hover:border-blue-400/40 hover:shadow-blue-500/10",
-				headerGradient: "from-blue-500/70 via-blue-500/30",
-				titleHover: "group-hover:text-blue-500",
-				arrowBg: "bg-muted/50 group-hover:bg-blue-500 group-hover:scale-110",
-				arrowIconClass: "text-muted-foreground group-hover:text-white",
-			};
-		default:
-			return {
-				label: "Дууссан",
-				Icon: Clock,
-				badgeClass: "bg-slate-500/80 text-white",
-				cardBorder:
-					"border-border/40 hover:border-slate-400/40 hover:shadow-slate-500/10",
-				headerGradient: "from-slate-600/70 via-slate-500/30",
-				titleHover: "group-hover:text-slate-400",
-				arrowBg: "bg-muted/50 group-hover:bg-slate-500 group-hover:scale-110",
-				arrowIconClass: "text-muted-foreground group-hover:text-white",
-			};
+		case 1: return {
+			label: "Идэвхтэй", Icon: Zap,
+			badgeClass: "bg-emerald-500 hover:bg-emerald-600 text-white",
+		};
+		case 0: return {
+			label: "Эхлээгүй", Icon: Timer,
+			badgeClass: "bg-blue-500/90 hover:bg-blue-600 text-white",
+		};
+		default: return {
+			label: "Дууссан", Icon: Clock,
+			badgeClass: "bg-slate-500/80 text-white",
+		};
 	}
 };
 
-// ============================================================================
-// SINGLE EXAM CARD
-// ============================================================================
-
+// ── Single Card ─────────────────────────────────────────────────
 interface ExamCardItemProps {
 	exam: Exam;
 	index: number;
@@ -130,225 +93,132 @@ interface ExamCardItemProps {
 	onCreateInvoice: (exam: Exam, e: React.MouseEvent) => void;
 }
 
-const ExamCardItem = memo(
-	({
-		exam,
-		index,
-		isNavigating,
-		loadingExamId,
-		onExamClick,
-		onCreateInvoice,
-	}: ExamCardItemProps) => {
-		const { isActive, isPurchased, isLocked, canTakeExam } = useMemo(
-			() => computeExamStatus(exam),
-			[exam],
-		);
+const ExamCardItem = memo(({
+	exam, index, isNavigating, loadingExamId, onExamClick, onCreateInvoice,
+}: ExamCardItemProps) => {
+	const { isActive, isPurchased, isLocked, canTakeExam } = useMemo(
+		() => computeExamStatus(exam), [exam],
+	);
+	const flagConfig = getFlagConfig(exam.flag);
+	const isThisCardLoading = loadingExamId === exam.exam_id;
+	const start = formatMongolianDateTime(exam.ognoo);
+	const end = formatMongolianDateTime(exam.enddate);
 
-		const flagConfig = getFlagConfig(exam.flag);
-		const isThisCardLoading = loadingExamId === exam.exam_id;
-
-		const handleClick = useCallback(() => {
-			onExamClick(exam.exam_id, canTakeExam);
-		}, [exam.exam_id, canTakeExam, onExamClick]);
-
-		const handleInvoice = useCallback(
-			(e: React.MouseEvent) => onCreateInvoice(exam, e),
-			[exam, onCreateInvoice],
-		);
-
-		return (
-			<motion.div
-				initial={{ opacity: 0, y: 20 }}
-				animate={{ opacity: 1, y: 0 }}
-				transition={{ duration: 0.4, delay: index * 0.05 }}
-				className="h-full"
+	return (
+		<motion.div
+			initial={{ opacity: 0, y: 12 }}
+			animate={{ opacity: 1, y: 0 }}
+			transition={{ duration: 0.3, delay: index * 0.05 }}
+			className="h-full"
+		>
+			<button
+				type="button"
+				onClick={() => onExamClick(exam.exam_id, canTakeExam)}
+				className={cn(
+					"group h-full w-full flex flex-col rounded-xl overflow-hidden border bg-card text-left transition-all duration-200",
+					isLocked
+						? "border-amber-400/30 hover:border-amber-400/60 hover:shadow-md hover:shadow-amber-500/10"
+						: "border-border/50 hover:border-border hover:shadow-md",
+					(!canTakeExam || isNavigating) && "opacity-60 cursor-not-allowed",
+				)}
 			>
-				<button
-					type="button"
-					onClick={handleClick}
-					aria-label={`${exam.title} шалгалт`}
-					className={cn(
-						"group h-full w-full relative flex flex-col backdrop-blur-md transition-all duration-500 ease-out rounded-lg sm:rounded-xl overflow-hidden text-left",
-						isLocked
-							? "border border-amber-500/40 bg-card/30 hover:shadow-lg hover:shadow-amber-500/20 hover:border-amber-500/60"
-							: `border bg-card/50 hover:shadow-xl ${flagConfig.cardBorder}`,
-						(!canTakeExam || isNavigating) && "opacity-60 cursor-not-allowed",
-						canTakeExam && !isNavigating && "cursor-pointer",
+				{/* Header — өнгөт strip */}
+				<div className={cn(
+					"relative w-full h-1.5 shrink-0",
+					exam.flag === 1 ? "bg-emerald-500" :
+					exam.flag === 0 ? "bg-blue-500" : "bg-slate-400",
+				)} />
+
+				{/* Body */}
+				<div className="flex flex-col flex-1 p-3 gap-2.5">
+					{/* Badge row */}
+					<div className="flex items-start justify-between gap-1.5">
+						{isLocked ? (
+							<Badge className="bg-amber-500 text-white border-0 text-[9px] px-1.5 py-0.5 shrink-0">
+								<Lock className="w-2.5 h-2.5 mr-0.5" />Төлбөртэй
+							</Badge>
+						) : isPurchased ? (
+							<Badge className="bg-emerald-500 text-white border-0 text-[9px] px-1.5 py-0.5 shrink-0">
+								<Unlock className="w-2.5 h-2.5 mr-0.5" />Төлөгдсөн
+							</Badge>
+						) : (
+							<Badge className={cn("border-0 text-[9px] px-1.5 py-0.5 shrink-0", flagConfig.badgeClass)}>
+								<flagConfig.Icon className="w-2.5 h-2.5 mr-0.5" />
+								{flagConfig.label}
+							</Badge>
+						)}
+					</div>
+
+					{/* Title */}
+					<Tooltip>
+						<TooltipTrigger asChild>
+							<h3 className="text-xs sm:text-sm font-semibold leading-snug line-clamp-2 group-hover:text-primary transition-colors">
+								{exam.title}
+							</h3>
+						</TooltipTrigger>
+						<TooltipContent><p className="max-w-[200px]">{exam.title}</p></TooltipContent>
+					</Tooltip>
+
+					{exam.lesson_name && (
+						<p className="text-[9px] text-muted-foreground truncate uppercase tracking-wide">
+							{exam.lesson_name}
+						</p>
 					)}
-				>
-					{/* Image Header */}
-					<div className="relative w-full aspect-5/2 bg-muted shrink-0">
-						<div className="absolute inset-0 bg-linear-to-br from-zinc-700 via-zinc-800 to-zinc-900 dark:from-zinc-800 dark:via-zinc-900 dark:to-black" />
 
-						{isLocked && (
-							<div className="absolute inset-0 bg-black/40 backdrop-blur-[2px] flex items-center justify-center z-10">
-								<Lock className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 text-white" />
-							</div>
-						)}
-
-						<div
-							className={cn(
-								"absolute inset-0 bg-linear-to-t to-transparent",
-								isLocked
-									? "from-background/85 via-background/50"
-									: flagConfig.headerGradient,
-							)}
-						/>
-
-						{/* Status badge */}
-						<div className="absolute top-1.5 left-1.5 sm:top-2 sm:left-2 z-20">
-							{isLocked ? (
-								<Badge className="bg-amber-500 hover:bg-amber-600 text-white border-0 px-1 sm:px-1.5 md:px-2 py-0 text-[7px] sm:text-[8px] md:text-[9px] shadow-lg whitespace-nowrap">
-									<Lock className="w-2 h-2 sm:w-2.5 sm:h-2.5 mr-0.5" />
-									Төлбөртэй
-								</Badge>
-							) : isPurchased ? (
-								<Badge className="bg-green-500/90 text-white border-0 px-1 sm:px-1.5 md:px-2 py-0 text-[7px] sm:text-[8px] md:text-[9px] shadow-lg whitespace-nowrap">
-									<Unlock className="w-2 h-2 sm:w-2.5 sm:h-2.5 mr-0.5" />
-									Төлөгдсөн
-								</Badge>
-							) : (
-								<Badge
-									className={cn(
-										"border-0 px-1 sm:px-1.5 md:px-2 py-0 text-[7px] sm:text-[8px] md:text-[9px] shadow-lg whitespace-nowrap",
-										flagConfig.badgeClass,
-									)}
-								>
-									<flagConfig.Icon className="w-2 h-2 sm:w-2.5 sm:h-2.5 mr-0.5" />
-									{flagConfig.label}
-								</Badge>
-							)}
+					{/* Dates */}
+					<div className="mt-auto space-y-1 pt-2 border-t border-border/40">
+						<div className="flex justify-between text-[10px] text-muted-foreground">
+							<span>Эхлэх</span>
+							<span className="tabular-nums">{start.date} {start.time}</span>
+						</div>
+						<div className="flex justify-between text-[10px] text-muted-foreground">
+							<span>Дуусах</span>
+							<span className="tabular-nums">{end.date} {end.time}</span>
 						</div>
 					</div>
 
-					{/* Body */}
-					<div className="p-1.5 sm:p-2 md:p-2.5 pb-7 sm:pb-8 md:pb-9 flex flex-col flex-1 space-y-1 sm:space-y-1.5">
-						<div className="space-y-0.5 flex-1 min-h-0">
-							<Tooltip>
-								<TooltipTrigger asChild>
-									<h3
-										className={cn(
-											"text-xs sm:text-sm font-semibold text-foreground break-words whitespace-normal leading-tight transition-colors duration-300",
-											isLocked
-												? "group-hover:text-amber-500"
-												: flagConfig.titleHover,
-										)}
-									>
-										{exam.title}
-									</h3>
-								</TooltipTrigger>
-								<TooltipContent className="max-w-xs">
-									<p>{exam.title}</p>
-								</TooltipContent>
-							</Tooltip>
-							{exam.lesson_name && (
-								<p className="text-[7px] sm:text-[8px] font-medium text-muted-foreground uppercase tracking-wider truncate">
-									{exam.lesson_name}
-								</p>
-							)}
+					{/* Stats */}
+					<div className="flex items-center justify-between pt-1.5 border-t border-border/40">
+						<div className="flex items-center gap-1 text-muted-foreground">
+							<Clock className="w-3 h-3" />
+							<span className="text-[10px]">{exam.exam_minute} мин</span>
 						</div>
-
-						{/* Dates */}
-						<div className="flex flex-col gap-0.5 pt-1 border-t border-border/50">
-							<div className="flex items-center justify-between">
-								<span className="font-medium text-[8px] sm:text-[9px] md:text-xs tabular-nums text-muted-foreground">
-									Эхлэх
-								</span>
-								<span className="font-medium text-[8px] sm:text-[9px] md:text-xs tabular-nums text-muted-foreground">
-									{formatMongolianDateTime(exam.ognoo).date}{" "}
-									{formatMongolianDateTime(exam.ognoo).time}
-								</span>
-							</div>
-							<div className="flex items-center justify-between">
-								<span className="font-medium text-[8px] sm:text-[9px] md:text-xs tabular-nums text-muted-foreground">
-									Дуусах
-								</span>
-								<span className="font-medium text-[8px] sm:text-[9px] md:text-xs tabular-nums text-muted-foreground">
-									{formatMongolianDateTime(exam.enddate).date}{" "}
-									{formatMongolianDateTime(exam.enddate).time}
-								</span>
-							</div>
+						<div className="flex items-center gap-1 text-muted-foreground">
+							<FileText className="w-3 h-3" />
+							<span className="text-[10px]">{exam.que_cnt} асуулт</span>
 						</div>
+						<ArrowRight className="w-3.5 h-3.5 text-muted-foreground/40 group-hover:text-primary group-hover:translate-x-0.5 transition-all" />
+					</div>
 
-						{/* Stats */}
-						<div className="flex items-center justify-between gap-1 sm:gap-1.5 pt-1 border-t border-border/50">
-							<div className="flex items-center gap-0.5 sm:gap-1 text-muted-foreground min-w-0">
-								<Clock className="w-2.5 h-2.5 sm:w-3 sm:h-3 shrink-0" />
-								<span className="font-medium text-[8px] sm:text-[9px] md:text-xs truncate">
-									{exam.exam_minute} мин
-								</span>
-							</div>
-							<div className="flex items-center gap-0.5 sm:gap-1 text-muted-foreground min-w-0">
-								<FileText className="w-2.5 h-2.5 sm:w-3 sm:h-3 shrink-0" />
-								<span className="font-medium text-[8px] sm:text-[9px] md:text-xs truncate">
-									{exam.que_cnt} асуулт
-								</span>
-							</div>
-						</div>
-
-						{/* Pay button */}
-						{isLocked && isActive && (
-							<Button
-								onClick={handleInvoice}
-								disabled={isThisCardLoading}
-								size="sm"
-								variant="default"
-								className="w-full h-7 sm:h-8 text-[10px] sm:text-xs bg-amber-500 hover:bg-amber-600 border-0"
-							>
-								{isThisCardLoading ? (
-									<Loader2 className="w-3 h-3 animate-spin" />
-								) : (
-									<>
-										<CreditCard className="w-3 h-3 sm:w-3.5 sm:h-3.5 mr-1 sm:mr-1.5" />
-										Төлбөр төлөх
-									</>
-								)}
-							</Button>
-						)}
-
-						{/* Arrow */}
-						<div
-							className={cn(
-								"absolute bottom-1.5 right-1.5 sm:bottom-2 sm:right-2 md:bottom-2.5 md:right-2.5 w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 rounded-full flex items-center justify-center transition-all duration-300",
-								isLocked
-									? "bg-amber-500/20 group-hover:bg-amber-500 group-hover:scale-110"
-									: flagConfig.arrowBg,
-							)}
+					{/* Pay button */}
+					{isLocked && isActive && (
+						<Button
+							onClick={(e) => onCreateInvoice(exam, e)}
+							disabled={isThisCardLoading}
+							size="sm"
+							className="w-full h-8 text-[10px] bg-amber-500 hover:bg-amber-600 border-0"
 						>
-							{isLocked ? (
-								<Lock className="w-2 h-2 sm:w-2.5 sm:h-2.5 md:w-3 md:h-3 text-amber-600 group-hover:text-white transition-all" />
-							) : (
-								<ArrowRight
-									className={cn(
-										"w-2 h-2 sm:w-2.5 sm:h-2.5 md:w-3 md:h-3 group-hover:translate-x-0.5 transition-all",
-										flagConfig.arrowIconClass,
-									)}
-								/>
-							)}
-						</div>
-					</div>
-				</button>
-			</motion.div>
-		);
-	},
-	(prev, next) =>
-		prev.exam === next.exam &&
-		prev.isNavigating === next.isNavigating &&
-		(prev.loadingExamId === next.loadingExamId ||
-			(prev.loadingExamId !== prev.exam.exam_id &&
-				next.loadingExamId !== next.exam.exam_id)),
+							{isThisCardLoading
+								? <Loader2 className="w-3 h-3 animate-spin" />
+								: <><CreditCard className="w-3 h-3 mr-1.5" />Төлбөр төлөх</>
+							}
+						</Button>
+					)}
+				</div>
+			</button>
+		</motion.div>
+	);
+}, (prev, next) =>
+	prev.exam === next.exam &&
+	prev.isNavigating === next.isNavigating &&
+	(prev.loadingExamId === next.loadingExamId ||
+		(prev.loadingExamId !== prev.exam.exam_id && next.loadingExamId !== next.exam.exam_id)),
 );
 
 ExamCardItem.displayName = "ExamCardItem";
 
-// ============================================================================
-// EXAM LIST PARENT
-// ============================================================================
-
-const ExamList = memo(function ExamList({
-	exams,
-	onPaymentSuccess,
-}: ExamListProps) {
+// ── Parent ───────────────────────────────────────────────────────
+const ExamList = memo(function ExamList({ exams, onPaymentSuccess }: ExamListProps) {
 	const router = useRouter();
 	const { userId } = useAuthStore();
 	const queryClient = useQueryClient();
@@ -360,32 +230,23 @@ const ExamList = memo(function ExamList({
 	const [selectedExamId, setSelectedExamId] = useState<number | null>(null);
 	const [isNavigating, setIsNavigating] = useState(false);
 
-	const handleCreateInvoice = useCallback(
-		async (exam: Exam, e: React.MouseEvent) => {
-			e.stopPropagation();
-			if (!userId) return;
-			setLoadingExamId(exam.exam_id);
-			try {
-				const response = await axios.post("/api/examqpay/invoice", {
-					amount: exam.amount?.toString() ?? "0",
-					userid: userId.toString(),
-					device_token: "",
-					orderid: exam.bill_type?.toString() ?? "0",
-					bilid: exam.exam_id.toString(),
-					classroom_id: "0",
-				});
-				if (response.data) {
-					setQpayData(response.data);
-					setQpayDialogOpen(true);
-				}
-			} catch {
-				// silent
-			} finally {
-				setLoadingExamId(null);
-			}
-		},
-		[userId],
-	);
+	const handleCreateInvoice = useCallback(async (exam: Exam, e: React.MouseEvent) => {
+		e.stopPropagation();
+		if (!userId) return;
+		setLoadingExamId(exam.exam_id);
+		try {
+			const response = await axios.post("/api/examqpay/invoice", {
+				amount: exam.amount?.toString() ?? "0",
+				userid: userId.toString(),
+				device_token: "",
+				orderid: exam.bill_type?.toString() ?? "0",
+				bilid: exam.exam_id.toString(),
+				classroom_id: "0",
+			});
+			if (response.data) { setQpayData(response.data); setQpayDialogOpen(true); }
+		} catch { /* silent */ }
+		finally { setLoadingExamId(null); }
+	}, [userId]);
 
 	const handlePaymentSuccess = useCallback(() => {
 		queryClient.invalidateQueries({ queryKey: ["homeScreen"] });
@@ -393,25 +254,19 @@ const ExamList = memo(function ExamList({
 		onPaymentSuccess?.();
 	}, [onPaymentSuccess, queryClient]);
 
-	const handleExamClick = useCallback(
-		(examId: number, canTake: boolean) => {
-			if (!canTake || isNavigating) return;
-			setSelectedExamId(examId);
-			setRulesDialogOpen(true);
-		},
-		[isNavigating],
-	);
+	const handleExamClick = useCallback((examId: number, canTake: boolean) => {
+		if (!canTake || isNavigating) return;
+		setSelectedExamId(examId);
+		setRulesDialogOpen(true);
+	}, [isNavigating]);
 
 	const handleRulesConfirm = useCallback(async () => {
 		if (!selectedExamId) return;
 		try {
 			setIsNavigating(true);
 			await router.replace(`/exam/${selectedExamId}`);
-		} catch {
-			// silent
-		} finally {
-			setIsNavigating(false);
-		}
+		} catch { /* silent */ }
+		finally { setIsNavigating(false); }
 	}, [selectedExamId, router]);
 
 	if (!exams?.length) return null;
@@ -429,7 +284,6 @@ const ExamList = memo(function ExamList({
 					onCreateInvoice={handleCreateInvoice}
 				/>
 			))}
-
 			<QPayDialog
 				open={qpayDialogOpen}
 				onOpenChange={setQpayDialogOpen}
@@ -437,7 +291,6 @@ const ExamList = memo(function ExamList({
 				userId={userId}
 				onPaymentSuccess={handlePaymentSuccess}
 			/>
-
 			<ExamRulesDialog
 				open={rulesDialogOpen}
 				onOpenChange={setRulesDialogOpen}

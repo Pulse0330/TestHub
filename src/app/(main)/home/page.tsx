@@ -4,11 +4,12 @@ import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import {
 	ArrowRight,
-	Calendar,
 	ClipboardCheck,
 	Clock,
 	Loader2,
 	Lock,
+	BookOpen,
+	FileText,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -43,49 +44,50 @@ import ExamLists from "./homeExamCard";
 const ANIMATION_STAGGER = 0.04;
 
 // ============================================================================
-// HERO SECTION
+// HERO SECTION — 3 stat card хийцтэй
 // ============================================================================
-
 interface HeroSectionProps {
 	username: string;
+	examCount?: number;
+	sorilCount?: number;
 }
 
-const HeroSection = memo(({ username }: HeroSectionProps) => (
-	<div className="w-full">
-		<div className="relative group overflow-hidden bg-white/50 dark:bg-zinc-950/50 backdrop-blur-sm border border-zinc-200/80 dark:border-zinc-800/80 rounded-2xl shadow-sm hover:shadow-lg hover:border-zinc-300 dark:hover:border-zinc-700 transition-all duration-500">
-			<div className="relative px-5 py-4 sm:px-8 sm:py-5 lg:px-10 lg:py-6 flex flex-col md:flex-row items-center justify-between gap-5 lg:gap-6">
-				<div className="flex-1 space-y-2 sm:space-y-3 text-center md:text-left max-w-xl">
-					<div className="space-y-1">
-						<h1 className="text-2xl sm:text-2xl md:text-2xl lg:text-2xl xl:text-2xl font-light tracking-tight leading-tight">
-							Сайн уу, <span className="font-medium">{username}</span>
-						</h1>
-						<p className="text-xs sm:text-sm lg:text-base font-light leading-relaxed max-w-md mx-auto md:mx-0">
-							Өнөөдөр шинэ зүйл сурч, ур чадвараа хөгжүүлэхэд бэлэн үү?
-						</p>
-					</div>
-					<div className="flex items-center gap-2 justify-center md:justify-start pt-0">
-						<div className="h-px w-6 bg-linear-to-r from-transparent to-zinc-300 dark:to-zinc-700" />
-						<span className="text-[10px] sm:text-[11px]">
-							24/7 суралцах хөгжих боломж
-						</span>
-						<div className="h-px w-6 bg-linear-to-l from-transparent to-zinc-300 dark:to-zinc-700" />
-					</div>
-				</div>
-
-				<div className="flex flex-col items-center md:items-end gap-2.5 sm:gap-3 w-full md:w-auto">
-					<Link href="/Lists/paymentCoureList" className="w-full sm:w-auto">
-						<Button className="w-full sm:min-w-[180px] h-10 bg-zinc-900 dark:bg-zinc-50 text-white dark:text-zinc-900 rounded-xl hover:bg-zinc-800 dark:hover:bg-zinc-100 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 group shadow-md shadow-zinc-900/10 dark:shadow-zinc-50/5 border-0">
-							<span className="flex items-center gap-2 font-medium text-sm tracking-wide">
-								Сургалт үзэх
-								<ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform duration-200" />
-							</span>
-						</Button>
-					</Link>
-				</div>
+const HeroSection = memo(({ username, examCount = 0, sorilCount = 0 }: HeroSectionProps) => (
+	<div className="w-full space-y-3">
+		{/* Greeting row */}
+		<div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
+			<div>
+				<p className="text-xs text-muted-foreground mb-1">Тавтай морилно уу</p>
+				<h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
+					{username}
+				</h1>
 			</div>
+			<Link href="/Lists/paymentCoureList">
+				<Button variant="outline" size="sm" className="gap-2 rounded-xl h-9 text-xs font-medium">
+					<BookOpen className="w-3.5 h-3.5" />
+					Сургалт үзэх
+					<ArrowRight className="w-3.5 h-3.5" />
+				</Button>
+			</Link>
+		</div>
 
-			<div className="absolute bottom-0 left-0 right-0 h-px bg-linear-to-r from-transparent via-zinc-200 dark:via-zinc-800 to-transparent opacity-60" />
-			<div className="absolute top-0 right-0 w-32 h-32 bg-linear-to-bl from-zinc-100/30 dark:from-zinc-900/30 to-transparent rounded-bl-[100px] pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+		{/* Stat cards */}
+		<div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+			<div className="rounded-xl border border-border/60 bg-card p-4 space-y-1.5">
+				<p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Идэвхтэй шалгалт</p>
+				<p className="text-3xl font-bold tabular-nums">{examCount}</p>
+				<p className="text-xs text-muted-foreground">Одоо нээлттэй</p>
+			</div>
+			<div className="rounded-xl border border-border/60 bg-card p-4 space-y-1.5">
+				<p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Сорилын сан</p>
+				<p className="text-3xl font-bold tabular-nums">{sorilCount}</p>
+				<p className="text-xs text-muted-foreground">Нийт сорил</p>
+			</div>
+			<div className="hidden sm:block rounded-xl border border-border/60 bg-card p-4 space-y-1.5">
+				<p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Хандалт</p>
+				<p className="text-3xl font-bold tabular-nums">24/7</p>
+				<p className="text-xs text-muted-foreground">Хаанаас ч нэвтэрнэ</p>
+			</div>
 		</div>
 	</div>
 ));
@@ -93,9 +95,8 @@ const HeroSection = memo(({ username }: HeroSectionProps) => (
 HeroSection.displayName = "HeroSection";
 
 // ============================================================================
-// EXAM CARD — SorilCard стандарттай ижил
+// EXAM CARD — vertical card, тод дүрслэл
 // ============================================================================
-
 interface ExamCardProps {
 	exam: PastExam;
 	index: number;
@@ -110,19 +111,16 @@ const ExamCard = memo(
 		const router = useRouter();
 		const _isCompleted = isSorilCompleted(exam.isguitset);
 		const isLocked = getExamLockStatus(exam);
-		const _isPaidAndUnlocked = exam.ispay === 1 && exam.paid === 1;
 
 		const handleClick = useCallback(() => {
-			router.push(
-				isLocked ? "/Lists/paymentCoureList" : `/soril/${exam.exam_id}`,
-			);
+			router.push(isLocked ? "/Lists/paymentCoureList" : `/soril/${exam.exam_id}`);
 		}, [router, exam.exam_id, isLocked]);
 
 		return (
 			<motion.div
-				initial={{ opacity: 0, y: 20 }}
+				initial={{ opacity: 0, y: 12 }}
 				animate={{ opacity: 1, y: 0 }}
-				transition={{ duration: 0.4, delay: index * ANIMATION_STAGGER }}
+				transition={{ duration: 0.3, delay: index * ANIMATION_STAGGER }}
 				className="h-full"
 			>
 				<Tooltip>
@@ -130,116 +128,68 @@ const ExamCard = memo(
 						<button
 							type="button"
 							onClick={handleClick}
-							aria-label={`${exam.soril_name} сорил ${isLocked ? "(Төлбөр шаардлагатай)" : "нээх"}`}
-							className={`group h-full w-full relative flex flex-col backdrop-blur-md cursor-pointer transition-all duration-500 ease-out rounded-lg sm:rounded-xl overflow-hidden text-left ${
-								isLocked
-									? "border border-amber-500/40 bg-card/30 hover:shadow-lg hover:shadow-amber-500/20 hover:border-amber-500/60"
-									: "border border-border/40 bg-card/50 hover:shadow-xl hover:shadow-primary/10 hover:border-primary/20"
-							}`}
+							className="group h-full w-full flex flex-col rounded-xl overflow-hidden border border-border/50 bg-card hover:border-border hover:shadow-md transition-all duration-200 text-left"
 						>
-							{/* Image Header */}
-							<div className="relative w-full aspect-5/2 bg-muted shrink-0">
+							{/* Thumbnail */}
+							<div className="relative w-full aspect-video bg-muted shrink-0 overflow-hidden">
 								{exam.filename ? (
 									<Image
 										src={exam.filename}
 										alt={exam.soril_name}
 										fill
-										className={`object-cover transition-all duration-700 ${isLocked ? "brightness-75 group-hover:brightness-90" : ""}`}
-										sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1024px) 25vw, (max-width: 1280px) 20vw, 16vw"
-										quality={90}
+										className={`object-cover transition-transform duration-500 group-hover:scale-[1.04] ${isLocked ? "brightness-75" : ""}`}
+										sizes="(max-width: 640px) 50vw, 25vw"
+										quality={85}
 										priority={index < 6}
 									/>
 								) : (
-									<div className="absolute inset-0 bg-linear-to-br from-primary/20 via-primary/10 to-background" />
+									<div className="absolute inset-0 flex items-center justify-center bg-muted">
+										<FileText className="w-8 h-8 text-muted-foreground/30" />
+									</div>
 								)}
 
+								{/* Overlay */}
+								<div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
+
 								{isLocked && (
-									<div className="absolute inset-0 flex items-center justify-center z-10">
-										<div className="">
-											<Lock className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 text-white" />
+									<div className="absolute inset-0 flex items-center justify-center">
+										<div className="w-9 h-9 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center">
+											<Lock className="w-4 h-4 text-white" />
 										</div>
 									</div>
 								)}
 
-								{/* Gradient Overlay */}
-								<div className="absolute inset-0 bg-linear-to-t from-background/85 via-background/50 to-transparent" />
-
-								{/* Status badge */}
-								<div className="absolute top-1.5 left-1.5 sm:top-2 sm:left-2 z-20">
-									{isLocked && (
-										<Badge className="bg-amber-500 hover:bg-amber-600 text-white border-0 px-1 sm:px-1.5 md:px-2 py-0 text-[7px] sm:text-[8px] md:text-[9px] shadow-lg whitespace-nowrap">
-											<Lock className="w-2 h-2 sm:w-2.5 sm:h-2.5 mr-0.5" />
-											Төлбөртэй
-										</Badge>
-									)}
-								</div>
-
-								{/* Date */}
-								<div className="absolute bottom-0 left-0 right-0 p-1 sm:p-1.5 z-10">
-									<div className="flex items-center gap-0.5 sm:gap-1">
-										<Calendar className="w-2.5 h-2.5 sm:w-3 sm:h-3 shrink-0" />
-										{/* <span className="font-medium text-[8px] sm:text-[9px] md:text-xs truncate">
-											{formatSorilDate(exam.sorildate)}
-										</span> */}
-									</div>
-								</div>
+								{isLocked && (
+									<Badge className="absolute top-2 left-2 bg-amber-500 hover:bg-amber-500 text-white border-0 text-[9px] px-1.5 py-0.5">
+										Төлбөртэй
+									</Badge>
+								)}
 							</div>
 
-							{/* Content */}
-							<div className="p-1.5 sm:p-2 md:p-2.5 pb-7 sm:pb-8 md:pb-9 flex flex-col flex-1 space-y-1 sm:space-y-1.5">
-								<div className="space-y-0.5 flex-1 min-h-0">
-									<h3
-										className={`text-[8px] sm:text-xs md:text-sm font-semibold leading-tight whitespace-normal words transition-colors duration-300 ${
-											isLocked
-												? "text-foreground group-hover:text-amber-500"
-												: "text-foreground group-hover:text-primary"
-										}`}
-									>
-										{exam.soril_name}
-									</h3>
-								</div>
+							{/* Info */}
+							<div className="flex flex-col flex-1 p-3 gap-2">
+								<h3 className="text-xs sm:text-sm font-medium leading-snug line-clamp-2 group-hover:text-primary transition-colors">
+									{exam.soril_name}
+								</h3>
 
-								{/* Stats */}
-								<div className="flex items-center justify-between gap-1 sm:gap-1.5 pt-1 border-t border-border/50">
-									<div className="flex items-center gap-0.5 sm:gap-1 text-muted-foreground min-w-0">
-										<Clock className="w-2.5 h-2.5 sm:w-3 sm:h-3 shrink-0" />
-										<span className="font-medium text-[8px] sm:text-[9px] md:text-xs truncate">
+								<div className="mt-auto flex items-center justify-between">
+									<div className="flex items-center gap-1 text-muted-foreground">
+										<Clock className="w-3 h-3" />
+										<span className="text-[10px]">
 											{exam.minut > 0 ? `${exam.minut} мин` : "∞"}
 										</span>
 									</div>
-									<div className="flex items-center gap-0.5 sm:gap-1 text-muted-foreground min-w-0">
-										<ClipboardCheck className="w-2.5 h-2.5 sm:w-3 sm:h-3 shrink-0" />
-										<span className="font-medium text-[8px] sm:text-[9px] md:text-xs truncate">
-											{exam.que_cnt} асуулт
-										</span>
+									<div className="flex items-center gap-1 text-muted-foreground">
+										<ClipboardCheck className="w-3 h-3" />
+										<span className="text-[10px]">{exam.que_cnt} асуулт</span>
 									</div>
-								</div>
-
-								{/* Arrow — absolute, стандарттай ижил */}
-								<div
-									className={`absolute bottom-1.5 right-1.5 sm:bottom-2 sm:right-2 md:bottom-2.5 md:right-2.5 w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 rounded-full flex items-center justify-center transition-all duration-300 ${
-										isLocked
-											? "bg-amber-500/20 group-hover:bg-amber-500 group-hover:scale-110"
-											: "bg-muted/50 group-hover:bg-foreground group-hover:scale-110"
-									}`}
-								>
-									{isLocked ? (
-										<Lock className="w-2 h-2 sm:w-2.5 sm:h-2.5 md:w-3 md:h-3 text-amber-600 group-hover:text-white transition-all" />
-									) : (
-										<ArrowRight className="w-2 h-2 sm:w-2.5 sm:h-2.5 md:w-3 md:h-3 text-muted-foreground group-hover:text-background group-hover:translate-x-0.5 transition-all" />
-									)}
 								</div>
 							</div>
 						</button>
 					</TooltipTrigger>
-					<TooltipContent className="max-w-xs">
-						<p>{exam.soril_name}</p>
-						{isLocked && (
-							<p className="text-amber-500 mt-1">Төлбөр төлөх шаардлагатай</p>
-						)}
-						{exam.isopensoril === 1 && (
-							<p className="text-green-500 mt-1">Нээлттэй сорил</p>
-						)}
+					<TooltipContent>
+						<p className="max-w-[200px]">{exam.soril_name}</p>
+						{isLocked && <p className="text-amber-500 text-xs mt-0.5">Төлбөр шаардлагатай</p>}
 					</TooltipContent>
 				</Tooltip>
 			</motion.div>
@@ -253,7 +203,6 @@ ExamCard.displayName = "ExamCard";
 // ============================================================================
 // SORIL LIST
 // ============================================================================
-
 interface SorilListsProps {
 	pastExams: PastExam[];
 }
@@ -261,19 +210,18 @@ interface SorilListsProps {
 const SorilLists = memo(({ pastExams }: SorilListsProps) => {
 	if (!pastExams?.length) {
 		return (
-			<div className="flex flex-col items-center py-24 opacity-40">
-				<p className="font-bold tracking-tight">Сорил олдсонгүй</p>
+			<div className="flex flex-col items-center py-16 gap-3 text-muted-foreground">
+				<ClipboardCheck className="w-10 h-10 opacity-20" />
+				<p className="text-sm opacity-40">Сорил олдсонгүй</p>
 			</div>
 		);
 	}
 
 	return (
-		<div className="px-2">
-			<div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 px-2">
-				{pastExams.map((exam, index) => (
-					<ExamCard key={exam.exam_id} exam={exam} index={index} />
-				))}
-			</div>
+		<div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
+			{pastExams.map((exam, index) => (
+				<ExamCard key={exam.exam_id} exam={exam} index={index} />
+			))}
 		</div>
 	);
 });
@@ -281,31 +229,31 @@ const SorilLists = memo(({ pastExams }: SorilListsProps) => {
 SorilLists.displayName = "SorilLists";
 
 // ============================================================================
-// SECTION DIVIDER
+// SECTION HEADER — хялбар, тод гарчиг + link
 // ============================================================================
-
 interface SectionDividerProps {
 	title: string;
 	href: string;
+	count?: number;
 }
 
-const SectionDivider = memo(({ title, href }: SectionDividerProps) => (
-	<div className="py-4">
-		<div className="w-full border-t border-border" />
-		<div className="flex flex-col mt-4">
-			<div className="flex justify-center">
-				<span className="px-4 py-1.5 text-xs font-bold">{title}</span>
-			</div>
-			<div className="flex justify-end mt-2">
-				<Link
-					href={href}
-					className="group flex items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground cursor-pointer transition-all duration-300 hover:gap-2"
-				>
-					{/* <span className="group-hover:underline">Бүгдийг харах</span> */}
-					{/* <ChevronRight className="w-3.5 h-3.5 transition-transform duration-300 group-hover:translate-x-1" /> */}
-				</Link>
-			</div>
+const SectionDivider = memo(({ title, href, count }: SectionDividerProps) => (
+	<div className="flex items-center justify-between">
+		<div className="flex items-center gap-2.5">
+			<h2 className="text-sm font-bold tracking-tight">{title}</h2>
+			{count !== undefined && count > 0 && (
+				<span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
+					{count}
+				</span>
+			)}
 		</div>
+		<Link
+			href={href}
+			className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors group"
+		>
+			Бүгдийг харах
+			<ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+		</Link>
 	</div>
 ));
 
@@ -361,8 +309,8 @@ export default function HomePage() {
 		select: (res) => res.RetData ?? [],
 	});
 
-	// myExamInfo-с exam_date_id авах
 	const examDateId = myExamInfo?.[0]?.exam_date_id;
+
 	//biome-ignore lint/correctness/noUnusedVariables: ExamVerifyDialog, MnExamPrint-д ашиглана
 	const { data: printData } = useQuery({
 		queryKey: ["mn_print", userId, user?.examinee_number, examDateId],
@@ -372,7 +320,7 @@ export default function HomePage() {
 				examineeNumber: String(user?.examinee_number ?? ""),
 				examDateId: Number(examDateId),
 			}),
-		enabled: !!userId && !!user?.examinee_number, // ← examDateId нөхцөл хасав
+		enabled: !!userId && !!user?.examinee_number,
 		select: (res) => {
 			console.log("✅ printData:", res);
 			return res.RetData ?? [];
@@ -388,87 +336,85 @@ export default function HomePage() {
 	const username = profileData?.RetData?.[0]?.username ?? "Хэрэглэгч";
 	const hasExams = Boolean(homeData?.RetDataThirt?.length);
 	const hasSorils = Boolean(homeData?.RetDataFourth?.length);
+	const examCount = homeData?.RetDataThirt?.length ?? 0;
+	const sorilCount = homeData?.RetDataFourth?.length ?? 0;
 
 	if (!userId) {
-		return <div className="flex items-center justify-center min-h-[60vh]" />;
+		return <div className="min-h-[60vh]" />;
 	}
 
 	return (
 		<TooltipProvider>
-			{/* Print хэсэг */}
-			{/* <MnExamPrint printList={printData ?? []} /> */}
-			<div className="w-full px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-8 relative z-10">
-				<div className="animate-in fade-in-0 slide-in-from-bottom-4 duration-700">
-					<HeroSection username={username} />
-					<div className="pt-2 flex flex-row gap-4 items-start">
-						{/* <div>
-							{myExamInfo && myExamInfo.length > 0 ? (
-								<div className="animate-in fade-in-0 slide-in-from-bottom-4 duration-700 delay-200">
-									<div className="flex flex-row gap-3 overflow-x-auto pb-2">
-										{myExamInfo.map((exam, index) => (
-											<div
-												key={`${exam.exam_number}-${index}`}
-												className="shrink-0 w-72"
-											>
-												<ExamInfoCard exam={exam} printData={printData ?? []} />
-											</div>
-										))}
-									</div>
-								</div>
-							) : (
-								<div className="animate-in fade-in-0 slide-in-from-bottom-4 duration-700 delay-200 w-72">
-									<ExamInfoCard exam={null} isSuccess={false} />
-								</div>
-							)}
-						</div> */}
-					</div>
+			<div className="w-full max-w-7xl mx-auto space-y-8 py-4">
 
-					{/* <ExamVerifyDialog
-						examList={examList}
-						isLoading={isLoading}
-						isFetched={isFetched}
-					/> */}
-				</div>
+				{/* Hero */}
+				<motion.div
+					initial={{ opacity: 0, y: 8 }}
+					animate={{ opacity: 1, y: 0 }}
+					transition={{ duration: 0.35 }}
+				>
+					<HeroSection
+						username={username}
+						examCount={examCount}
+						sorilCount={sorilCount}
+					/>
+				</motion.div>
 
-				{/* <SectionDivider
-					title="ӨНӨӨДӨР НЭЭЛТТЭЙ БАЙГАА МОНГОЛ ХЭЛ БИЧГИЙН ШАЛГАЛТ "
-					href="/Lists/mnSorilList"
-				/>
-				<div className="animate-in fade-in-0 duration-700">
-					<MnExamList />
-				</div> */}
+				{/* Divider */}
+				<div className="border-t border-border/60" />
 
+				{/* Content */}
 				{isHomeLoading || isProfileLoading ? (
-					<div className="flex items-center justify-center py-24">
-						<Loader2 className="w-10 h-10 animate-spin text-primary" />
+					<div className="flex flex-col items-center justify-center py-24 gap-3">
+						<Loader2 className="w-7 h-7 animate-spin text-muted-foreground" />
+						<p className="text-xs text-muted-foreground">Ачааллаж байна...</p>
 					</div>
 				) : (
-					<>
+					<div className="space-y-10">
+						{/* Шалгалт */}
 						{hasExams && homeData?.RetDataThirt && (
-							<>
+							<motion.section
+								initial={{ opacity: 0, y: 8 }}
+								animate={{ opacity: 1, y: 0 }}
+								transition={{ duration: 0.35, delay: 0.1 }}
+								className="space-y-4"
+							>
 								<SectionDivider
 									title="Идэвхтэй шалгалтууд"
 									href="/Lists/examList"
+									count={examCount}
 								/>
-								<div className="animate-in fade-in-0 duration-700 delay-300">
-									<div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 px-2">
-										<ExamLists exams={homeData.RetDataThirt} />
-									</div>
+								<div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+									<ExamLists exams={homeData.RetDataThirt} />
 								</div>
-							</>
+							</motion.section>
 						)}
+
+						{/* Сорил */}
 						{hasSorils && homeData?.RetDataFourth && (
-							<>
+							<motion.section
+								initial={{ opacity: 0, y: 8 }}
+								animate={{ opacity: 1, y: 0 }}
+								transition={{ duration: 0.35, delay: 0.15 }}
+								className="space-y-4"
+							>
 								<SectionDivider
-									title="ЭЛСЭЛТИЙН ШАЛГАЛТЫН СОРИЛУУД"
+									title="Элсэлтийн шалгалтын сорилууд"
 									href="/Lists/sorilList"
+									count={sorilCount}
 								/>
-								<div className="animate-in fade-in-0 duration-700 delay-500">
-									<SorilLists pastExams={homeData.RetDataFourth} />
-								</div>
-							</>
+								<SorilLists pastExams={homeData.RetDataFourth} />
+							</motion.section>
 						)}
-					</>
+
+						{/* Хоосон */}
+						{!hasExams && !hasSorils && (
+							<div className="flex flex-col items-center justify-center py-24 gap-3">
+								<ClipboardCheck className="w-10 h-10 text-muted-foreground/20" />
+								<p className="text-sm text-muted-foreground/40">Мэдээлэл олдсонгүй</p>
+							</div>
+						)}
+					</div>
 				)}
 			</div>
 		</TooltipProvider>
