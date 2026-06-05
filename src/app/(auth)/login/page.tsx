@@ -255,7 +255,7 @@ export default function ExmoLanding() {
       {/* Login Dialog */}
       <Dialog open={modal === "login"} onOpenChange={(o) => { if (!o) setModal(null); }}>
         <DialogContent
-          className="p-0 border-0 bg-transparent shadow-none max-w-sm w-full [&>button:last-child]:hidden"
+          className="p-0 border-0 bg-transparent shadow-none max-w-sm w-full [&>button:last-child]:hidden outline-none ring-0 focus:outline-none"
           onInteractOutside={(e) => e.preventDefault()}
         >
           <DialogTitle className="sr-only">{modalTitles.login}</DialogTitle>
@@ -275,7 +275,7 @@ export default function ExmoLanding() {
       {/* Sign Dialog */}
       <Dialog open={modal === "sign"} onOpenChange={(o) => { if (!o) setModal(null); }}>
         <DialogContent
-          className="p-0 border-0 bg-transparent shadow-none max-w-md w-full h-[95vh] sm:h-[85vh] md:h-auto overflow-y-auto [&>button:last-child]:hidden"
+          className="p-0 border-0 bg-transparent shadow-none max-w-md w-full h-[95vh] sm:h-[85vh] md:h-auto overflow-y-auto [&>button:last-child]:hidden outline-none ring-0 focus:outline-none"
           onInteractOutside={(e) => e.preventDefault()}
         >
           <DialogTitle className="sr-only">{modalTitles.sign}</DialogTitle>
@@ -292,7 +292,7 @@ export default function ExmoLanding() {
       {/* Forgot Dialog */}
       <Dialog open={modal === "forgot"} onOpenChange={(o) => { if (!o) setModal(null); }}>
         <DialogContent
-          className="p-0 border-0 bg-transparent shadow-none max-w-sm w-full [&>button:last-child]:hidden"
+          className="p-0 border-0 bg-transparent shadow-none max-w-sm w-full [&>button:last-child]:hidden outline-none ring-0 focus:outline-none"
           onInteractOutside={(e) => e.preventDefault()}
         >
           <DialogTitle className="sr-only">{modalTitles.forgot}</DialogTitle>
