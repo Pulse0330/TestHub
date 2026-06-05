@@ -2,20 +2,20 @@
 import { useQueryClient } from "@tanstack/react-query";
 import Cookies from "js-cookie";
 import {
-	BarChart3,
-	ChevronDown,
-	ChevronUp,
-	ClipboardList,
-	CreditCard,
-	FileText,
-	LogOut,
-	type LucideIcon,
-	Menu,
-	School,
-	TrendingUp,
-	User,
-	UserCircle,
-	X,
+    BarChart3,
+    ChevronDown,
+    ClipboardList,
+    CreditCard,
+    FileText,
+    LogOut,
+    type LucideIcon,
+    Menu,
+    School,
+    TrendingUp,
+    UserCircle,
+    X,
+    Home,
+    Bell
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -23,718 +23,344 @@ import { usePathname, useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
 import * as React from "react";
 import {
-	AlertDialog,
-	AlertDialogAction,
-	AlertDialogCancel,
-	AlertDialogContent,
-	AlertDialogDescription,
-	AlertDialogFooter,
-	AlertDialogHeader,
-	AlertDialogTitle,
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Button } from "@/components/ui/button";
+
 import {
-	DropdownMenu,
-	DropdownMenuContent,
-	DropdownMenuItem,
-	DropdownMenuSeparator,
-	DropdownMenuTrigger,
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
-	Tooltip,
-	TooltipContent,
-	TooltipProvider,
-	TooltipTrigger,
-} from "@/components/ui/tooltip";
+
 import { ThemeSwitch } from "@/components/ui/ui-theme";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/stores/useAuthStore";
-import ServerDate from "./serverDate";
 
-// Navigation links configuration
 const NAV_LINKS = [
-	{ href: "/home", label: "Үндсэн хуудас" },
-	{ href: "/Lists/exerciseList", label: "Дасгал ажил" },
+    { href: "/home", label: "Үндсэн хуудас", icon: Home },
+    { href: "/Lists/exerciseList", label: "Дасгал ажил", icon: ClipboardList },
 ];
 
 const EXAM_LINKS: Array<{ href: string; label: string; icon: LucideIcon }> = [
-	{
-		href: "/Lists/examList",
-		label: "Шалгалтын жагсаалт",
-		icon: FileText,
-	},
-	{
-		href: "/Lists/examResult",
-		label: "Шалгалтын үр дүн",
-		icon: BarChart3,
-	},
+    { href: "/Lists/examList", label: "Шалгалтын жагсаалт", icon: FileText },
+    { href: "/Lists/examResult", label: "Шалгалтын үр дүн", icon: BarChart3 },
 ];
 
 const SORIL_LINKS: Array<{ href: string; label: string; icon: LucideIcon }> = [
-	{
-		href: "/Lists/sorilList",
-		label: "Сорилын жагсаалт",
-		icon: ClipboardList,
-	},
-	{
-		href: "/Lists/sorilResult",
-		label: "Сорилын үр дүн",
-		icon: TrendingUp,
-	},
+    { href: "/Lists/sorilList", label: "Сорилын жагсаалт", icon: ClipboardList },
+    { href: "/Lists/sorilResult", label: "Сорилын үр дүн", icon: TrendingUp },
 ];
 
 const COURSE_LINKS: Array<{ href: string; label: string; icon: LucideIcon }> = [
-	{
-		href: "/Lists/courseList",
-		label: "Хичээл",
-		icon: School,
-	},
-	{
-		href: "/Lists/paymentCoureList",
-		label: "Төлбөртэй хичээл",
-		icon: CreditCard,
-	},
+    { href: "/Lists/courseList", label: "Хичээл", icon: School },
+    { href: "/Lists/paymentCoureList", label: "Төлбөртэй хичээл", icon: CreditCard },
 ];
 
-// User Avatar Component
+const NAV_SECTIONS = [
+    { label: "Шалгалт", links: EXAM_LINKS },
+    { label: "Сорил", links: SORIL_LINKS },
+    { label: "Цахим сургалт", links: COURSE_LINKS },
+];
+
+// ── User Avatar ─────────────────────────────────────────────────
 const UserAvatar: React.FC<{
-	userImage: string;
-	userName: string;
-	size?: "sm" | "md" | "lg";
-	showOnlineStatus?: boolean;
-}> = ({ userImage, userName, size = "md", showOnlineStatus = false }) => {
-	const sizeMap = {
-		sm: "w-8 h-8",
-		md: "w-10 h-10",
-		lg: "w-12 h-12",
-	};
-
-	if (userImage) {
-		return (
-			<div className="relative">
-				<Image
-					src={userImage}
-					alt={userName}
-					width={size === "lg" ? 48 : size === "md" ? 40 : 32}
-					height={size === "lg" ? 48 : size === "md" ? 40 : 32}
-					className={cn(
-						"rounded-full object-cover ring-2 ring-primary/20",
-						sizeMap[size],
-					)}
-				/>
-				{showOnlineStatus && (
-					<span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-background rounded-full" />
-				)}
-			</div>
-		);
-	}
-
-	return (
-		<div
-			className={cn(
-				"rounded-full bg-linear-to-br from-primary/20 to-primary/10 flex items-center justify-center",
-				sizeMap[size],
-			)}
-		>
-			<User className="w-5 h-5 text-primary" />
-		</div>
-	);
+    userImage: string;
+    userName: string;
+    size?: "sm" | "md";
+}> = ({ userImage, userName, size = "md" }) => {
+    const dim = size === "sm" ? 34 : 42;
+    const cls = size === "sm" ? "w-8 h-8" : "w-10 h-10";
+    if (userImage) {
+        return (
+            <Image 
+                src={userImage} 
+                alt={userName} 
+                width={dim} 
+                height={dim}
+                className={cn("rounded-full object-cover flex-shrink-0 ring-2 ring-emerald-500/20 dark:ring-emerald-400/20", cls)} 
+            />
+        );
+    }
+    const initials = userName.slice(0, 1).toUpperCase();
+    return (
+        <div className={cn(
+            "rounded-full bg-gradient-to-tr from-emerald-600 to-teal-500 flex items-center justify-center text-white font-semibold flex-shrink-0 shadow-sm", 
+            cls,
+            size === "sm" ? "text-xs" : "text-sm"
+        )}>
+            {initials}
+        </div>
+    );
 };
 
-// Desktop Dropdown Menu
-const DesktopDropdown: React.FC<{
-	label: string;
-	items: Array<{ href: string; label: string; icon: LucideIcon }>;
-	isActive: boolean;
-}> = ({ label, items, isActive }) => {
-	const [isOpen, setIsOpen] = React.useState(false);
-	const pathname = usePathname();
-	const dropdownRef = React.useRef<HTMLDivElement>(null);
-	const buttonRef = React.useRef<HTMLButtonElement>(null);
+// ── Sidebar Section ──────────────────────────────────────────────
+const SidebarSection: React.FC<{
+    label: string;
+    links: Array<{ href: string; label: string; icon: LucideIcon }>;
+    onClose?: () => void;
+}> = ({ label, links, onClose }) => {
+    const pathname = usePathname();
+    const [open, setOpen] = React.useState(
+        links.some((l) => pathname === l.href)
+    );
 
-	// Handle keyboard navigation
-	React.useEffect(() => {
-		const handleKeyDown = (e: KeyboardEvent) => {
-			if (e.key === "Escape" && isOpen) {
-				setIsOpen(false);
-				buttonRef.current?.focus();
-			}
-		};
-
-		if (isOpen) {
-			document.addEventListener("keydown", handleKeyDown);
-		}
-
-		return () => {
-			document.removeEventListener("keydown", handleKeyDown);
-		};
-	}, [isOpen]);
-
-	// Handle click outside
-	React.useEffect(() => {
-		const handleClickOutside = (event: MouseEvent) => {
-			if (
-				dropdownRef.current &&
-				!dropdownRef.current.contains(event.target as Node)
-			) {
-				setIsOpen(false);
-			}
-		};
-
-		if (isOpen) {
-			document.addEventListener("mousedown", handleClickOutside);
-		}
-
-		return () => {
-			document.removeEventListener("mousedown", handleClickOutside);
-		};
-	}, [isOpen]);
-
-	const handleToggle = () => {
-		setIsOpen((prev) => !prev);
-	};
-
-	return (
-		<div ref={dropdownRef} className="relative">
-			<button
-				ref={buttonRef}
-				type="button"
-				className={cn(
-					"flex items-center gap-1 px-4 py-2 text-sm font-medium rounded-lg transition-all",
-					"hover:bg-accent hover:text-accent-foreground",
-					isActive && "bg-accent text-accent-foreground",
-				)}
-				aria-expanded={isOpen}
-				aria-haspopup="true"
-				onClick={handleToggle}
-			>
-				{label}
-				<ChevronDown
-					className={cn("w-4 h-4 transition-transform", isOpen && "rotate-180")}
-				/>
-			</button>
-
-			{isOpen && (
-				<div
-					className="absolute top-full left-0 mt-2 w-56 rounded-xl border bg-popover shadow-lg z-50"
-					role="menu"
-					aria-orientation="vertical"
-				>
-					<div className="p-2 space-y-1">
-						{items.map((item) => {
-							const Icon = item.icon;
-							const isItemActive = pathname === item.href;
-							return (
-								<Link
-									key={item.href}
-									href={item.href}
-									className={cn(
-										"flex items-center gap-3 px-3 py-2 rounded-lg transition-all",
-										"hover:bg-accent hover:text-accent-foreground",
-										isItemActive && "bg-accent/50",
-									)}
-									onClick={() => setIsOpen(false)}
-								>
-									<Icon className="w-4 h-4" />
-									<span className="text-sm font-medium">{item.label}</span>
-								</Link>
-							);
-						})}
-					</div>
-				</div>
-			)}
-		</div>
-	);
-};
-// Mobile Menu - ACCORDION ONLY
-const MobileMenu: React.FC<{
-	isOpen: boolean;
-	onClose: () => void;
-}> = ({ isOpen, onClose }) => {
-	const pathname = usePathname();
-	const [expandedSection, setExpandedSection] = React.useState<string | null>(
-		null,
-	);
-
-	// Handle escape key
-	React.useEffect(() => {
-		const handleEscape = (e: KeyboardEvent) => {
-			if (e.key === "Escape" && isOpen) {
-				onClose();
-			}
-		};
-
-		document.addEventListener("keydown", handleEscape);
-		return () => document.removeEventListener("keydown", handleEscape);
-	}, [isOpen, onClose]);
-
-	// Prevent body scroll when menu is open
-	React.useEffect(() => {
-		if (isOpen) {
-			document.body.style.overflow = "hidden";
-		} else {
-			document.body.style.overflow = "";
-		}
-		return () => {
-			document.body.style.overflow = "";
-		};
-	}, [isOpen]);
-
-	// Reset expanded section when menu closes
-	React.useEffect(() => {
-		if (!isOpen) {
-			setExpandedSection(null);
-		}
-	}, [isOpen]);
-
-	const toggleSection = (section: string) => {
-		setExpandedSection((prev) => (prev === section ? null : section));
-	};
-
-	if (!isOpen) return null;
-
-	return (
-		<div className="fixed inset-0 z-50 lg:hidden">
-			{/* Backdrop */}
-			<button
-				type="button"
-				className={cn(
-					"absolute inset-0 bg-black/60 backdrop-blur-sm cursor-default transition-opacity duration-300",
-					isOpen ? "opacity-100" : "opacity-0",
-				)}
-				onClick={onClose}
-				aria-label="Close menu"
-			/>
-
-			{/* Menu Panel - Slides from LEFT */}
-			<div
-				className={cn(
-					"absolute left-0 top-0 h-full w-[85vw] max-w-sm bg-background shadow-2xl",
-					"transform transition-transform duration-300 ease-out",
-					isOpen ? "translate-x-0" : "-translate-x-full",
-				)}
-				role="dialog"
-				aria-modal="true"
-				aria-label="Navigation menu"
-			>
-				<div className="flex flex-col h-full">
-					{/* Header */}
-					<div className="flex items-center justify-between p-4 border-b bg-background shrink-0">
-						<div className="flex items-center gap-3">
-							<Image
-								src="/image/logoLogin.png"
-								alt="ECM Logo"
-								width={40}
-								height={40}
-								priority
-								style={{ width: "40px", height: "40px", objectFit: "contain" }} // ✅
-							/>
-							<h2 className="text-lg font-bold">Цэс</h2>
-						</div>
-						<button
-							type="button"
-							onClick={onClose}
-							className="p-2 hover:bg-accent rounded-lg transition-colors"
-							aria-label="Close menu"
-						>
-							<X className="w-5 h-5" />
-						</button>
-					</div>
-
-					{/* Menu Items - Scrollable with Accordions */}
-					<div className="flex-1 overflow-y-auto p-4 space-y-2">
-						{/* Main Links */}
-						{NAV_LINKS.map((link) => (
-							<Link
-								key={link.href}
-								href={link.href}
-								onClick={onClose}
-								className={cn(
-									"block px-4 py-3 rounded-lg font-medium transition-all",
-									"hover:bg-accent hover:text-accent-foreground",
-									pathname === link.href && "bg-accent text-accent-foreground",
-								)}
-							>
-								{link.label}
-							</Link>
-						))}
-
-						{/* Exam Accordion */}
-						<div className="space-y-1">
-							<button
-								type="button"
-								onClick={() => toggleSection("exam")}
-								className={cn(
-									"w-full flex items-center justify-between px-4 py-3 rounded-lg font-medium transition-all cursor-pointer",
-									"hover:bg-accent hover:text-accent-foreground",
-									expandedSection === "exam" && "bg-accent/50",
-								)}
-							>
-								<span>Шалгалт</span>
-								<ChevronDown
-									className={cn(
-										"w-4 h-4 transition-transform duration-200",
-										expandedSection === "exam" && "rotate-180",
-									)}
-								/>
-							</button>
-
-							{expandedSection === "exam" && (
-								<div className="pl-4 space-y-1 animate-in slide-in-from-top-2">
-									{EXAM_LINKS.map((item) => {
-										const Icon = item.icon;
-										return (
-											<Link
-												key={item.href}
-												href={item.href}
-												onClick={onClose}
-												className={cn(
-													"flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all text-sm",
-													"hover:bg-accent hover:text-accent-foreground",
-													pathname === item.href &&
-														"bg-accent text-accent-foreground",
-												)}
-											>
-												<Icon className="w-4 h-4" />
-												<span>{item.label}</span>
-											</Link>
-										);
-									})}
-								</div>
-							)}
-						</div>
-
-						{/* Soril Accordion */}
-						<div className="space-y-1">
-							<button
-								type="button"
-								onClick={() => toggleSection("soril")}
-								className={cn(
-									"w-full flex items-center justify-between px-4 py-3 rounded-lg font-medium transition-all",
-									"hover:bg-accent hover:text-accent-foreground",
-									expandedSection === "soril" && "bg-accent/50",
-								)}
-							>
-								<span>Сорил</span>
-								<ChevronDown
-									className={cn(
-										"w-4 h-4 transition-transform duration-200",
-										expandedSection === "soril" && "rotate-180",
-									)}
-								/>
-							</button>
-
-							{expandedSection === "soril" && (
-								<div className="pl-4 space-y-1 animate-in slide-in-from-top-2">
-									{SORIL_LINKS.map((item) => {
-										const Icon = item.icon;
-										return (
-											<Link
-												key={item.href}
-												href={item.href}
-												onClick={onClose}
-												className={cn(
-													"flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all text-sm",
-													"hover:bg-accent hover:text-accent-foreground",
-													pathname === item.href &&
-														"bg-accent text-accent-foreground",
-												)}
-											>
-												<Icon className="w-4 h-4" />
-												<span>{item.label}</span>
-											</Link>
-										);
-									})}
-								</div>
-							)}
-						</div>
-
-						{/* Course Accordion */}
-						<div className="space-y-1">
-							<button
-								type="button"
-								onClick={() => toggleSection("course")}
-								className={cn(
-									"w-full flex items-center justify-between px-4 py-3 rounded-lg font-medium transition-all",
-									"hover:bg-accent hover:text-accent-foreground",
-									expandedSection === "course" && "bg-accent/50",
-								)}
-							>
-								<span>Цахим сургалт</span>
-								<ChevronDown
-									className={cn(
-										"w-4 h-4 transition-transform duration-200",
-										expandedSection === "course" && "rotate-180",
-									)}
-								/>
-							</button>
-
-							{expandedSection === "course" && (
-								<div className="pl-4 space-y-1 animate-in slide-in-from-top-2">
-									{COURSE_LINKS.map((item) => {
-										const Icon = item.icon;
-										return (
-											<Link
-												key={item.href}
-												href={item.href}
-												onClick={onClose}
-												className={cn(
-													"flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all text-sm",
-													"hover:bg-accent hover:text-accent-foreground",
-													pathname === item.href &&
-														"bg-accent text-accent-foreground",
-												)}
-											>
-												<Icon className="w-4 h-4" />
-												<span>{item.label}</span>
-											</Link>
-										);
-									})}
-								</div>
-							)}
-						</div>
-					</div>
-				</div>
-			</div>
-		</div>
-	);
+    return (
+        <div className="space-y-1">
+            <button
+                type="button"
+                onClick={() => setOpen((p) => !p)}
+                className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 transition-colors"
+            >
+                {label}
+                <ChevronDown className={cn("w-3.5 h-3.5 transition-transform duration-300", open && "rotate-180")} />
+            </button>
+            {open && (
+                <div className="space-y-0.5 pl-1">
+                    {links.map((item) => {
+                        const Icon = item.icon;
+                        const active = pathname === item.href;
+                        return (
+                            <Link 
+                                key={item.href} 
+                                href={item.href}
+                                onClick={onClose}
+                                className={cn(
+                                    "group flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all relative",
+                                    active
+                                        ? "bg-emerald-50/60 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400 font-semibold shadow-[0_0_12px_rgba(16,185,129,0.05)] before:absolute before:left-0 before:top-2 before:bottom-2 before:w-1 before:bg-emerald-500 before:rounded-r"
+                                        : "text-slate-600 dark:text-slate-400 hover:bg-slate-50/60 dark:hover:bg-slate-800/40 hover:text-slate-900 dark:hover:text-white"
+                                )}
+                            >
+                                <Icon className={cn(
+                                    "w-4 h-4 flex-shrink-0 transition-transform group-hover:scale-105", 
+                                    active ? "text-emerald-600 dark:text-emerald-400 opacity-100" : "opacity-60"
+                                )} />
+                                {item.label}
+                            </Link>
+                        );
+                    })}
+                </div>
+            )}
+        </div>
+    );
 };
 
-// Main Navbar Component
+// ── Sidebar Content ──────────────────────────────────────────────
+const SidebarContent: React.FC<{
+    userInfo: { userName: string; userImage: string; schoolName: string };
+    onClose?: () => void;
+    onLogout: () => void;
+}> = ({ userInfo, onClose, onLogout }) => {
+    const pathname = usePathname();
+    const router = useRouter();
+
+    return (
+        <div className="flex flex-col h-full bg-white/70 dark:bg-slate-900/70 backdrop-blur-md">
+            {/* Logo */}
+            <div className="flex items-center gap-3 px-6 py-5 border-b border-slate-100/80 dark:border-slate-800/40">
+                <div className="p-1.5 bg-slate-50 dark:bg-slate-800 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700/30">
+                    <Image src="/image/asd.png" alt="EXMO" width={26} height={26} priority
+                        style={{ width: 26, height: 26, objectFit: "contain" }} />
+                </div>
+                <span className="text-base font-black tracking-widest bg-gradient-to-r from-emerald-600 to-teal-500 bg-clip-text text-transparent">EXMO</span>
+            </div>
+
+            {/* Nav */}
+            <nav className="flex-1 overflow-y-auto px-4 py-6 space-y-6 scrollbar-none">
+                {/* Main links */}
+                <div className="space-y-1">
+                    <p className="px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Үндсэн</p>
+                    {NAV_LINKS.map((link) => {
+                        const Icon = link.icon;
+                        const active = pathname === link.href;
+                        return (
+                            <Link 
+                                key={link.href} 
+                                href={link.href} 
+                                onClick={onClose}
+                                className={cn(
+                                    "group flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all relative",
+                                    active
+                                        ? "bg-emerald-50/60 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400 font-semibold shadow-[0_0_12px_rgba(16,185,129,0.05)] before:absolute before:left-0 before:top-2 before:bottom-2 before:w-1 before:bg-emerald-500 before:rounded-r"
+                                        : "text-slate-600 dark:text-slate-400 hover:bg-slate-50/60 dark:hover:bg-slate-800/40 hover:text-slate-900 dark:hover:text-white"
+                                )}
+                            >
+                                <Icon className={cn(
+                                    "w-4 h-4 flex-shrink-0 transition-transform group-hover:scale-105", 
+                                    active ? "text-emerald-600 dark:text-emerald-400 opacity-100" : "opacity-60"
+                                )} />
+                                {link.label}
+                            </Link>
+                        );
+                    })}
+                </div>
+
+                {/* Sectioned links */}
+                <div className="space-y-4">
+                    {NAV_SECTIONS.map((section) => (
+                        <SidebarSection key={section.label} label={section.label} links={section.links} onClose={onClose} />
+                    ))}
+                </div>
+            </nav>
+
+            {/* User footer */}
+            <div className="p-4 border-t border-slate-100/80 dark:border-slate-800/40 bg-slate-50/30 dark:bg-slate-900/30 backdrop-blur-md">
+                <DropdownMenu modal={false}>
+                    <DropdownMenuTrigger asChild>
+                        <button type="button"
+                            className="w-full flex items-center gap-3 p-2 rounded-xl hover:bg-white dark:hover:bg-slate-800 border border-transparent hover:border-slate-100 dark:hover:border-slate-700/50 transition-all text-left shadow-none hover:shadow-sm">
+                            <UserAvatar userImage={userInfo.userImage} userName={userInfo.userName} size="sm" />
+                            <div className="flex-1 min-w-0">
+                                <p className="text-sm font-semibold text-slate-800 dark:text-slate-200 truncate">{userInfo.userName}</p>
+                                {userInfo.schoolName && (
+                                    <p className="text-xs text-slate-400 dark:text-slate-500 truncate mt-0.5">{userInfo.schoolName}</p>
+                                )}
+                            </div>
+                            <ChevronDown className="w-4 h-4 text-slate-400 flex-shrink-0 opacity-60" />
+                        </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent side="top" align="start" sideOffset={12}
+                        className="w-52 rounded-2xl border border-slate-100 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md shadow-xl p-1.5 anim-fade-in animate-in slide-in-from-bottom-2 duration-200">
+                        <DropdownMenuItem onClick={() => router.push("/userProfile")}
+                            className="gap-3 px-3 py-2.5 rounded-xl text-sm cursor-pointer text-slate-700 dark:text-slate-300 focus:bg-slate-50 dark:focus:bg-slate-800">
+                            <UserCircle className="w-4 h-4 text-slate-400" />
+                            Профайл
+                        </DropdownMenuItem>
+                        <div className="flex items-center px-1.5 py-1 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors cursor-pointer">
+                            <ThemeSwitch className="p-0 min-w-0 w-full justify-start gap-3 h-9 px-1.5 rounded-xl text-sm" />
+                        </div>
+                        <DropdownMenuSeparator className="my-1.5 bg-slate-100 dark:bg-slate-800" />
+                        <DropdownMenuItem onClick={onLogout}
+                            className="gap-3 px-3 py-2.5 rounded-xl text-sm cursor-pointer text-red-600 dark:text-red-400 focus:bg-red-50 dark:focus:bg-red-950/30 font-medium">
+                            <LogOut className="w-4 h-4" />
+                            Гарах
+                        </DropdownMenuItem>
+                    </DropdownMenuContent>
+                </DropdownMenu>
+            </div>
+        </div>
+    );
+};
+
+// ── Main Navbar (Topbar) ─────────────────────────────────────────
 export const Navbar01: React.FC = () => {
-	const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
-	const [showLogoutDialog, setShowLogoutDialog] = React.useState(false);
-	const pathname = usePathname();
-	const router = useRouter();
-	const queryClient = useQueryClient();
-	const { user, firstname, imgUrl, clearAuth } = useAuthStore();
+    const [mobileOpen, setMobileOpen] = React.useState(false);
+    const [showLogoutDialog, setShowLogoutDialog] = React.useState(false);
+    const router = useRouter();
+    const queryClient = useQueryClient();
+    const { user, firstname, imgUrl, clearAuth } = useAuthStore();
 
-	const { resolvedTheme } = useTheme();
-	const _isDark = resolvedTheme === "dark";
+    const userInfo = React.useMemo(() => ({
+        userName: user?.fname || firstname || "Хэрэглэгч",
+        userEmail: user?.email || "",
+        userImage: imgUrl || user?.img_url || "",
+        schoolName: user?.sch_name || "",
+    }), [user, firstname, imgUrl]);
 
-	const userInfo = React.useMemo(
-		() => ({
-			userName: user?.fname || firstname || "Хэрэглэгч",
-			userEmail: user?.email || "",
-			userImage: imgUrl || user?.img_url || "",
-			schoolName: user?.sch_name || "",
-			studentGroup: user?.studentgroupname || "",
-		}),
-		[user, firstname, imgUrl],
-	);
+    React.useEffect(() => {
+        document.body.style.overflow = mobileOpen ? "hidden" : "";
+        return () => { document.body.style.overflow = ""; };
+    }, [mobileOpen]);
 
-	const isExamActive = pathname.includes("/Lists/exam");
-	const isSorilActive = pathname.includes("/Lists/soril");
-	const isCourseActive =
-		pathname.includes("/Lists/courseList") ||
-		pathname.includes("/Lists/paymentCoureList");
+    const handleLogout = async () => {
+        try {
+            for (const c of ["auth-token", "user-id", "firstname", "img-url"]) {
+                Cookies.remove(c, { path: "/" });
+            }
+            clearAuth();
+            localStorage.clear();
+            sessionStorage.clear();
+            queryClient.clear();
+            router.push("/login");
+        } catch {
+            window.location.href = "/login";
+        }
+    };
 
-	const handleLogout = async () => {
-		try {
-			const cookiesToRemove = ["auth-token", "user-id", "firstname", "img-url"];
-			cookiesToRemove.forEach((cookie) => {
-				Cookies.remove(cookie, { path: "/" });
-			});
+    return (
+        <>
+            {/* ── Desktop: Sidebar ── */}
+            <aside className="hidden lg:flex flex-col fixed left-0 top-0 h-full w-60 bg-transparent border-r border-slate-100/80 dark:border-slate-800/40 z-40">
+                <SidebarContent
+                    userInfo={userInfo}
+                    onLogout={() => setShowLogoutDialog(true)}
+                />
+            </aside>
 
-			clearAuth();
+            {/* ── Mobile: Topbar ── */}
+            <header className="lg:hidden fixed top-0 left-0 right-0 h-14 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-100/80 dark:border-slate-800/40 z-30 flex items-center justify-between px-4 shadow-sm">
+                <button type="button" onClick={() => setMobileOpen(true)}
+                    className="p-2 rounded-xl text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors active:scale-95"
+                    aria-label="Цэс нээх">
+                    <Menu className="w-5 h-5" />
+                </button>
+                <div className="flex items-center gap-2">
+                    <Image src="/image/asd.png" alt="EXMO" width={26} height={26}
+                        style={{ width: 26, height: 26, objectFit: "contain" }} />
+                    <span className="text-sm font-black tracking-widest bg-gradient-to-r from-emerald-600 to-teal-500 bg-clip-text text-transparent">EXMO</span>
+                </div>
+                <button type="button"
+                    className="w-9 h-9 flex items-center justify-center rounded-xl border border-slate-100/80 dark:border-slate-800/40 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors active:scale-95">
+                    <Bell className="w-4 h-4" />
+                </button>
+            </header>
 
-			// Persist store бүрийг цэвэрлэх
-			localStorage.clear();
-			sessionStorage.clear();
+            {/* ── Mobile: Drawer ── */}
+            {mobileOpen && (
+                <div className="lg:hidden fixed inset-0 z-50 animate-fade-in">
+                    <button type="button" className="absolute inset-0 bg-slate-900/30 backdrop-blur-sm transition-opacity" onClick={() => setMobileOpen(false)} aria-label="Хаах" />
+                    <div className={cn(
+                        "absolute left-0 top-0 h-full w-64 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-r border-slate-100/80 dark:border-slate-800/40 shadow-2xl",
+                        "transform transition-transform duration-300 ease-out translate-x-0"
+                    )}>
+                        <div className="absolute top-4 right-4 z-10">
+                            <button type="button" onClick={() => setMobileOpen(false)}
+                                className="p-2 rounded-xl text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors active:scale-95">
+                                <X className="w-4 h-4" />
+                            </button>
+                        </div>
+                        <SidebarContent
+                            userInfo={userInfo}
+                            onClose={() => setMobileOpen(false)}
+                            onLogout={() => { setMobileOpen(false); setShowLogoutDialog(true); }}
+                        />
+                    </div>
+                </div>
+            )}
 
-			queryClient.clear();
-
-			router.push("/login");
-		} catch (error) {
-			console.error("Logout error:", error);
-			window.location.href = "/login";
-		}
-	};
-
-	return (
-		<>
-			<header className="w-full border bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60 rounded-2xl shadow-lg ">
-				<div className="flex h-16 items-center justify-between gap-4 px-6">
-					{/* Logo - Pushed Left */}
-					<Link href="/" className="flex items-center gap-2 shrink-0">
-						<Image
-							src="/image/logoLogin.png"
-							alt="ECM Logo"
-							width={48}
-							height={48}
-							priority
-							style={{ width: "48px", height: "48px", objectFit: "contain" }} // ✅
-						/>
-					</Link>
-
-					{/* Desktop Navigation - Centered */}
-					<nav
-						className="hidden lg:flex items-center gap-1 flex-1 justify-center"
-						aria-label="Main navigation"
-					>
-						{NAV_LINKS.map((link) => (
-							<Link
-								key={link.href}
-								href={link.href}
-								className={cn(
-									"px-4 py-2 text-sm font-medium rounded-lg transition-all",
-									"hover:bg-accent hover:text-accent-foreground",
-									pathname === link.href && "bg-accent text-accent-foreground",
-								)}
-							>
-								{link.label}
-							</Link>
-						))}
-
-						<DesktopDropdown
-							label="Шалгалт"
-							items={EXAM_LINKS}
-							isActive={isExamActive}
-						/>
-						<DesktopDropdown
-							label="Сорил"
-							items={SORIL_LINKS}
-							isActive={isSorilActive}
-						/>
-						<DesktopDropdown
-							label="Цахим сургалт"
-							items={COURSE_LINKS}
-							isActive={isCourseActive}
-						/>
-					</nav>
-					<div className="hidden lg:block">
-						<ServerDate />
-					</div>
-
-					{/* Right Actions - Pushed Right */}
-					<div className="flex items-center gap-3 shrink-0">
-						{/* Mobile Menu Button */}
-						<button
-							type="button"
-							onClick={() => setMobileMenuOpen(true)}
-							className="lg:hidden p-2 hover:bg-accent rounded-lg transition-colors"
-							aria-label="Open navigation menu"
-							aria-expanded={mobileMenuOpen}
-						>
-							<Menu className="w-5 h-5" />
-						</button>
-
-						{/* User Profile Pop-over */}
-						<DropdownMenu modal={false}>
-							<DropdownMenuTrigger asChild>
-								<Button
-									variant="ghost"
-									className="gap-2 px-3 py-2 h-auto hover:bg-accent rounded-lg"
-								>
-									<UserAvatar
-										userImage={userInfo.userImage}
-										userName={userInfo.userName}
-										size="sm"
-										showOnlineStatus
-									/>
-									<span className="hidden md:block text-sm font-medium max-w-[120px] truncate">
-										{userInfo.userName}
-									</span>
-									<ChevronDown className="w-4 h-4 hidden md:block" />
-								</Button>
-							</DropdownMenuTrigger>
-							<DropdownMenuContent
-								align="end"
-								className="w-72 rounded-xl shadow-lg p-0 overflow-x-auto"
-							>
-								{/* Header: Avatar + Name + Chevron */}
-								<div className="flex items-center gap-3 p-4 border-b">
-									<UserAvatar
-										userImage={userInfo.userImage}
-										userName={userInfo.userName}
-										size="md"
-										showOnlineStatus
-									/>
-									<TooltipProvider>
-										<div className="flex-1 min-w-0">
-											<p className="text-sm font-semibold truncate cursor-help">
-												{userInfo.userName}
-											</p>
-
-											{userInfo.schoolName && (
-												<Tooltip>
-													<TooltipTrigger asChild>
-														<p className="text-xs text-muted-foreground truncate flex items-center gap-1 mt-0.5 cursor-help">
-															<School className="w-3 h-3 shrink-0" />
-															<span className="truncate">
-																{userInfo.schoolName}
-															</span>
-														</p>
-													</TooltipTrigger>
-													<TooltipContent>
-														<p>{userInfo.schoolName}</p>
-													</TooltipContent>
-												</Tooltip>
-											)}
-										</div>
-									</TooltipProvider>
-									<ChevronUp className="w-4 h-4 text-muted-foreground shrink-0" />
-								</div>
-								<div className="lg:hidden px-4 py-3 border-b">
-									<ServerDate />
-								</div>
-								<div className="p-2 space-y-0.5">
-									<DropdownMenuItem
-										onClick={() => router.push("/userProfile")}
-										className="cursor-pointer rounded-lg px-3 py-3 gap-3 focus:bg-accent"
-									>
-										<UserCircle className="w-4 h-4 shrink-0 text-muted-foreground" />
-										<span className="font-medium">Профайл</span>
-									</DropdownMenuItem>
-
-									<div className="flex items-center justify-between gap-3 px-3 py-3 rounded-lg hover:bg-accent/50 focus-within:bg-accent/50 transition-colors">
-										<ThemeSwitch className="p-0 min-w-0 hover:opacity-90 transition-opacity" />
-									</div>
-									<DropdownMenuSeparator className="my-1" />
-									<DropdownMenuItem
-										onClick={() => setShowLogoutDialog(true)}
-										className="cursor-pointer rounded-lg px-3 py-3 gap-3 text-destructive focus:text-destructive focus:bg-destructive/10 hover:bg-destructive/10"
-									>
-										<LogOut className="w-4 h-4 shrink-0" />
-										<span className="font-medium">Гарах</span>
-									</DropdownMenuItem>
-								</div>
-							</DropdownMenuContent>
-						</DropdownMenu>
-					</div>
-				</div>
-			</header>
-
-			{/* Mobile Menu */}
-			<MobileMenu
-				isOpen={mobileMenuOpen}
-				onClose={() => setMobileMenuOpen(false)}
-			/>
-
-			{/* Logout Dialog */}
-			<AlertDialog open={showLogoutDialog} onOpenChange={setShowLogoutDialog}>
-				<AlertDialogContent>
-					<AlertDialogHeader>
-						<AlertDialogTitle className="flex items-center gap-2">
-							<LogOut className="w-5 h-5 text-red-600" />
-							Гарахдаа итгэлтэй байна уу?
-						</AlertDialogTitle>
-						<AlertDialogDescription>
-							Та системээс гарахдаа итгэлтэй байна уу? Дахин нэвтрэхийн тулд
-							нэвтрэх нэр болон нууц үгээ оруулах шаардлагатай.
-						</AlertDialogDescription>
-					</AlertDialogHeader>
-					<AlertDialogFooter>
-						<AlertDialogCancel>Цуцлах</AlertDialogCancel>
-						<AlertDialogAction
-							onClick={handleLogout}
-							className="bg-red-600 hover:bg-red-700"
-						>
-							Тийм, Гарах
-						</AlertDialogAction>
-					</AlertDialogFooter>
-				</AlertDialogContent>
-			</AlertDialog>
-		</>
-	);
+            {/* ── Logout Dialog ── */}
+            <AlertDialog open={showLogoutDialog} onOpenChange={setShowLogoutDialog}>
+                <AlertDialogContent className="rounded-2xl border-slate-100 dark:border-slate-800/60 max-w-sm bg-white/95 dark:bg-slate-900/95 backdrop-blur-md shadow-2xl p-6">
+                    <AlertDialogHeader>
+                        <AlertDialogTitle className="flex items-center gap-3 text-base font-bold text-slate-900 dark:text-white">
+                            <div className="p-2 bg-red-50 dark:bg-red-950/30 rounded-xl">
+                                <LogOut className="w-4 h-4 text-red-500" />
+                            </div>
+                            Системээс гарах уу?
+                        </AlertDialogTitle>
+                        <AlertDialogDescription className="text-sm text-slate-500 dark:text-slate-400 pt-2 leading-relaxed">
+                            Та системээс гарахдаа итгэлтэй байна уу? Дахин нэвтрэхийн тулд бүртгэлтэй имэйл, нууц үгээ оруулах шаардлагатай.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter className="gap-2 mt-4">
+                        <AlertDialogCancel className="rounded-xl text-sm border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 font-medium px-4 py-2.5">
+                            Цуцлах
+                        </AlertDialogCancel>
+                        <AlertDialogAction onClick={handleLogout} className="rounded-xl text-sm bg-red-600 hover:bg-red-700 text-white font-medium border-none shadow-sm shadow-red-600/20 px-4 py-2.5">
+                            Тийм, гарах
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+        </>
+    );
 };
