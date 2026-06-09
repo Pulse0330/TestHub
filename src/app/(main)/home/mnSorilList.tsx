@@ -16,7 +16,7 @@ import {
 	ShieldX,
 	Terminal,
 } from "lucide-react";
-import Image from "next/image";
+
 import { useRouter } from "next/navigation";
 import { memo } from "react";
 
@@ -105,7 +105,7 @@ const PremiumPromoBanner = memo(({ item }: { item: AdItem }) => (
 		</div>
 		{item.filename && (
 			<div className="relative w-full md:w-52 h-32 rounded-xl overflow-hidden border border-neutral-800 shadow-xl flex-shrink-0">
-				<Image src={item.filename} alt="Promo" fill className="object-cover" />
+				
 			</div>
 		)}
 	</motion.div>
@@ -159,7 +159,7 @@ const ModernSorilRow = memo(({ item }: { item: ExamItem }) => {
 		<div className="group flex items-center justify-between p-3 bg-white dark:bg-neutral-950 rounded-xl border border-neutral-200/60 dark:border-neutral-800/60 hover:border-neutral-400 dark:hover:border-neutral-700 transition-all">
 			<div className="flex items-center gap-3 min-w-0">
 				<div className="relative w-10 h-10 rounded-lg overflow-hidden bg-neutral-100 dark:bg-neutral-900 flex-shrink-0 border border-neutral-200 dark:border-neutral-800">
-					<Image src={item.filename} alt="" fill className="object-cover" />
+				
 				</div>
 				<div className="min-w-0">
 					<h5 className="font-bold text-xs md:text-sm text-neutral-800 dark:text-neutral-200 truncate">

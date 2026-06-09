@@ -11,7 +11,7 @@ import {
 	BookOpen,
 	FileText,
 } from "lucide-react";
-import Image from "next/image";
+
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { memo, useCallback, useEffect } from "react";
@@ -132,21 +132,11 @@ const ExamCard = memo(
 						>
 							{/* Thumbnail */}
 							<div className="relative w-full aspect-video bg-muted shrink-0 overflow-hidden">
-								{exam.filename ? (
-									<Image
-										src={exam.filename}
-										alt={exam.soril_name}
-										fill
-										className={`object-cover transition-transform duration-500 group-hover:scale-[1.04] ${isLocked ? "brightness-75" : ""}`}
-										sizes="(max-width: 640px) 50vw, 25vw"
-										quality={85}
-										priority={index < 6}
-									/>
-								) : (
-									<div className="absolute inset-0 flex items-center justify-center bg-muted">
-										<FileText className="w-8 h-8 text-muted-foreground/30" />
-									</div>
-								)}
+							
+								<div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-indigo-100 to-purple-100 dark:from-indigo-950/40 dark:to-purple-950/40">
+  <FileText className="w-8 h-8 text-indigo-400/50" />
+</div>
+							
 
 								{/* Overlay */}
 								<div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />

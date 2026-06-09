@@ -6,10 +6,11 @@ import {
 	Calendar,
 	ClipboardCheck,
 	Clock,
+	FileText,
 	Lock,
-	Sparkles,
+	
 } from "lucide-react";
-import Image from "next/image";
+
 import type React from "react";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -72,20 +73,11 @@ export const SorilCard: React.FC<SorilCardProps> = ({ exam, onClick }) => {
 				}`}
 			>
 				<div className="relative w-full aspect-5/2 bg-muted shrink-0">
-					{exam.filename ? (
-						<Image
-							src={exam.filename}
-							alt={exam.soril_name}
-							fill
-							className={`object-cover transition-all duration-700 ${isLocked ? "brightness-75 group-hover:brightness-90" : ""}`}
-							sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1024px) 25vw, (max-width: 1280px) 20vw, 16vw"
-							quality={90}
-						/>
-					) : (
-						<div className="absolute inset-0 bg-linear-to-br from-primary/20 via-primary/10 to-background flex items-center justify-center">
-							<Sparkles className="w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10 text-primary/30" />
-						</div>
-					)}
+			
+					<div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-indigo-100 to-purple-100 dark:from-indigo-950/40 dark:to-purple-950/40">
+  <FileText className="w-8 h-8 text-indigo-400/50" />
+</div>
+				
 
 					{/* Lock Overlay for Unpaid Exams */}
 					{isLocked && (
