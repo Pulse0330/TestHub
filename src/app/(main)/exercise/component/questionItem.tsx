@@ -20,33 +20,27 @@ const QUESTION_TYPE_CONFIG: Record<
 > = {
 	1: {
 		name: "Нэг сонголттой",
-		color:
-			"bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-800",
+		color: "bg-pop-sky-soft text-pop-sky-ink",
 	},
 	2: {
 		name: "Олон сонголттой",
-		color:
-			"bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 border-purple-200 dark:border-purple-800",
+		color: "bg-pop-violet-soft text-pop-violet-ink",
 	},
 	3: {
 		name: "Тоо оруулах",
-		color:
-			"bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 border-orange-200 dark:border-orange-800",
+		color: "bg-pop-sun-soft text-pop-sun-ink",
 	},
 	4: {
 		name: "Нөхөх",
-		color:
-			"bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 border-orange-200 dark:border-orange-800",
+		color: "bg-pop-coral-soft text-pop-coral-ink",
 	},
 	5: {
 		name: "Дараалал",
-		color:
-			"bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 border-green-200 dark:border-green-800",
+		color: "bg-pop-mint-soft text-pop-mint-ink",
 	},
 	6: {
 		name: "Хослуулах",
-		color:
-			"bg-pink-100 dark:bg-pink-900/30 text-pink-600 dark:text-pink-400 border-pink-200 dark:border-pink-800",
+		color: "bg-pop-pink-soft text-pop-pink-ink",
 	},
 };
 
@@ -127,8 +121,7 @@ const QuestionItem = memo(function QuestionItem({
 	const typeConfig = QUESTION_TYPE_CONFIG[questionType];
 	const typeName = typeConfig?.name || `Тодорхойгүй (${questionType})`;
 	const typeColor =
-		typeConfig?.color ||
-		"bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-800";
+		typeConfig?.color || "bg-muted text-muted-foreground";
 
 	const showAnswerFeedback =
 		((questionType === 1 || questionType === 2 || questionType === 4) &&
@@ -174,11 +167,11 @@ const QuestionItem = memo(function QuestionItem({
 	const Bodolt =
 		showAnswerFeedback && bodolt ? (
 			<div className="mt-4">
-				<div className="bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-500 p-4 rounded-lg">
-					<p className="text-xs sm:text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+				<div className="bg-pop-sky-soft border-2 border-pop-sky/40 p-4 rounded-2xl animate-pop-in">
+					<p className="text-xs sm:text-sm font-extrabold uppercase tracking-wide text-pop-sky-ink mb-2">
 						📝 Бодолт:
 					</p>
-					<div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 bg-white dark:bg-gray-800 p-3 rounded-lg">
+					<div className="text-xs sm:text-sm text-foreground bg-card p-3 rounded-xl border-2 border-border">
 						<MathContent html={bodolt.descr} />
 					</div>
 				</div>
@@ -188,11 +181,11 @@ const QuestionItem = memo(function QuestionItem({
 	const SubmittedBodolt =
 		isSubmitted && bodolt ? (
 			<div className="mt-4">
-				<div className="bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-500 p-4 rounded-lg">
-					<p className="text-xs sm:text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+				<div className="bg-pop-sky-soft border-2 border-pop-sky/40 p-4 rounded-2xl animate-pop-in">
+					<p className="text-xs sm:text-sm font-extrabold uppercase tracking-wide text-pop-sky-ink mb-2">
 						📝 Бодолт:
 					</p>
-					<div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 bg-white dark:bg-gray-800 p-3 rounded-lg">
+					<div className="text-xs sm:text-sm text-foreground bg-card p-3 rounded-xl border-2 border-border">
 						<MathContent html={bodolt.descr} />
 					</div>
 				</div>
@@ -200,14 +193,17 @@ const QuestionItem = memo(function QuestionItem({
 		) : null;
 
 	return (
-		<div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-4 sm:p-6 md:p-8 border-2 border-gray-100 dark:border-gray-700">
+		<div
+			className="card-pop p-4 sm:p-6 md:p-8 animate-pop-in"
+			style={{ animationDelay: `${Math.min(index, 10) * 40}ms` }}
+		>
 			{/* Question Header */}
 			<div className="flex items-start gap-3 sm:gap-4 mb-4 sm:mb-6">
-				<div className="w-8 h-8 sm:w-10 sm:h-10 bg-linear-to-br from-blue-600 to-purple-600 text-white rounded-full flex items-center justify-center shrink-0 font-bold text-sm sm:text-lg shadow-lg">
+				<div className="size-9 sm:size-11 bg-primary text-primary-foreground rounded-2xl flex items-center justify-center shrink-0 font-black text-sm sm:text-lg shadow-[0_3px_0_0_var(--primary-shade)]">
 					{index + 1}
 				</div>
 				<div className="flex-1 min-w-0">
-					<div className="text-base w-full min-w-0">
+					<div className="text-base sm:text-lg font-semibold text-foreground w-full min-w-0">
 						<MathContent html={question.question_name} />
 					</div>
 					{question.question_img && (
@@ -221,12 +217,13 @@ const QuestionItem = memo(function QuestionItem({
 						sourceImg={question.source_img}
 						srcAudio={question.src_audio}
 					/>
-					<div className="flex flex-wrap items-center gap-2 sm:gap-3">
-						<span className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 px-3 py-1 rounded-full">
+					<div className="mt-3 flex flex-wrap items-center gap-2">
+						<span className="text-xs sm:text-sm font-bold text-pop-sun-ink bg-pop-sun-soft px-3 py-1 rounded-full">
+							⭐{" "}
 							Оноо: {question.que_onoo}
 						</span>
 						<span
-							className={`text-xs sm:text-sm px-3 py-1 rounded-full border ${typeColor}`}
+							className={`text-xs sm:text-sm font-bold px-3 py-1 rounded-full ${typeColor}`}
 						>
 							{typeName}
 						</span>
@@ -285,7 +282,8 @@ const QuestionItem = memo(function QuestionItem({
 								<div className="mt-4">
 									<Button
 										onClick={handleSubmitClick}
-										className="w-full sm:w-auto font-semibold shadow-lg"
+										size="lg"
+										className="w-full sm:w-auto"
 									>
 										Хариултаа шалгах
 									</Button>
@@ -327,7 +325,9 @@ const QuestionItem = memo(function QuestionItem({
 							<div className="mt-4">
 								<Button
 									onClick={handleSubmitClick}
-									className="w-full sm:w-auto bg-linear-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700"
+									variant="success"
+									size="lg"
+									className="w-full sm:w-auto"
 								>
 									Хариултаа илгээх
 								</Button>
@@ -362,7 +362,9 @@ const QuestionItem = memo(function QuestionItem({
 								<div className="mt-4">
 									<Button
 										onClick={handleSubmitClick}
-										className="w-full sm:w-auto bg-linear-to-r from-pink-600 to-rose-600 hover:from-pink-700 hover:to-rose-700"
+										variant="success"
+										size="lg"
+										className="w-full sm:w-auto"
 									>
 										Хариултаа илгээх
 									</Button>

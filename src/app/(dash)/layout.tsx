@@ -7,14 +7,14 @@ interface MainLayoutProps {
 
 export default function DashboardLayout({ children }: MainLayoutProps) {
 	return (
-		<div className="min-h-screen flex flex-col">
+		<div className="flex min-h-screen flex-col bg-page-gradient">
 			{/* Navbar */}
-			<div className="sticky top-0 z-50 container pt-4 mx-auto">
+			<div className="sticky top-0 z-50 container mx-auto px-3 pt-3 md:px-4 md:pt-4">
 				<IDashboardHeader />
 			</div>
 
 			{/* Main Content */}
-			<main className="flex-1  container mx-auto px-4">{children}</main>
+			<main className="container mx-auto flex-1 px-4 pt-2 pb-12 md:pt-4">{children}</main>
 		</div>
 	);
 }

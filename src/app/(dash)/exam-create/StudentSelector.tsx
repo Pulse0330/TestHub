@@ -145,21 +145,21 @@ export function StudentSelector({
 	const isOverCapacity = selectedStudents.length > roomPCCount;
 
 	return (
-		<div className="flex flex-col h-full bg-background">
+		<div className="flex h-full flex-col bg-card">
 			{/* Header хэсэг хэвээрээ... */}
-			<div className="px-4 py-3 border-b space-y-3 bg-muted/10">
+			<div className="space-y-3 border-b-2 border-border bg-muted/40 px-4 py-3">
 				<div className="flex gap-2">
 					<div className="relative flex-1">
-						<Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+						<Search className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" strokeWidth={2.5} />
 						<Input
 							placeholder="Хайх..."
-							className="pl-9 h-9 text-xs"
+							className="h-10 rounded-xl pl-9 text-xs font-semibold"
 							value={searchQuery}
 							onChange={(e) => setSearchQuery(e.target.value)}
 						/>
 					</div>
 					<Select value={selectedGroupId} onValueChange={setSelectedGroupId}>
-						<SelectTrigger className="w-27.5 h-9 text-xs">
+						<SelectTrigger className="h-10 w-27.5 rounded-xl text-xs font-bold">
 							<SelectValue placeholder="Анги" />
 						</SelectTrigger>
 						<SelectContent>
@@ -188,14 +188,14 @@ export function StudentSelector({
 						/>
 						<label
 							htmlFor="all"
-							className="text-[10px] font-black uppercase cursor-pointer"
+							className="cursor-pointer text-[11px] font-black tracking-wide uppercase"
 						>
 							Бүгдийг сонгох
 						</label>
 					</div>
 					<Badge
-						variant="secondary"
-						className={`text-[10px] h-5 font-bold ${isOverCapacity ? "bg-destructive/10 text-destructive" : "bg-primary/10 text-primary"}`}
+						variant={isOverCapacity ? "coral" : "violet"}
+						className="h-6 rounded-full text-[11px] font-bold"
 					>
 						Сонгосон: {selectedStudents.length} / {roomPCCount}
 					</Badge>
@@ -203,14 +203,14 @@ export function StudentSelector({
 			</div>
 
 			{/* Жагсаалт хэсэг */}
-			<div className="flex-1 overflow-y-auto p-4 space-y-6">
+			<div className="flex-1 space-y-6 overflow-y-auto p-4">
 				{isLoading ? (
-					<Skeleton className="h-24 w-full" />
+					<Skeleton className="h-24 w-full rounded-2xl" />
 				) : (
 					Object.entries(groupedData).map(([groupId, group]) => (
 						<div key={groupId} className="space-y-2">
-							<div className="flex items-center gap-2 bg-muted/50 p-2 rounded-lg sticky top-0 z-10">
-								<span className="text-[11px] font-black text-primary uppercase">
+							<div className="sticky top-0 z-10 flex items-center gap-2 rounded-xl bg-pop-violet-soft px-3 py-2">
+								<span className="text-[11px] font-black tracking-wide text-pop-violet-ink uppercase">
 									{group.name}
 								</span>
 							</div>
@@ -224,11 +224,11 @@ export function StudentSelector({
 										<Item
 											key={student.examinee_number}
 											onClick={() => !locked && toggleStudent(student)}
-											className={`flex items-center gap-3 p-2.5 rounded-xl border transition-all ${
+											className={`flex items-center gap-3 rounded-xl border-2 p-2.5 transition-all ${
 												locked
-													? "opacity-75 cursor-not-allowed bg-muted/30"
+													? "cursor-not-allowed bg-muted/40 opacity-75"
 													: "cursor-pointer"
-											} ${isSelected ? "border-primary bg-primary/5" : "border-transparent hover:bg-muted/50"}`}
+											} ${isSelected ? "border-primary/40 bg-primary/10" : "border-transparent hover:bg-accent/50"}`}
 										>
 											<Checkbox
 												checked={isSelected}
@@ -243,16 +243,17 @@ export function StudentSelector({
 												>
 													{student.last_name.charAt(0)}. {student.first_name}
 												</p>
-												<p className="text-[10px] font-mono text-muted-foreground uppercase">
+												<p className="font-mono text-[10px] font-semibold text-muted-foreground uppercase">
 													{student.examinee_number} • {student.register_number}{" "}
 													•{student.studentgroupname}
 												</p>
 											</div>
 											{locked ? (
-												<Lock size={14} className="text-muted-foreground/50" />
+												<Lock size={14} className="text-muted-foreground" strokeWidth={2.5} />
 											) : isSelected ? (
 												<CheckCircle2
-													size={14}
+													size={16}
+													strokeWidth={2.5}
 													className="text-primary animate-in zoom-in"
 												/>
 											) : null}

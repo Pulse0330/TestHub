@@ -28,6 +28,8 @@ interface CourseCardProps {
 	onView?: () => void;
 	onExtend?: () => void;
 	disabled?: boolean;
+	/** "shelf" = compact card for the purchased-courses shelf */
+	variant?: "catalog" | "shelf";
 }
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -86,6 +88,7 @@ function CourseCard({
 	onSelect,
 	onExtend,
 	disabled = false,
+	variant = "catalog",
 }: CourseCardProps) {
 	const isPurchased = course.ispurchased === 1;
 	const isSelectable = !isPurchased && !disabled;
@@ -120,25 +123,33 @@ function CourseCard({
 	const showExtendButton =
 		isPurchased && (expiryInfo?.isExpired || expiryInfo?.isExpiringSoon);
 
+	const isShelf = variant === "shelf";
+
 	return (
 		<motion.div
 			onClick={handleClick}
 			className={cn(
-				"relative",
+				"relative h-full",
 				isSelectable ? "cursor-pointer" : "cursor-default",
 			)}
 		>
 			<div
 				className={cn(
-					"relative overflow-hidden rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 transition-all duration-200",
+					"group card-pop relative h-full flex flex-col overflow-hidden rounded-3xl transition-all duration-200",
 					isSelected &&
-						"border-blue-500 dark:border-blue-500 shadow-lg shadow-blue-500/20",
+						"border-pop-coral bg-pop-coral-soft/40 shadow-[0_4px_0_0_var(--pop-coral)]",
 					isSelectable &&
-						"hover:shadow-xl hover:border-blue-400 dark:hover:border-blue-600",
+						!isSelected &&
+						"hover:-translate-y-1 hover:border-pop-coral/60 hover:shadow-[0_7px_0_0_var(--border)]",
 				)}
 			>
 				{/* ── Image ── */}
-				<div className="relative w-full aspect-4/2 overflow-hidden bg-slate-100 dark:bg-slate-900">
+				<div
+					className={cn(
+						"relative m-2 mb-0 overflow-hidden rounded-2xl bg-pop-coral-soft",
+						isShelf ? "aspect-16/9" : "aspect-4/2",
+					)}
+				>
 					<Image
 						src={course.filename}
 						alt={course.title}
@@ -146,26 +157,27 @@ function CourseCard({
 						loading="lazy"
 						placeholder="blur"
 						blurDataURL={BLUR_PLACEHOLDER}
+						className="object-cover transition-transform duration-500 group-hover:scale-105"
 					/>
 
 					{/* Purchased check */}
 					{isPurchased && (
 						<StatusBadge color="green">
-							<Check className="w-4 h-4 text-white" />
+							<Check className="size-4 text-primary-foreground" strokeWidth={3} />
 						</StatusBadge>
 					)}
 
 					{/* Selected check */}
 					{isSelected && !isPurchased && (
 						<StatusBadge color="blue">
-							<Check className="w-4 h-4 text-white" />
+							<Check className="size-4 text-primary-foreground" strokeWidth={3} />
 						</StatusBadge>
 					)}
 
 					{/* Max-selection overlay */}
 					{disabled && (
 						<Overlay>
-							<Badge className="bg-slate-700 text-white text-[10px]">
+							<Badge variant="secondary" className="text-[10px] font-extrabold">
 								Дээд тал нь 4
 							</Badge>
 						</Overlay>
@@ -174,8 +186,8 @@ function CourseCard({
 					{/* Expired overlay */}
 					{expiryInfo?.isExpired && (
 						<Overlay>
-							<Clock className="w-5 h-5 text-white mb-1" />
-							<Badge className="bg-red-600 text-white text-[10px]">
+							<Clock className="size-5 text-destructive mb-1" strokeWidth={2.5} />
+							<Badge variant="destructive" className="text-[10px] font-extrabold">
 								Дууссан
 							</Badge>
 						</Overlay>
@@ -183,26 +195,33 @@ function CourseCard({
 				</div>
 
 				{/* ── Info ── */}
-				<div className="p-2.5">
-					<h3 className="text-xs font-semibold mb-2 line-clamp-2 leading-snug min-h-8 text-slate-800 dark:text-slate-100">
+				<div className="flex flex-1 flex-col p-3 sm:p-4">
+					<h3 className="text-sm sm:text-base font-extrabold mb-2 line-clamp-2 leading-snug min-h-10 text-foreground">
 						{course.title}
 					</h3>
 
 					{isPurchased && expiryInfo && !expiryInfo.isExpired && (
-						<div className="flex items-center gap-1 text-[10px] mb-2">
-							<Clock className="w-3 h-3 text-slate-500" />
-							<span className="font-medium text-slate-600 dark:text-slate-400">
+						<div
+							className={cn(
+								"mb-2 inline-flex w-fit items-center gap-1 rounded-full px-2 py-0.5 text-[11px]",
+								expiryInfo.isExpiringSoon
+									? "bg-pop-sun-soft text-pop-sun-ink"
+									: "bg-pop-mint-soft text-pop-mint-ink",
+							)}
+						>
+							<Clock className="size-3" strokeWidth={2.5} />
+							<span className="font-bold">
 								{expiryInfo.diffDays} хоног үлдлээ
 							</span>
 						</div>
 					)}
 
-					<div className="flex items-center justify-between gap-2">
+					<div className="mt-auto flex items-center justify-between gap-2">
 						{showExtendButton ? (
 							<Button
 								size="sm"
 								onClick={handleExtend}
-								className="h-6 px-2 text-[10px] gap-1 bg-orange-500 hover:bg-orange-600"
+								className="w-full gap-1 bg-pop-coral text-primary-foreground shadow-[0_3px_0_0_color-mix(in_oklch,var(--pop-coral)_60%,black)]"
 							>
 								Сунгах
 							</Button>
@@ -211,16 +230,16 @@ function CourseCard({
 								size="sm"
 								variant="destructive"
 								onClick={handleDeselect}
-								className="h-6 px-2 text-[10px] gap-1"
+								className="w-full gap-1"
 							>
-								<Trash2 className="w-3 h-3" />
+								<Trash2 className="size-3.5" strokeWidth={2.5} />
 								Хасах
 							</Button>
 						) : !isPurchased ? (
 							<Button
 								size="sm"
 								onClick={handleClick}
-								className="h-6 px-2 text-[10px]"
+								className="w-full"
 								disabled={disabled}
 							>
 								Сонгох
@@ -246,8 +265,8 @@ function StatusBadge({
 		<div className="absolute top-1.5 right-1.5 z-20">
 			<div
 				className={cn(
-					"flex items-center justify-center w-6 h-6 rounded-full",
-					color === "green" ? "bg-green-500" : "bg-blue-500",
+					"flex items-center justify-center size-7 rounded-xl border-2 border-card animate-pop-in",
+					color === "green" ? "bg-success" : "bg-pop-coral",
 				)}
 			>
 				{children}
@@ -258,7 +277,7 @@ function StatusBadge({
 
 function Overlay({ children }: { children: React.ReactNode }) {
 	return (
-		<div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center z-20">
+		<div className="absolute inset-0 bg-background/80 flex flex-col items-center justify-center z-20">
 			{children}
 		</div>
 	);

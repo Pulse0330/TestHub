@@ -45,11 +45,15 @@ function getBorderClass(
 	isBookmarked: boolean,
 	isTyping: boolean,
 ): string {
-	if (isTyping) return "border-2 border-blue-400 shadow-lg";
-	if (isAnswered && isBookmarked) return "border-2 border-amber-500 shadow-sm";
-	if (isAnswered) return "border-2 border-blue-600 shadow-sm";
-	if (isBookmarked) return "border-2 border-amber-400 shadow-sm";
-	return "border border-gray-200";
+	if (isTyping)
+		return "border-pop-sky shadow-[0_4px_0_0_color-mix(in_oklch,var(--pop-sky)_45%,transparent)]";
+	if (isAnswered && isBookmarked)
+		return "border-warning shadow-[0_4px_0_0_color-mix(in_oklch,var(--warning)_55%,transparent)]";
+	if (isAnswered)
+		return "border-primary/50 shadow-[0_4px_0_0_color-mix(in_oklch,var(--primary)_35%,transparent)]";
+	if (isBookmarked)
+		return "border-warning/70 shadow-[0_4px_0_0_color-mix(in_oklch,var(--warning)_40%,transparent)]";
+	return "border-border";
 }
 
 // ─────────────────────────────────────────────
@@ -58,10 +62,14 @@ function getBorderClass(
 const BOUNCE_DELAYS = [0, 150, 300];
 const TypingIndicator = memo(function TypingIndicator() {
 	return (
-		<div className="flex items-center gap-1 px-2 py-1 bg-blue-100 dark:bg-blue-900/40 rounded-md">
+		<div className="flex items-center gap-1 rounded-full bg-pop-sky-soft px-2.5 py-1.5">
 			<div className="flex gap-0.5">
 				{BOUNCE_DELAYS.map((delay) => (
-					<span key={delay} style={{ animationDelay: `${delay}ms` }} />
+					<span
+						key={delay}
+						className="size-1.5 animate-bounce rounded-full bg-pop-sky"
+						style={{ animationDelay: `${delay}ms` }}
+					/>
 				))}
 			</div>
 		</div>
@@ -88,9 +96,9 @@ const BookmarkButton = memo(function BookmarkButton({
 			title={isBookmarked ? "Тэмдэглэгээ хасах" : "Тэмдэглэх"}
 		>
 			{isBookmarked ? (
-				<BookmarkCheck className="w-5 h-5 text-yellow-500 fill-yellow-500" />
+				<BookmarkCheck className="size-5 fill-warning text-warning" />
 			) : (
-				<Bookmark className="w-5 h-5 text-slate-400" />
+				<Bookmark className="size-5 text-muted-foreground" />
 			)}
 		</Button>
 	);
@@ -125,24 +133,26 @@ export const QuestionCard = memo(function QuestionCard({
 	if (variant === "desktop") {
 		return (
 			<div id={`question-${q.question_id}`}>
-				<Card className={borderClass}>
-					<CardContent className="p-6">
-						<div className="flex gap-4">
-							<div className="shrink-0 w-12 h-12 rounded-lg flex items-center justify-center font-semibold">
-								{q.row_num}
+				<Card className={`gap-0 py-0 transition-colors ${borderClass}`}>
+					<CardContent className="p-5 sm:p-6">
+						<div className="flex flex-col">
+							<div className="mb-3 flex items-center justify-between gap-2">
+								<span className="inline-flex items-center rounded-full bg-primary/10 px-3 py-1 text-xs font-extrabold text-primary">
+									Асуулт {q.row_num}
+								</span>
+								<BookmarkButton
+									isBookmarked={isBookmarked}
+									onClick={handleBookmark}
+									className="shrink-0 rounded-xl"
+								/>
 							</div>
-							<div className="flex-1 min-w-0">
-								<div className="flex items-start justify-between gap-2 mb-4">
-									<div className="font-semibold text-lg flex-1 leading-relaxed prose prose-sm max-w-none">
+							<div className="min-w-0 flex-1">
+								<div className="mb-5">
+									<div className="prose prose-sm dark:prose-invert max-w-none flex-1 text-base font-semibold leading-relaxed text-foreground sm:text-lg">
 										<MathContent
 											html={q.question_name.replace(/<img[^>]*>/gi, "")}
 										/>
 									</div>
-									<BookmarkButton
-										isBookmarked={isBookmarked}
-										onClick={handleBookmark}
-										className="hover:bg-gray-100 shrink-0"
-									/>
 								</div>
 								<QuestionRenderer
 									question={q}
@@ -161,24 +171,24 @@ export const QuestionCard = memo(function QuestionCard({
 
 	// ── Mobile layout ───────────────────────────────────────────
 	return (
-		<Card className={`${borderClass} shadow-sm`}>
+		<Card className={`gap-0 py-0 transition-colors ${borderClass}`}>
 			<CardContent className="p-4">
-				<div className="flex items-start gap-3 mb-4">
-					<div className="shrink-0 w-9 h-9 rounded-lg bg-linear-to-br from-blue-500 to-indigo-600 flex items-center justify-center font-bold text-white shadow-md">
-						{q.row_num}
-					</div>
-					<div className="flex-1 min-w-0">
-						<div className="font-semibold leading-relaxed prose prose-sm max-w-none text-sm">
-							<MathContent html={q.question_name.replace(/<img[^>]*>/gi, "")} />
-						</div>
-					</div>
-					<div className="flex items-center gap-2 shrink-0">
+				<div className="mb-3 flex items-center justify-between gap-2">
+					<span className="inline-flex items-center rounded-full bg-primary/10 px-3 py-1 text-xs font-extrabold text-primary">
+						Асуулт {q.row_num}
+					</span>
+					<div className="flex shrink-0 items-center gap-2">
 						{showTypingIndicator && isTyping && <TypingIndicator />}
 						<BookmarkButton
 							isBookmarked={isBookmarked}
 							onClick={handleBookmark}
-							className="shrink-0 h-9 w-9"
+							className="size-9 shrink-0 rounded-xl"
 						/>
+					</div>
+				</div>
+				<div className="min-w-0">
+					<div className="prose prose-sm dark:prose-invert max-w-none text-base font-semibold leading-relaxed text-foreground">
+						<MathContent html={q.question_name.replace(/<img[^>]*>/gi, "")} />
 					</div>
 				</div>
 				<div className="mt-4">

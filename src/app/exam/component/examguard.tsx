@@ -11,6 +11,8 @@ interface ExamProctorProps {
 	maxViolations?: number; // Default 3
 	strictMode?: boolean; // Default true
 	enableFullscreen?: boolean; // Default true
+	/** Optional extra classes for the inline "protection status" card (layout only). */
+	statusClassName?: string;
 }
 
 interface Violation {
@@ -25,6 +27,7 @@ export const AdvancedExamProctor: React.FC<ExamProctorProps> = ({
 	maxViolations = 3,
 	strictMode = true,
 	enableFullscreen = true,
+	statusClassName = "",
 }) => {
 	const [violations, setViolations] = useState<Violation[]>([]);
 	const [dialogMessage, setDialogMessage] = useState<string | null>(null);
@@ -523,6 +526,9 @@ export const AdvancedExamProctor: React.FC<ExamProctorProps> = ({
 
 	const overlayContent = (
 		<div
+			role="alertdialog"
+			aria-modal="true"
+			data-exam-guard-overlay=""
 			style={{
 				position: "fixed",
 				top: 0,
@@ -538,62 +544,33 @@ export const AdvancedExamProctor: React.FC<ExamProctorProps> = ({
 			}}
 		>
 			<div
-				style={{
-					color: "white",
-					textAlign: "center",
-					padding: "1.5rem",
-					maxWidth: "28rem",
-					width: "100%",
-				}}
+				className="w-full max-w-md p-6 text-center"
+				style={{ color: "white" }}
 			>
-				<AlertTriangle
-					className={`w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-6 ${isLocked ? "text-red-500" : "text-yellow-400"} animate-pulse`}
-				/>
-				<h1
-					style={{
-						fontSize: "1.75rem",
-						fontWeight: "bold",
-						marginBottom: "1rem",
-					}}
+				<div
+					className={`mx-auto mb-6 flex size-24 items-center justify-center rounded-3xl ${
+						isLocked ? "bg-destructive/20" : "bg-warning/20"
+					}`}
 				>
+					<AlertTriangle
+						className={`size-14 animate-pulse ${isLocked ? "text-destructive" : "text-warning"}`}
+						strokeWidth={2.5}
+					/>
+				</div>
+				<h1 className="mb-3 text-3xl font-black tracking-tight">
 					{isLocked ? "🚫 Шалгалт хаагдлаа" : "⚠️ Анхааруулга"}
 				</h1>
-				<p
-					style={{
-						fontSize: "1rem",
-						lineHeight: "1.6",
-						marginBottom: "1.5rem",
-					}}
-				>
+				<p className="mb-6 text-base leading-relaxed font-semibold opacity-90">
 					{dialogMessage}
 				</p>
 				{isLocked ? (
 					<div>
-						<div
-							style={{
-								background: "rgba(127,29,29,0.5)",
-								border: "1px solid rgb(220,38,38)",
-								borderRadius: "0.5rem",
-								padding: "0.75rem 1rem",
-								fontSize: "0.875rem",
-								color: "rgb(254,202,202)",
-								marginBottom: "0.75rem",
-							}}
-						>
+						<div className="mb-3 rounded-2xl border-2 border-destructive/60 bg-destructive/20 px-4 py-3 text-sm font-bold">
 							Шалгалтын систем хаагдсан. Багшийн зөвшөөрөлгүйгээр үргэлжлүүлэх
 							боломжгүй.
 						</div>
-						<div
-							style={{
-								display: "flex",
-								alignItems: "center",
-								justifyContent: "center",
-								gap: "0.5rem",
-								color: "rgb(156,163,175)",
-								fontSize: "0.75rem",
-							}}
-						>
-							<Lock className="w-3 h-3" />
+						<div className="flex items-center justify-center gap-2 text-xs font-semibold opacity-70">
+							<Lock className="size-3" />
 							<span>Зөвхөн багш тайлах боломжтой</span>
 						</div>
 					</div>
@@ -602,21 +579,9 @@ export const AdvancedExamProctor: React.FC<ExamProctorProps> = ({
 						<button
 							type="button"
 							onClick={handleDismissWarning}
-							style={{
-								background: "rgb(234,179,8)",
-								color: "black",
-								fontWeight: "bold",
-								padding: "0.75rem 2rem",
-								borderRadius: "0.5rem",
-								display: "inline-flex",
-								alignItems: "center",
-								gap: "0.5rem",
-								border: "none",
-								cursor: "pointer",
-								fontSize: "1rem",
-							}}
+							className="inline-flex cursor-pointer items-center gap-2 rounded-2xl border-0 bg-warning px-8 py-3 text-base font-black text-[color-mix(in_oklch,var(--warning)_22%,black)] shadow-[0_4px_0_0_color-mix(in_oklch,var(--warning)_60%,black)] transition-transform hover:brightness-105 active:translate-y-0.5 active:shadow-none"
 						>
-							<Unlock className="w-4 h-4" />
+							<Unlock className="size-4" strokeWidth={2.5} />
 							Ойлголоо, үргэлжлүүлэх
 						</button>
 					</div>
@@ -633,63 +598,72 @@ export const AdvancedExamProctor: React.FC<ExamProctorProps> = ({
 				createPortal(overlayContent, document.body)}
 
 			{/* Bottom alerts */}
-			<div className="fixed bottom-2 right-2 sm:bottom-4 sm:right-4 z-50 space-y-2 max-w-[90vw] sm:max-w-none pointer-events-none">
+			<div className="pointer-events-none fixed bottom-4 left-1/2 z-50 w-max max-w-[90vw] -translate-x-1/2">
 				{mouseLeft && strictMode && !isMobile && (
 					<Alert
 						variant="destructive"
-						className="w-56 sm:w-64 shadow-lg animate-pulse pointer-events-auto"
+						className="pointer-events-auto w-64 animate-pulse rounded-2xl border-2 border-destructive"
 					>
-						<AlertTriangle className="h-3 w-3 sm:h-4 sm:w-4" />
+						<AlertTriangle className="size-4" />
 						<AlertDescription>
-							<div className="text-xs font-semibold">
+							<div className="text-xs font-bold">
 								⚠️ Хулгана цонхноос гарсан байна!
 							</div>
 						</AlertDescription>
 					</Alert>
 				)}
+			</div>
 
-				{/* Protection status */}
-				<div className="bg-card border rounded-lg p-2 sm:p-3 w-56 sm:w-64 text-xs space-y-1.5 shadow-lg pointer-events-auto">
-					<div className="font-semibold text-xs sm:text-sm mb-2 flex items-center gap-2">
-						{isMobile && <Smartphone className="w-3 h-3" />} Хамгаалалтын төлөв
-					</div>
-					{!isMobile && enableFullscreen && (
-						<div className="flex items-center gap-2 text-green-600 dark:text-green-400">
-							<Lock className="w-3 h-3" />
-							<span>Fullscreen идэвхтэй</span>
-						</div>
-					)}
-					<div className="flex items-center gap-2 text-green-600 dark:text-green-400">
-						<Shield className="w-3 h-3" />
-						<span>Хамгаалалт идэвхтэй</span>
-					</div>
-					{isMobile && (
-						<div className="flex items-center gap-2 text-blue-600 dark:text-blue-400">
-							<Smartphone className="w-3 h-3" />
-							<span>Мобайл горим</span>
-						</div>
-					)}
+			{/* Protection status */}
+			<div
+				className={`w-full space-y-2 rounded-2xl border-2 border-border bg-card p-3 text-xs ${statusClassName}`}
+			>
+				<div className="mb-1 flex items-center gap-2 text-xs font-extrabold text-foreground">
+					<span className="flex size-7 items-center justify-center rounded-lg bg-pop-mint-soft text-pop-mint-ink">
+						{isMobile ? (
+							<Smartphone className="size-3.5" strokeWidth={2.5} />
+						) : (
+							<Shield className="size-3.5" strokeWidth={2.5} />
+						)}
+					</span>
+					Хамгаалалтын төлөв
 				</div>
+				{!isMobile && enableFullscreen && (
+					<div className="flex items-center gap-2 rounded-full bg-pop-mint-soft px-2.5 py-1 font-bold text-pop-mint-ink">
+						<Lock className="size-3" />
+						<span>Fullscreen идэвхтэй</span>
+					</div>
+				)}
+				<div className="flex items-center gap-2 rounded-full bg-pop-mint-soft px-2.5 py-1 font-bold text-pop-mint-ink">
+					<Shield className="size-3" />
+					<span>Хамгаалалт идэвхтэй</span>
+				</div>
+				{isMobile && (
+					<div className="flex items-center gap-2 rounded-full bg-pop-sky-soft px-2.5 py-1 font-bold text-pop-sky-ink">
+						<Smartphone className="size-3" />
+						<span>Мобайл горим</span>
+					</div>
+				)}
 			</div>
 
 			{/* Development violation log */}
 			{process.env.NODE_ENV === "development" && violations.length > 0 && (
-				<div className="fixed bottom-2 left-2 sm:bottom-4 sm:left-4 bg-card border rounded-lg p-2 sm:p-3 max-w-[90vw] sm:max-w-sm max-h-48 sm:max-h-64 overflow-auto text-xs z-50 shadow-lg">
-					<div className="font-bold mb-2 flex items-center justify-between">
+				<div className="fixed bottom-2 left-2 z-50 max-h-48 max-w-[90vw] overflow-auto rounded-2xl border-2 border-border bg-card p-2 text-xs shadow-[0_4px_0_0_var(--border)] sm:bottom-4 sm:left-4 sm:max-h-64 sm:max-w-sm sm:p-3">
+					<div className="mb-2 flex items-center justify-between font-extrabold">
 						<span>Зөрчлийн түүх ({violations.length})</span>
 					</div>
 					{violations.map((v) => (
 						<div
 							key={`${v.type}-${v.timestamp.getTime()}`}
-							className="mb-1 text-xs py-1 border-b last:border-0"
+							className="mb-1 border-b py-1 text-xs last:border-0"
 						>
 							<span
 								className={
 									v.severity === "high"
-										? "text-red-600 font-bold"
+										? "font-bold text-destructive"
 										: v.severity === "medium"
-											? "text-orange-600 font-medium"
-											: "text-gray-600"
+											? "font-semibold text-pop-coral-ink"
+											: "text-muted-foreground"
 								}
 							>
 								[{v.severity.toUpperCase()}]

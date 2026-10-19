@@ -48,9 +48,9 @@ export default function ServerDate({ variant = "navbar" }: ServerDateProps) {
 
 	if (isLoading || !currentTime) {
 		return (
-			<div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-secondary/50">
-				<Clock className="w-4 h-4 animate-spin" />
-				<span className="font-mono text-xs sm:text-sm">--:--:--</span>
+			<div className="inline-flex h-10 items-center gap-2 rounded-full border-2 border-border bg-muted px-3 text-muted-foreground">
+				<Clock className="size-4 animate-spin" />
+				<span className="font-mono text-xs font-bold sm:text-sm">--:--:--</span>
 			</div>
 		);
 	}
@@ -65,19 +65,19 @@ export default function ServerDate({ variant = "navbar" }: ServerDateProps) {
 	// Fixed position variant (original behavior)
 	if (variant === "fixed") {
 		return (
-			<div className="fixed bottom-6 left-6 z-40 p-2 bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60 shadow-lg rounded-2xl transition-all duration-300 hover:scale-110 inline-flex items-center gap-3 px-4 py-2">
+			<div className="fixed bottom-6 left-6 z-40 inline-flex items-center gap-3 rounded-2xl border-2 border-border bg-card px-4 py-2 shadow-[0_4px_0_0_var(--border)] transition-all duration-300 hover:-translate-y-0.5">
 				{/* Desktop / Tablet view */}
 				<div className="hidden sm:flex items-center gap-3">
 					<div className="flex items-center gap-2">
-						<Calendar className="w-4 h-4" />
-						<span className="text-sm font-semibold tabular-nums">
+						<Calendar className="size-4 text-pop-sky-ink" strokeWidth={2.5} />
+						<span className="text-sm font-extrabold tabular-nums">
 							{year}.{month}.{day}
 						</span>
 					</div>
-					<div className="w-px h-5 bg-gray-400 dark:bg-gray-600" />
+					<div className="h-5 w-0.5 rounded-full bg-border" />
 					<div className="flex items-center gap-2">
-						<Clock className="w-4 h-4 animate-pulse" />
-						<div className="font-mono text-sm font-semibold tabular-nums">
+						<Clock className="size-4 animate-pulse text-pop-violet-ink" strokeWidth={2.5} />
+						<div className="font-mono text-sm font-bold tabular-nums">
 							{hours}:{minutes}:{seconds}
 						</div>
 					</div>
@@ -85,8 +85,8 @@ export default function ServerDate({ variant = "navbar" }: ServerDateProps) {
 
 				{/* Mobile view */}
 				<div className="flex sm:hidden items-center gap-2">
-					<Clock className="w-4 h-4 animate-pulse" />
-					<div className="font-mono text-sm font-semibold tabular-nums">
+					<Clock className="size-4 animate-pulse text-pop-violet-ink" strokeWidth={2.5} />
+					<div className="font-mono text-sm font-bold tabular-nums">
 						{hours}:{minutes}:{seconds}
 					</div>
 				</div>
@@ -96,19 +96,19 @@ export default function ServerDate({ variant = "navbar" }: ServerDateProps) {
 
 	// Navbar variant (inline)
 	return (
-		<div className="inline-flex items-center gap-2 sm:gap-3 px-2 sm:px-3 py-1.5 sm:py-2 bg-secondary/50 rounded-lg sm:rounded-xl border border-border/50 hover:bg-secondary/70 transition-colors">
+		<div className="inline-flex h-10 items-center gap-2 rounded-full border-2 border-pop-sky/30 bg-pop-sky-soft px-3 text-pop-sky-ink transition-colors sm:gap-3 sm:px-4">
 			{/* Desktop / Tablet view */}
 			<div className="hidden lg:flex items-center gap-3">
 				<div className="flex items-center gap-1.5">
-					<Calendar className="w-3.5 h-3.5 text-muted-foreground" />
-					<span className="text-xs font-medium tabular-nums">
+					<Calendar className="size-3.5" strokeWidth={2.5} />
+					<span className="text-xs font-extrabold tabular-nums">
 						{year}.{month}.{day}
 					</span>
 				</div>
-				<div className="w-px h-4 bg-border" />
+				<div className="h-4 w-0.5 rounded-full bg-pop-sky/30" />
 				<div className="flex items-center gap-1.5">
-					<Clock className="w-3.5 h-3.5 text-muted-foreground animate-pulse" />
-					<div className="font-mono text-xs font-medium tabular-nums">
+					<Clock className="size-3.5 animate-pulse" strokeWidth={2.5} />
+					<div className="font-mono text-xs font-bold tabular-nums">
 						{hours}:{minutes}:{seconds}
 					</div>
 				</div>
@@ -117,15 +117,15 @@ export default function ServerDate({ variant = "navbar" }: ServerDateProps) {
 			{/* Tablet view - date + time compact */}
 			<div className="hidden sm:flex lg:hidden items-center gap-2">
 				<div className="flex items-center gap-1.5">
-					<Calendar className="w-3.5 h-3.5 text-muted-foreground" />
-					<span className="text-xs font-medium tabular-nums">
+					<Calendar className="size-3.5" strokeWidth={2.5} />
+					<span className="text-xs font-extrabold tabular-nums">
 						{month}.{day}
 					</span>
 				</div>
-				<div className="w-px h-4 bg-border" />
+				<div className="h-4 w-0.5 rounded-full bg-pop-sky/30" />
 				<div className="flex items-center gap-1.5">
-					<Clock className="w-3.5 h-3.5 text-muted-foreground animate-pulse" />
-					<div className="font-mono text-xs font-medium tabular-nums">
+					<Clock className="size-3.5 animate-pulse" strokeWidth={2.5} />
+					<div className="font-mono text-xs font-bold tabular-nums">
 						{hours}:{minutes}
 					</div>
 				</div>
@@ -133,8 +133,8 @@ export default function ServerDate({ variant = "navbar" }: ServerDateProps) {
 
 			{/* Mobile view - time only */}
 			<div className="flex sm:hidden items-center gap-1.5">
-				<Clock className="w-3.5 h-3.5 text-muted-foreground animate-pulse" />
-				<div className="font-mono text-xs font-medium tabular-nums">
+				<Clock className="size-3.5 animate-pulse" strokeWidth={2.5} />
+				<div className="font-mono text-xs font-bold tabular-nums">
 					{hours}:{minutes}
 				</div>
 			</div>

@@ -1,9 +1,19 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { AlertCircle } from "lucide-react";
+import {
+	AlertCircle,
+	CheckCircle2,
+	ChevronDown,
+	CreditCard,
+	Lock,
+	RotateCw,
+	Search,
+	Sparkles,
+	X,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
-import React, { useCallback, useMemo, useState } from "react";
+import React, { type ReactNode, useCallback, useMemo, useState } from "react";
 import LessonFilter from "@/components/LessonFilter";
 import { Button } from "@/components/ui/button";
 import {
@@ -14,6 +24,8 @@ import {
 	DialogHeader,
 	DialogTitle,
 } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
 import { getSorilFilteredlists, getTestFilter } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/stores/useAuthStore";
@@ -24,6 +36,8 @@ import type {
 import { SorilCard } from "./card";
 
 type SorilCategory = "all" | "completed" | "notstarted";
+
+const ITEMS_PER_PAGE = 18;
 
 interface Lesson {
 	lesson_id: number;
@@ -44,7 +58,8 @@ interface TestFilterResponse {
 export default function MnSorilLits() {
 	const { userId } = useAuthStore();
 	const router = useRouter();
-	const [searchTerm, _setSearchTerm] = useState("");
+	const [searchTerm, setSearchTerm] = useState("");
+	const [showDone, setShowDone] = useState(false);
 	const [selectedCategory, _setSelectedCategory] =
 		useState<SorilCategory>("all");
 	const [selectedLessonId, setSelectedLessonId] = useState<number>(0); // 0 = Бүгд
@@ -112,6 +127,19 @@ export default function MnSorilLits() {
 		return sorils;
 	}, [data, categorizedData, selectedCategory, searchTerm]);
 
+	// Төлөвөөр бүлэглэх
+	const groups = useMemo(() => {
+		const inProgress: SorillistsData[] = [];
+		const fresh: SorillistsData[] = [];
+		const done: SorillistsData[] = [];
+		for (const s of filteredData) {
+			if (s.isguitset === 1) done.push(s);
+			else if (s.test_resid > 0) inProgress.push(s);
+			else fresh.push(s);
+		}
+		return { inProgress, fresh, done };
+	}, [filteredData]);
+
 	const handleSorilClick = useCallback(
 		(soril: SorillistsData) => {
 			const isAccessible = soril.isopensoril === 1 || soril.ispay === 1;
@@ -138,45 +166,51 @@ export default function MnSorilLits() {
 		setSelectedSoril(null);
 	}, []);
 
+	const selectedLessonName = lessons.find(
+		(l) => l.lesson_id === selectedLessonId,
+	)?.lesson_name;
+
 	return (
 		<div className="w-full">
-			<div className=" mx-auto  flex flex-col px-3 sm:px-8 lg:px-8 py-4 sm:py-8 lg:py-8">
-				{/* Header */}
-				<header className="mb-4 sm:mb-6">
-					<h3 className="text-lg sm:text-2xl font-extrabold bg-linear-to-r from-primary to-primary/70 bg-clip-text text-transparent ">
-						Сорилын жагсаалт
-					</h3>
-				</header>
-
-				{selectedLessonId !== null && (
-					<LessonFilter
-						lessons={lessons}
-						selectedLessonId={selectedLessonId}
-						onLessonSelect={setSelectedLessonId}
-					/>
-				)}
+			<div className="flex flex-col">
+				{/* Sticky toolbar */}
+				<div className="mb-6 border-b-2 border-border pb-4">
+					<div className="flex flex-col-reverse gap-3">
+						<div className="min-w-0 flex-1">
+							{selectedLessonId !== null && (
+								<LessonFilter
+									lessons={lessons}
+									selectedLessonId={selectedLessonId}
+									onLessonSelect={setSelectedLessonId}
+								/>
+							)}
+						</div>
+						<div className="flex items-center">
+							<SearchBox
+								value={searchTerm}
+								onChange={setSearchTerm}
+								placeholder="Сорил хайх..."
+							/>
+						</div>
+					</div>
+				</div>
 
 				{/* Results Info */}
-				{(searchTerm || selectedLessonId !== 0) && (
-					<div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 mb-4">
-						<AlertCircle size={16} />
-						<span>
-							<strong>{filteredData.length}</strong> сорил олдлоо
+				{!isPending && (selectedLessonId !== 0 || searchTerm) && (
+					<div className="mb-5 inline-flex w-fit max-w-full items-center gap-2 rounded-full bg-pop-pink-soft px-4 py-1.5 text-sm font-semibold text-pop-pink-ink">
+						<AlertCircle size={16} className="shrink-0" />
+						<span className="min-w-0">
+							<strong className="font-black">{filteredData.length}</strong> сорил олдлоо
 							{searchTerm && (
 								<>
 									{" "}
-									&ldquo;<strong>{searchTerm}</strong>&rdquo; гэсэн хайлтаар
+									&ldquo;<strong className="font-black">{searchTerm}</strong>&rdquo; гэсэн хайлтаар
 								</>
 							)}
 							{selectedLessonId !== 0 && (
 								<>
 									{" "}
-									<strong>
-										{
-											lessons.find((l) => l.lesson_id === selectedLessonId)
-												?.lesson_name
-										}
-									</strong>{" "}
+									<strong className="font-black">{selectedLessonName}</strong>{" "}
 									хичээлд
 								</>
 							)}
@@ -184,49 +218,115 @@ export default function MnSorilLits() {
 					</div>
 				)}
 
-				{/* Soril Grid */}
-				<div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-7 gap-2 sm:gap-3 md:gap-4 pb-4">
-					{isPending
-						? SKELETON_KEYS.map((key) => <SkeletonCard key={key} />)
-						: filteredData.map((soril) => (
-								<SorilCard
-									key={soril.exam_id}
-									exam={soril}
-									onClick={() => handleSorilClick(soril)}
-								/>
-							))}
-				</div>
-
-				{/* Empty State */}
-				{!isPending && filteredData.length === 0 && (
-					<div className="text-center py-12 space-y-3">
-						<AlertCircle
-							className="mx-auto text-gray-400 dark:text-gray-600"
-							size={48}
-						/>
-						<p className="text-lg font-medium text-gray-700 dark:text-gray-300">
+				{isPending ? (
+					<div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3 2xl:grid-cols-4">
+						{SKELETON_KEYS.map((key) => (
+							<SkeletonCard key={key} />
+						))}
+					</div>
+				) : filteredData.length === 0 ? (
+					/* Empty State */
+					<div className="flex flex-col items-center justify-center space-y-3 py-14 text-center">
+						<div className="flex size-20 items-center justify-center rounded-full bg-pop-pink-soft text-pop-pink-ink">
+							<AlertCircle className="size-10" strokeWidth={2.5} />
+						</div>
+						<p className="text-xl font-extrabold text-foreground">
 							Сорил олдсонгүй
 						</p>
-						<p className="text-sm text-gray-500 dark:text-gray-400">
+						<p className="max-w-sm text-sm font-semibold text-muted-foreground">
 							{searchTerm
 								? `"${searchTerm}" хайлтад тохирох сорил олдсонгүй.`
 								: selectedLessonId === 0
 									? "Танд одоогоор сорил байхгүй байна."
-									: `${lessons.find((l) => l.lesson_id === selectedLessonId)?.lesson_name || "Энэ хичээл"}-д сорил байхгүй байна.`}
+									: `${selectedLessonName || "Энэ хичээл"}-д сорил байхгүй байна.`}
 						</p>
+					</div>
+				) : (
+					<div className="space-y-10 pb-4">
+						{groups.inProgress.length > 0 && (
+							<Section
+								icon={<RotateCw className="size-4" strokeWidth={2.5} />}
+								tone="bg-pop-sky-soft text-pop-sky-ink"
+								title="Үргэлжлүүлэх"
+								count={groups.inProgress.length}
+							>
+								<CardGrid
+									items={groups.inProgress}
+									onSelect={handleSorilClick}
+								/>
+							</Section>
+						)}
+
+						<Section
+							icon={<Sparkles className="size-4" strokeWidth={2.5} />}
+							tone="bg-pop-pink-soft text-pop-pink-ink"
+							title="Шинэ"
+							count={groups.fresh.length}
+						>
+							{groups.fresh.length > 0 ? (
+								<CardGrid items={groups.fresh} onSelect={handleSorilClick} />
+							) : (
+								<div className="flex items-center gap-4 rounded-3xl border-2 border-dashed border-border bg-card/60 p-5">
+									<span className="text-3xl" aria-hidden>
+										🎉
+									</span>
+									<p className="text-sm font-semibold text-muted-foreground">
+										Шинэ сорил алга — бүгдийг нь эхлүүлсэн байна!
+									</p>
+								</div>
+							)}
+						</Section>
+
+						{groups.done.length > 0 && (
+							<section>
+								<button
+									type="button"
+									onClick={() => setShowDone((v) => !v)}
+									aria-expanded={showDone}
+									className="mb-3 flex w-full items-center gap-2 text-left"
+								>
+									<span className="flex size-7 items-center justify-center rounded-lg bg-muted text-muted-foreground">
+										<CheckCircle2 className="size-4" strokeWidth={2.5} />
+									</span>
+									<h2 className="text-base font-extrabold text-muted-foreground">
+										Дууссан
+									</h2>
+									<span className="rounded-full bg-muted px-2 py-0.5 text-xs font-black text-muted-foreground">
+										{groups.done.length}
+									</span>
+									<span className="ml-auto inline-flex items-center gap-1 text-xs font-bold text-muted-foreground">
+										{showDone ? "Хураах" : "Харах"}
+										<ChevronDown
+											className={cn(
+												"size-4 transition-transform",
+												showDone && "rotate-180",
+											)}
+										/>
+									</span>
+								</button>
+								{showDone && (
+									<RowList items={groups.done} onSelect={handleSorilClick} />
+								)}
+							</section>
+						)}
 					</div>
 				)}
 			</div>
 
 			{/* Payment Dialog */}
 			<Dialog open={showPaymentDialog} onOpenChange={setShowPaymentDialog}>
-				<DialogContent className="sm:max-w-md">
+				<DialogContent className="rounded-3xl border-2 sm:max-w-md">
 					<DialogHeader>
-						<DialogTitle>Төлбөртэй сорил</DialogTitle>
+						<DialogTitle className="flex items-center gap-3 text-xl font-black">
+							<span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-pop-sun-soft text-pop-sun-ink">
+								<Lock className="size-5" strokeWidth={2.5} />
+							</span>
+							Төлбөртэй сорил
+						</DialogTitle>
 						{/* asChild нэмснээр DialogDescription нь доорх <div>-ээр солигдоно */}
 						<DialogDescription asChild className="pt-4 space-y-2">
-							<div className="text-muted-foreground text-sm">
-								<div className="font-semibold text-foreground">
+							<div className="text-sm font-semibold text-muted-foreground">
+								<div className="font-extrabold text-foreground">
 									{selectedSoril?.soril_name}
 								</div>
 								Энэхүү сорил төлбөртэй юм. Үргэлжлүүлэхийн тулд төлбөр төлөх
@@ -234,7 +334,7 @@ export default function MnSorilLits() {
 							</div>
 						</DialogDescription>
 					</DialogHeader>
-					<DialogFooter className="flex-row gap-2 sm:gap-0">
+					<DialogFooter className="flex-row gap-2">
 						<Button
 							type="button"
 							variant="outline"
@@ -248,6 +348,7 @@ export default function MnSorilLits() {
 							onClick={handlePaymentConfirm}
 							className="flex-1 sm:flex-none"
 						>
+							<CreditCard />
 							Төлбөр төлөх
 						</Button>
 					</DialogFooter>
@@ -257,29 +358,155 @@ export default function MnSorilLits() {
 	);
 }
 
+function CardGrid({
+	items,
+	onSelect,
+}: {
+	items: SorillistsData[];
+	onSelect: (s: SorillistsData) => void;
+}) {
+	const [limit, setLimit] = useState(ITEMS_PER_PAGE);
+	const visible = items.slice(0, limit);
+	return (
+		<>
+			<div className="grid grid-cols-1 content-start gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3 2xl:grid-cols-4">
+				{visible.map((soril, index) => (
+					<div
+						key={soril.exam_id}
+						className="h-full animate-pop-in"
+						style={{ animationDelay: `${Math.min(index, 12) * 40}ms` }}
+					>
+						<SorilCard exam={soril} onClick={() => onSelect(soril)} />
+					</div>
+				))}
+			</div>
+			{items.length > limit && (
+				<div className="mt-5 flex justify-center">
+					<Button
+						variant="outline"
+						onClick={() => setLimit((l) => l + ITEMS_PER_PAGE)}
+					>
+						Цааш үзэх ({items.length - limit})
+						<ChevronDown className="size-4" />
+					</Button>
+				</div>
+			)}
+		</>
+	);
+}
+
+function RowList({
+	items,
+	onSelect,
+}: {
+	items: SorillistsData[];
+	onSelect: (s: SorillistsData) => void;
+}) {
+	const [limit, setLimit] = useState(ITEMS_PER_PAGE);
+	return (
+		<div className="card-pop divide-y-2 divide-border overflow-hidden opacity-90">
+			{items.slice(0, limit).map((soril) => (
+				<div key={soril.exam_id}>
+					<SorilCard
+						exam={soril}
+						variant="row"
+						onClick={() => onSelect(soril)}
+					/>
+				</div>
+			))}
+			{items.length > limit && (
+				<button
+					type="button"
+					onClick={() => setLimit((l) => l + ITEMS_PER_PAGE)}
+					className="w-full py-3 text-sm font-bold text-primary hover:bg-accent/50"
+				>
+					Цааш үзэх ({items.length - limit})
+				</button>
+			)}
+		</div>
+	);
+}
+
+function Section({
+	icon,
+	tone,
+	title,
+	count,
+	children,
+}: {
+	icon: ReactNode;
+	tone: string;
+	title: string;
+	count: number;
+	children: ReactNode;
+}) {
+	return (
+		<section>
+			<div className="mb-3 flex items-center gap-2">
+				<span
+					className={cn(
+						"flex size-7 items-center justify-center rounded-lg",
+						tone,
+					)}
+				>
+					{icon}
+				</span>
+				<h2 className="text-lg font-black tracking-tight text-foreground">
+					{title}
+				</h2>
+				<span
+					className={cn("rounded-full px-2 py-0.5 text-xs font-black", tone)}
+				>
+					{count}
+				</span>
+			</div>
+			{children}
+		</section>
+	);
+}
+
+function SearchBox({
+	value,
+	onChange,
+	placeholder,
+}: {
+	value: string;
+	onChange: (v: string) => void;
+	placeholder: string;
+}) {
+	return (
+		<div className="relative min-w-0 flex-1 lg:w-56 lg:flex-none">
+			<Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+			<Input
+				value={value}
+				onChange={(e) => onChange(e.target.value)}
+				placeholder={placeholder}
+				aria-label={placeholder}
+				className="h-9 rounded-full pr-9 pl-9"
+			/>
+			{value && (
+				<button
+					type="button"
+					onClick={() => onChange("")}
+					aria-label="Цэвэрлэх"
+					className="absolute top-1/2 right-2 flex size-6 -translate-y-1/2 items-center justify-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground"
+				>
+					<X className="size-3.5" />
+				</button>
+			)}
+		</div>
+	);
+}
+
 // Skeleton Card Component
 const SkeletonCard = () => (
-	<div className="h-full w-full flex flex-col overflow-hidden rounded-lg sm:rounded-xl border border-border/40 bg-card/50 backdrop-blur-md animate-pulse">
-		<div className="w-full aspect-5/2 bg-slate-200 dark:bg-slate-800 relative">
-			<div className="absolute top-2 left-2 flex flex-col gap-2">
-				<div className="h-5 w-16 bg-slate-300 dark:bg-slate-700 rounded-full" />
-			</div>
-			<div className="absolute bottom-2 left-2">
-				<div className="h-4 w-20 bg-slate-300 dark:bg-slate-700 rounded" />
-			</div>
-		</div>
-		<div className="flex flex-col grow p-2 gap-2">
-			<div className="space-y-2">
-				<div className="h-4 w-full bg-slate-200 dark:bg-slate-800 rounded" />
-				<div className="h-4 w-2/3 bg-slate-200 dark:bg-slate-800 rounded" />
-			</div>
-			<div className="mt-auto pt-2 border-t border-border/50 flex items-center justify-between">
-				<div className="flex gap-2">
-					<div className="h-3 w-10 bg-slate-200 dark:bg-slate-800 rounded" />
-					<div className="h-3 w-12 bg-slate-200 dark:bg-slate-800 rounded" />
-				</div>
-				<div className="h-6 w-6 rounded-full bg-slate-200 dark:bg-slate-800" />
-			</div>
+	<div className="card-pop flex h-full w-full flex-col gap-3 p-5">
+		<Skeleton className="aspect-5/2 w-full rounded-2xl" />
+		<Skeleton className="h-5 w-full rounded-lg" />
+		<Skeleton className="h-5 w-2/3 rounded-lg" />
+		<div className="flex gap-2">
+			<Skeleton className="h-6 w-16 rounded-full" />
+			<Skeleton className="h-6 w-20 rounded-full" />
 		</div>
 	</div>
 );
@@ -298,7 +525,7 @@ const _CategoryBadge: React.FC<CategoryBadgeProps> = React.memo(
 	function CategoryBadge({ active, onClick, count, label, variant, icon }) {
 		const getStyle = () => {
 			if (!active)
-				return "bg-white dark:bg-gray-900 border-2 border-gray-200 dark:border-gray-800 text-gray-600 dark:text-gray-400 hover:border-gray-300 dark:hover:border-gray-700";
+				return "border-2 border-border bg-card text-muted-foreground hover:bg-accent";
 
 			switch (variant) {
 				case "all":
@@ -317,9 +544,9 @@ const _CategoryBadge: React.FC<CategoryBadgeProps> = React.memo(
 				type="button"
 				onClick={onClick}
 				className={cn(
-					"inline-flex items-center gap-1.5 px-4 py-2.5 rounded-full text-sm font-semibold transition-all duration-200",
+					"inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-sm font-bold transition-all duration-200",
 					getStyle(),
-					active ? "scale-105" : "hover:scale-102",
+					
 				)}
 				aria-label={`${label} категори сонгох`}
 				aria-pressed={active}
@@ -330,8 +557,8 @@ const _CategoryBadge: React.FC<CategoryBadgeProps> = React.memo(
 					className={cn(
 						"ml-1 px-2 py-0.5 rounded-full text-xs font-bold",
 						active
-							? "bg-white/30 text-white"
-							: "bg-gray-200 dark:bg-gray-800 text-gray-700 dark:text-gray-300",
+							? "bg-primary-foreground/20 text-primary-foreground"
+							: "bg-muted text-muted-foreground",
 					)}
 				>
 					{count}

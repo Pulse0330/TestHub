@@ -69,57 +69,69 @@ const ExamMinimap = memo(function ExamMinimap({
 	const _progressPercentage =
 		totalCount > 0 ? Math.round((answeredCount / totalCount) * 100) : 0;
 
+	const squareClass = (answered: boolean, isCurrent: boolean) =>
+		`relative flex aspect-square w-full items-center justify-center rounded-xl text-sm font-black tabular-nums transition-all active:scale-90 ${
+			answered
+				? "bg-primary text-primary-foreground shadow-[0_3px_0_0_var(--primary-shade)] hover:brightness-110"
+				: "bg-muted text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+		} ${isCurrent ? "ring-4 ring-primary/30 ring-offset-2 ring-offset-card" : ""}`;
+
 	if (isMobileOverlay) {
 		return (
-			<div className="fixed inset-0 bg-black/50 z-50 flex items-end animate-in fade-in duration-200">
-				<div className="w-full bg-white dark:bg-slate-900 rounded-t-2xl max-h-[85vh] overflow-y-auto animate-in slide-in-from-bottom duration-300">
-					<div className="sticky top-0 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700 p-4 flex items-center justify-between z-10">
-						<div>
-							<h3 className="font-bold text-lg text-slate-900 dark:text-white">
-								Асуултууд
-							</h3>
-							<p className="text-sm text-slate-600 dark:text-slate-400">
-								{answeredCount}/{totalCount} хариулсан
-							</p>
+			<div className="fixed inset-0 z-50 flex items-end bg-foreground/40 animate-in fade-in duration-200">
+				<div className="max-h-[85vh] w-full overflow-y-auto rounded-t-3xl border-2 border-b-0 border-border bg-card animate-in slide-in-from-bottom duration-300">
+					<div className="sticky top-0 z-10 flex items-center justify-between border-b-2 border-border bg-card p-4">
+						<div className="flex items-center gap-3">
+							<div className="flex size-10 items-center justify-center rounded-2xl bg-primary/10 text-lg">
+								🧭
+							</div>
+							<div>
+								<h3 className="text-lg font-black text-foreground">Асуултууд</h3>
+								<p className="text-sm font-semibold text-muted-foreground">
+									{answeredCount}/{totalCount} хариулсан
+								</p>
+							</div>
 						</div>
 						<Button
 							onClick={onClose}
-							className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition"
+							variant="outline"
+							size="icon"
+							className="rounded-xl"
 						>
-							<X className="w-5 h-5 text-slate-600 dark:text-slate-400" />
+							<X className="size-5" />
 						</Button>
 					</div>
 
-					<div className="p-4 space-y-4">
+					<div className="space-y-4 p-4">
 						<div className="grid grid-cols-2 gap-3">
-							<div className="bg-linear-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 border border-green-200 dark:border-green-800 rounded-lg p-3 text-center">
-								<div className="text-2xl font-black text-green-600 dark:text-green-400">
+							<div className="rounded-2xl bg-pop-mint-soft p-3 text-center">
+								<div className="text-2xl font-black text-pop-mint-ink">
 									{answeredCount}
 								</div>
-								<div className="text-xs text-green-700 dark:text-green-300 font-semibold">
+								<div className="text-xs font-bold uppercase tracking-wide text-pop-mint-ink">
 									Хариулсан
 								</div>
 							</div>
-							<div className="bg-linear-to-br from-orange-50 to-amber-50 dark:from-orange-900/20 dark:to-amber-900/20 border border-orange-200 dark:border-orange-800 rounded-lg p-3 text-center">
-								<div className="text-2xl font-black text-orange-600 dark:text-orange-400">
+							<div className="rounded-2xl bg-pop-coral-soft p-3 text-center">
+								<div className="text-2xl font-black text-pop-coral-ink">
 									{totalCount - answeredCount}
 								</div>
-								<div className="text-xs text-orange-700 dark:text-orange-300 font-semibold">
+								<div className="text-xs font-bold uppercase tracking-wide text-pop-coral-ink">
 									Үлдсэн
 								</div>
 							</div>
 						</div>
 
-						<div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-4">
-							<div className="flex items-center justify-between mb-3">
-								<span className="text-sm font-bold text-slate-700 dark:text-slate-200">
+						<div className="card-pop p-4">
+							<div className="mb-3 flex items-center justify-between">
+								<span className="text-sm font-extrabold text-foreground">
 									Бүх асуултууд
 								</span>
-								<span className="text-xs bg-slate-100 dark:bg-slate-700 px-2 py-1 rounded-full font-semibold text-slate-600 dark:text-slate-400">
+								<span className="rounded-full bg-muted px-2.5 py-0.5 text-xs font-bold text-muted-foreground">
 									{questions.length}
 								</span>
 							</div>
-							<div className="grid grid-cols-5 gap-2">
+							<div className="grid grid-cols-5 gap-2.5">
 								{questions.map((q, idx) => {
 									const answered = isQuestionAnswered(q.question_id);
 									const isBookmarked = bookmarkedQuestions.has(q.question_id);
@@ -133,25 +145,18 @@ const ExamMinimap = memo(function ExamMinimap({
 												onQuestionClick(idx);
 												onClose?.();
 											}}
-											className={`relative aspect-square rounded-lg transition-all active:scale-90 flex items-center justify-center text-sm font-bold
-												${
-													answered
-														? "bg-linear-to-br from-green-500 to-green-600 text-white shadow-sm"
-														: "bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-600"
-												}
-												${isCurrent ? "ring-2 ring-blue-500 ring-offset-2 dark:ring-offset-slate-900 scale-105" : ""}
-											`}
+											className={squareClass(answered, isCurrent)}
 										>
 											{idx + 1}
 											{isBookmarked && (
-												<span className="absolute -top-1 -right-1 z-10">
-													<div className="bg-yellow-400 rounded-full p-0.5 shadow-md">
-														<Bookmark className="w-2 h-2 fill-white text-white" />
+												<span className="absolute -top-1.5 -right-1.5 z-10">
+													<div className="rounded-full border-2 border-card bg-warning p-0.5">
+														<Bookmark className="size-2.5 fill-current text-[color-mix(in_oklch,var(--warning)_22%,black)]" />
 													</div>
 												</span>
 											)}
 											{answered && (
-												<CheckCircle2 className="absolute -bottom-0.5 -right-0.5 w-3 h-3 text-white opacity-80" />
+												<CheckCircle2 className="absolute right-0.5 bottom-0.5 size-3 text-primary-foreground opacity-70" />
 											)}
 										</button>
 									);
@@ -160,10 +165,10 @@ const ExamMinimap = memo(function ExamMinimap({
 						</div>
 
 						{bookmarkedQuestionsArray.length > 0 && (
-							<div className="bg-linear-to-br from-yellow-50 to-amber-50 dark:from-yellow-900/20 dark:to-amber-900/20 rounded-xl border border-yellow-200 dark:border-yellow-800 p-4">
-								<div className="flex items-center gap-2 mb-3">
-									<Bookmark className="w-4 h-4 fill-yellow-500 text-yellow-500" />
-									<span className="text-sm font-bold text-yellow-800 dark:text-yellow-200">
+							<div className="rounded-2xl bg-pop-sun-soft p-4">
+								<div className="mb-3 flex items-center gap-2">
+									<Bookmark className="size-4 fill-current text-pop-sun-ink" />
+									<span className="text-sm font-extrabold text-pop-sun-ink">
 										Тэмдэглэсэн ({bookmarkedCount})
 									</span>
 								</div>
@@ -180,7 +185,7 @@ const ExamMinimap = memo(function ExamMinimap({
 													onQuestionClick(questionIndex);
 													onClose?.();
 												}}
-												className="bg-white dark:bg-slate-800 border border-yellow-300 dark:border-yellow-700 rounded-md px-3 py-1.5 text-sm font-bold text-yellow-700 dark:text-yellow-300 hover:bg-yellow-100 dark:hover:bg-yellow-900/30 active:scale-95 transition-all shadow-sm"
+												className="rounded-full border-2 border-warning bg-card px-3 py-1 text-sm font-bold text-pop-sun-ink transition-all hover:-translate-y-0.5 active:scale-95"
 											>
 												#{questionIndex + 1}
 											</button>
@@ -197,18 +202,18 @@ const ExamMinimap = memo(function ExamMinimap({
 
 	// Desktop Version
 	return (
-		<div className="space-y-2 w-full">
-			<div className="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
-				<div className="p-2.5 sm:p-3">
-					<div className="flex items-center justify-between mb-2">
-						<span className="text-[10px] sm:text-xs font-bold text-slate-700 dark:text-slate-200">
+		<div className="w-full space-y-3">
+			<div className="card-pop overflow-hidden">
+				<div className="@container p-4">
+					<div className="mb-3 flex items-center justify-between">
+						<span className="text-sm font-extrabold text-foreground">
 							Асуултууд
 						</span>
-						<span className="text-[9px] sm:text-[10px] bg-slate-100 dark:bg-slate-800 px-1.5 sm:px-2 py-0.5 rounded-full font-semibold text-slate-600 dark:text-slate-400">
+						<span className="rounded-full bg-muted px-2.5 py-0.5 text-xs font-bold text-muted-foreground">
 							{questions.length}
 						</span>
 					</div>
-					<div className="grid grid-cols-6 sm:grid-cols-8 md:grid-cols-10 lg:grid-cols-6 gap-1 sm:gap-1.5">
+					<div className="grid grid-cols-5 gap-2 @xs:grid-cols-6 @md:grid-cols-8 @2xl:grid-cols-10">
 						{questions.map((q, idx) => {
 							const answered = isQuestionAnswered(q.question_id);
 							const isBookmarked = bookmarkedQuestions.has(q.question_id);
@@ -219,25 +224,18 @@ const ExamMinimap = memo(function ExamMinimap({
 									type="button"
 									key={q.question_id}
 									onClick={() => onQuestionClick(idx)}
-									className={`relative aspect-square rounded-lg transition-all active:scale-90 flex items-center justify-center text-[10px] sm:text-xs font-bold w-full
-										${
-											answered
-												? "bg-linear-to-br from-green-500 to-green-600 text-white shadow-sm hover:shadow-md"
-												: "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-600"
-										}
-										${isCurrent ? "ring-2 ring-blue-500 ring-offset-1 dark:ring-offset-slate-900 scale-105" : ""}
-									`}
+									className={squareClass(answered, isCurrent)}
 								>
 									{idx + 1}
 									{isBookmarked && (
-										<span className="absolute -top-0.5 -right-0.5 z-10">
-											<div className="bg-yellow-400 rounded-full p-0.5 shadow-md">
-												<Bookmark className="w-1.5 h-1.5 sm:w-2 sm:h-2 fill-white text-white" />
+										<span className="absolute -top-1.5 -right-1.5 z-10">
+											<div className="rounded-full border-2 border-card bg-warning p-0.5">
+												<Bookmark className="size-2 fill-current text-[color-mix(in_oklch,var(--warning)_22%,black)]" />
 											</div>
 										</span>
 									)}
 									{answered && (
-										<CheckCircle2 className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 sm:w-3 sm:h-3 text-white opacity-80" />
+										<CheckCircle2 className="absolute right-0.5 bottom-0.5 size-2.5 text-primary-foreground opacity-70" />
 									)}
 								</button>
 							);
@@ -246,35 +244,35 @@ const ExamMinimap = memo(function ExamMinimap({
 				</div>
 			</div>
 
-			<div className="grid grid-cols-2 gap-1.5 sm:gap-2">
-				<div className="bg-linear-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 border border-green-200 dark:border-green-800 rounded-lg p-2 sm:p-2.5 text-center">
-					<div className="text-lg sm:text-xl md:text-2xl font-black text-green-600 dark:text-green-400">
+			<div className="grid grid-cols-2 gap-2">
+				<div className="rounded-2xl bg-pop-mint-soft p-3 text-center">
+					<div className="text-2xl font-black text-pop-mint-ink">
 						{answeredCount}
 					</div>
-					<div className="text-[9px] sm:text-[10px] md:text-xs text-green-700 dark:text-green-300 font-semibold">
+					<div className="text-[10px] font-bold uppercase tracking-wide text-pop-mint-ink sm:text-xs">
 						Хариулсан
 					</div>
 				</div>
-				<div className="bg-linear-to-br from-orange-50 to-amber-50 dark:from-orange-900/20 dark:to-amber-900/20 border border-orange-200 dark:border-orange-800 rounded-lg p-2 sm:p-2.5 text-center">
-					<div className="text-lg sm:text-xl md:text-2xl font-black text-orange-600 dark:text-orange-400">
+				<div className="rounded-2xl bg-pop-coral-soft p-3 text-center">
+					<div className="text-2xl font-black text-pop-coral-ink">
 						{totalCount - answeredCount}
 					</div>
-					<div className="text-[9px] sm:text-[10px] md:text-xs text-orange-700 dark:text-orange-300 font-semibold">
+					<div className="text-[10px] font-bold uppercase tracking-wide text-pop-coral-ink sm:text-xs">
 						Үлдсэн
 					</div>
 				</div>
 			</div>
 
 			{bookmarkedQuestionsArray.length > 0 && (
-				<div className="bg-linear-to-br from-yellow-50 to-amber-50 dark:from-yellow-900/20 dark:to-amber-900/20 rounded-xl shadow-sm border border-yellow-200 dark:border-yellow-800 overflow-hidden">
-					<div className="p-2 sm:p-2.5">
-						<div className="flex items-center gap-1.5 mb-1.5">
-							<Bookmark className="w-3 h-3 sm:w-3.5 sm:h-3.5 fill-yellow-500 text-yellow-500" />
-							<span className="text-[10px] sm:text-xs font-bold text-yellow-800 dark:text-yellow-200">
+				<div className="overflow-hidden rounded-2xl bg-pop-sun-soft">
+					<div className="p-3">
+						<div className="mb-2 flex items-center gap-1.5">
+							<Bookmark className="size-3.5 fill-current text-pop-sun-ink" />
+							<span className="text-xs font-extrabold text-pop-sun-ink">
 								Тэмдэглэсэн ({bookmarkedCount})
 							</span>
 						</div>
-						<div className="flex flex-wrap gap-1 sm:gap-1.5">
+						<div className="flex flex-wrap gap-1.5">
 							{bookmarkedQuestionsArray.map((q) => {
 								// ✅ FIX 4: O(n) findIndex → O(1) Map.get()
 								const questionIndex = questionIndexMap.get(q.question_id) ?? -1;
@@ -283,7 +281,7 @@ const ExamMinimap = memo(function ExamMinimap({
 										type="button"
 										key={q.question_id}
 										onClick={() => onQuestionClick(questionIndex)}
-										className="bg-white dark:bg-slate-800 border border-yellow-300 dark:border-yellow-700 rounded-md px-2 sm:px-2.5 py-0.5 sm:py-1 text-[10px] sm:text-xs font-bold text-yellow-700 dark:text-yellow-300 hover:bg-yellow-100 dark:hover:bg-yellow-900/30 active:scale-95 transition-all shadow-sm"
+										className="rounded-full border-2 border-warning bg-card px-2.5 py-0.5 text-xs font-bold text-pop-sun-ink transition-all hover:-translate-y-0.5 active:scale-95"
 									>
 										#{questionIndex + 1}
 									</button>

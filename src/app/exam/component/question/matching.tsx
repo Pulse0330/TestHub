@@ -51,7 +51,7 @@ function MatchingZoomImage({
 					sizes="280px"
 					quality={85}
 					style={{ objectFit: "contain" }}
-					className="rounded-lg pointer-events-none"
+					className="pointer-events-none rounded-xl"
 					loading="lazy"
 				/>
 				<button
@@ -60,23 +60,23 @@ function MatchingZoomImage({
 						e.stopPropagation();
 						setIsOpen(true);
 					}}
-					className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity bg-white/90 rounded-full p-1.5 shadow hover:bg-white z-10"
+					className="absolute top-1 right-1 z-10 flex size-8 items-center justify-center rounded-xl border-2 border-border bg-card text-foreground opacity-0 transition-opacity group-hover:opacity-100"
 					title="Томруулах"
 				>
-					<Maximize size={14} className="text-gray-700" />
+					<Maximize size={14} />
 				</button>
 			</div>
 
 			<Dialog open={isOpen} onOpenChange={close}>
 				<DialogContent
-					className="w-[95vw] max-w-5xl h-[90vh] p-4 flex flex-col"
+					className="flex h-[90vh] w-[95vw] max-w-5xl flex-col p-4"
 					onClick={(e) => e.stopPropagation()}
 				>
-					<DialogTitle className="text-sm truncate">{alt}</DialogTitle>
+					<DialogTitle className="truncate text-sm font-bold">{alt}</DialogTitle>
 					<div
 						role="application"
 						aria-label="Зургийг чирж томруулах"
-						className="relative flex-1 flex items-center justify-center overflow-hidden rounded-lg bg-gray-50 dark:bg-gray-900"
+						className="relative flex flex-1 items-center justify-center overflow-hidden rounded-2xl bg-muted"
 						onMouseDown={(e) => {
 							if (zoom <= 1) return;
 							setIsDragging(true);
@@ -115,12 +115,12 @@ function MatchingZoomImage({
 								quality={100}
 								priority
 								style={{ objectFit: "contain" }}
-								className="rounded-lg pointer-events-none"
+								className="pointer-events-none rounded-xl"
 								draggable={false}
 							/>
 						</div>
 
-						<div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-2 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-xl px-3 py-2 shadow-lg">
+						<div className="absolute bottom-3 left-1/2 flex -translate-x-1/2 items-center gap-2 rounded-2xl border-2 border-border bg-card px-3 py-2 shadow-[0_4px_0_0_var(--border)]">
 							<Button
 								size="icon"
 								variant="ghost"
@@ -129,7 +129,7 @@ function MatchingZoomImage({
 							>
 								<ZoomIn size={18} />
 							</Button>
-							<span className="text-xs font-medium w-12 text-center">
+							<span className="w-12 text-center text-xs font-bold tabular-nums">
 								{Math.round(zoom * 100)}%
 							</span>
 							<Button
@@ -146,7 +146,7 @@ function MatchingZoomImage({
 							>
 								<ZoomOut size={18} />
 							</Button>
-							<div className="w-px h-5 bg-gray-300" />
+							<div className="h-5 w-0.5 rounded-full bg-border" />
 							<Button
 								size="icon"
 								variant="ghost"
@@ -171,7 +171,7 @@ function MatchingZoomImage({
 						<Button
 							size="icon"
 							variant="secondary"
-							className="absolute top-2 right-2 shadow"
+							className="absolute top-2 right-2"
 							onClick={close}
 						>
 							<Minimize size={18} />
@@ -450,12 +450,12 @@ export default function MatchingByLine({
 					</div>
 				)}
 				{item.answer_name_html && (
-					<div className="text-sm font-medium text-center">
+					<div className="text-center text-sm font-bold">
 						{parse(item.answer_name_html.trim())}
 					</div>
 				)}
 				{!item.answer_name_html && !item.answer_img && (
-					<div className="text-sm text-gray-400 text-center">
+					<div className="text-center text-sm font-semibold text-muted-foreground">
 						Контент байхгүй
 					</div>
 				)}
@@ -500,8 +500,8 @@ export default function MatchingByLine({
 		<>
 			<div ref={containerRef} className="w-full relative">
 				<Xwrapper>
-					<div className="flex items-center justify-center gap-2 mb-4">
-						<p className="font-semibold text-center text-sm">
+					<div className="mb-4 flex items-center justify-center gap-2 rounded-2xl bg-muted/60 px-3 py-2.5">
+						<p className="text-center text-sm font-bold text-muted-foreground">
 							{isMobile
 								? "Асуулт → Хариулт → Асуулт дахин → Дараагийн хариулт"
 								: "Асуулт сонгоод хариултаа дарна уу. Дараагийн хариулт холбохын тулд асуултаа дахин дарна уу."}
@@ -509,10 +509,10 @@ export default function MatchingByLine({
 						<button
 							type="button"
 							onClick={() => setShowHelp(true)}
-							className="p-1 rounded-full hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors"
+							className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-pop-sky-soft text-pop-sky-ink transition-transform hover:-translate-y-0.5"
 							title="Заавар харах"
 						>
-							<HelpCircle className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+							<HelpCircle className="size-5" strokeWidth={2.5} />
 						</button>
 					</div>
 
@@ -535,27 +535,27 @@ export default function MatchingByLine({
 											id={qid}
 											{...interactiveProps(qid)}
 											className={cn(
-												"w-full p-3 rounded-lg flex flex-col items-center transition-colors cursor-pointer",
+												"flex w-full cursor-pointer flex-col items-center rounded-2xl border-2 p-3 transition-colors",
 												isSelected(qid)
-													? "border-2 border-blue-500"
+													? "border-pop-sky bg-pop-sky-soft ring-4 ring-pop-sky/20"
 													: isConnected(qid)
-														? "border-2 border-green-500 bg-green-50"
-														: "border border-gray-300",
+														? "border-success bg-success/10"
+														: "border-border bg-card",
 											)}
 										>
 											{renderContent(q)}
 											{connectedAnswers.length > 0 && (
-												<div className="mt-2 text-xs text-gray-500">
+												<div className="mt-2 rounded-full bg-success/15 px-2.5 py-0.5 text-xs font-bold text-success">
 													{connectedAnswers.length} хариулт холбогдсон
 												</div>
 											)}
 										</div>
 
 										{answerItems.length > 0 && (
-											<div className="pl-4 space-y-2 border-l-2 border-green-500">
-												<div className="text-sm text-gray-500 dark:text-gray-400 flex items-center justify-between">
+											<div className="ml-2 space-y-2 border-l-4 border-success/40 pl-3">
+												<div className="flex items-center justify-between text-sm font-bold text-muted-foreground">
 													<span>Сонгосон хариултууд:</span>
-													<span className="text-xs text-red-400">
+													<span className="text-xs font-bold text-destructive">
 														дарж устгана
 													</span>
 												</div>
@@ -567,13 +567,13 @@ export default function MatchingByLine({
 																{...interactiveProps(
 																	`a-${answerItem.answer_id}`,
 																)}
-																className="p-2 rounded border border-green-500 bg-green-50 dark:bg-green-900/20 cursor-pointer hover:border-red-400 hover:bg-red-50 active:scale-95 transition-all"
+																className="cursor-pointer rounded-xl border-2 border-success bg-success/10 p-2 transition-all hover:border-destructive hover:bg-destructive/10 active:scale-95"
 															>
 																<div className="flex items-center gap-2">
 																	<div className="flex-1">
 																		{renderContent(answerItem)}
 																	</div>
-																	<X className="w-4 h-4 text-red-500 shrink-0" />
+																	<X className="size-4 shrink-0 text-destructive" />
 																</div>
 															</div>
 														),
@@ -582,9 +582,9 @@ export default function MatchingByLine({
 										)}
 
 										{isSelected(qid) && (
-											<div className="pl-4 mt-2 space-y-2">
-												<div className="text-sm text-gray-600 dark:text-gray-400 mb-1 flex items-center gap-2">
-													<span className="inline-block w-2 h-2 bg-blue-500 rounded-full animate-pulse" />
+											<div className="mt-2 ml-2 space-y-2 pl-3">
+												<div className="mb-1 flex items-center gap-2 text-sm font-bold text-pop-sky-ink">
+													<span className="inline-block size-2 animate-pulse rounded-full bg-pop-sky" />
 													Холбох хариултаа сонгоно уу:
 												</div>
 												{answersOnly.map((a) => {
@@ -597,10 +597,10 @@ export default function MatchingByLine({
 															key={aid}
 															{...interactiveProps(aid)}
 															className={cn(
-																"w-full p-2 border rounded cursor-pointer transition-colors",
+																"w-full cursor-pointer rounded-xl border-2 p-2 transition-colors",
 																alreadyConnected
-																	? "border-green-500 bg-green-50 dark:bg-green-900/20"
-																	: "border-dashed border-blue-300 hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20",
+																	? "border-success bg-success/10"
+																	: "border-dashed border-pop-sky/50 bg-card hover:border-pop-sky hover:bg-pop-sky-soft",
 															)}
 														>
 															{renderContent(a)}
@@ -614,12 +614,16 @@ export default function MatchingByLine({
 							})}
 						</div>
 					) : (
-						<div className="grid grid-cols-2 gap-x-8 gap-y-3">
-							<div className="border-b pb-2">
-								<h3 className="font-semibold text-center">Асуулт</h3>
+						<div className="grid grid-cols-2 gap-x-10 gap-y-3">
+							<div className="flex justify-center">
+								<h3 className="rounded-full bg-muted px-4 py-1 text-center text-xs font-extrabold uppercase tracking-wide text-muted-foreground">
+									Асуулт
+								</h3>
 							</div>
-							<div className="border-b pb-2">
-								<h3 className="font-semibold text-center">Хариулт</h3>
+							<div className="flex justify-center">
+								<h3 className="rounded-full bg-muted px-4 py-1 text-center text-xs font-extrabold uppercase tracking-wide text-muted-foreground">
+									Хариулт
+								</h3>
 							</div>
 
 							<div className="space-y-3">
@@ -634,12 +638,12 @@ export default function MatchingByLine({
 											id={qid}
 											{...interactiveProps(qid)}
 											className={cn(
-												"w-full p-4 rounded-lg flex flex-col items-center justify-center transition-all cursor-pointer relative",
+												"relative flex w-full cursor-pointer flex-col items-center justify-center rounded-2xl border-2 bg-card p-4 transition-all",
 												isSelected(qid)
-													? "border-2 border-blue-500 shadow-lg"
+													? "border-pop-sky bg-pop-sky-soft shadow-[0_4px_0_0_var(--pop-sky)] ring-4 ring-pop-sky/20"
 													: isConnected(qid)
-														? "border-2 border-green-500 hover:border-red-400"
-														: "border border-gray-300 hover:border-blue-400",
+														? "border-success hover:border-destructive"
+														: "border-border shadow-[0_3px_0_0_var(--border)] hover:border-pop-sky/60",
 											)}
 											style={
 												!isSelected(qid) && colors.length > 0
@@ -657,7 +661,7 @@ export default function MatchingByLine({
 										>
 											{renderContent(q)}
 											{connectionCount > 0 && (
-												<div className="absolute top-2 right-2 bg-green-500 text-white text-xs rounded-full w-6 h-6 flex items-center justify-center font-bold">
+												<div className="absolute top-2 right-2 flex size-6 items-center justify-center rounded-full bg-success text-xs font-black text-white">
 													{connectionCount}
 												</div>
 											)}
@@ -679,17 +683,17 @@ export default function MatchingByLine({
 											id={aid}
 											{...interactiveProps(aid)}
 											className={cn(
-												"w-full p-4 rounded-lg flex flex-col items-center justify-center transition-all relative",
+												"relative flex w-full flex-col items-center justify-center rounded-2xl border-2 bg-card p-4 transition-all",
 												isClickable
 													? "cursor-pointer"
 													: "cursor-not-allowed opacity-60",
 												isSelected(aid)
-													? "border-2 border-blue-500 shadow-md"
+													? "border-pop-sky bg-pop-sky-soft"
 													: isConnectedAnswer
-														? "border-2 border-green-500 bg-green-50 hover:border-red-400 hover:bg-red-50"
+														? "border-success bg-success/10 hover:border-destructive hover:bg-destructive/10"
 														: activeStart
-															? "border border-gray-300 hover:border-blue-400"
-															: "border border-gray-300",
+															? "border-dashed border-pop-sky/50 hover:border-pop-sky hover:bg-pop-sky-soft"
+															: "border-border",
 											)}
 											style={
 												!isSelected(aid) && colors.length > 0
@@ -708,7 +712,7 @@ export default function MatchingByLine({
 										>
 											{renderContent(a)}
 											{isConnectedAnswer && (
-												<div className="absolute top-1 right-1 text-xs text-red-500 opacity-0 group-hover:opacity-100 transition-opacity">
+												<div className="absolute top-1 right-1 text-xs font-bold text-destructive opacity-0 transition-opacity group-hover:opacity-100">
 													×
 												</div>
 											)}
@@ -736,18 +740,20 @@ export default function MatchingByLine({
 			{/* Help Dialog */}
 			<Dialog open={showHelp} onOpenChange={setShowHelp}>
 				<DialogContent className="max-w-md">
-					<DialogTitle className="flex items-center gap-2">
-						<HelpCircle className="w-6 h-6 text-blue-600" />
-						<span className="text-xl font-bold">Хэрхэн ашиглах вэ?</span>
+					<DialogTitle className="flex items-center gap-3">
+						<span className="flex size-10 items-center justify-center rounded-xl bg-pop-sky-soft text-pop-sky-ink">
+							<HelpCircle className="size-5" strokeWidth={2.5} />
+						</span>
+						<span className="text-xl font-black">Хэрхэн ашиглах вэ?</span>
 					</DialogTitle>
 
 					<div className="space-y-4">
 						<div className="space-y-3 text-sm">
-							<div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-								<h3 className="font-semibold text-blue-900 dark:text-blue-100 mb-2">
+							<div className="rounded-2xl bg-pop-sky-soft p-3.5">
+								<h3 className="mb-2 font-extrabold text-pop-sky-ink">
 									✅ Холбох
 								</h3>
-								<ol className="space-y-1 text-gray-700 dark:text-gray-300 list-decimal list-inside">
+								<ol className="list-inside list-decimal space-y-1 font-semibold text-foreground/80">
 									<li>
 										<strong>Асуулт</strong> баганаас асуултаа сонгоно (цэнхэр
 										хүрээтэй болно)
@@ -763,11 +769,11 @@ export default function MatchingByLine({
 								</ol>
 							</div>
 
-							<div className="p-3 bg-red-50 dark:bg-red-900/20 rounded-lg">
-								<h3 className="font-semibold text-red-900 dark:text-red-100 mb-2">
+							<div className="rounded-2xl bg-pop-coral-soft p-3.5">
+								<h3 className="mb-2 font-extrabold text-pop-coral-ink">
 									❌ Устгах
 								</h3>
-								<ul className="space-y-1 text-gray-700 dark:text-gray-300 list-disc list-inside">
+								<ul className="list-inside list-disc space-y-1 font-semibold text-foreground/80">
 									<li>
 										Холбогдсон <strong>хариулт</strong> дээр дарах → холболт
 										устана
@@ -778,9 +784,9 @@ export default function MatchingByLine({
 								</ul>
 							</div>
 
-							<div className="p-3 bg-gray-100 dark:bg-gray-800 rounded-lg">
-								<h3 className="font-semibold mb-2">💡 Дохио өнгөнүүд</h3>
-								<ul className="space-y-1 text-sm text-gray-700 dark:text-gray-300">
+							<div className="rounded-2xl bg-muted p-3.5">
+								<h3 className="mb-2 font-extrabold">💡 Дохио өнгөнүүд</h3>
+								<ul className="space-y-1 text-sm font-semibold text-foreground/80">
 									<li>🔵 Цэнхэр = Идэвхтэй сонголт</li>
 									<li>🟢 Ногоон = Холбогдсон</li>
 									<li>🔴 Улаан = Устгах боломжтой</li>
@@ -791,6 +797,7 @@ export default function MatchingByLine({
 						<Button
 							onClick={() => setShowHelp(false)}
 							className="w-full"
+							size="lg"
 							variant="default"
 						>
 							Ойлголоо

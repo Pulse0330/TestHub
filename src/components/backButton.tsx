@@ -63,8 +63,8 @@ export default function StyledBackButton({
 	// Variant-ээс хамааран default style
 	const defaultStyles =
 		variant === "ghost"
-			? "bg-transparent hover:bg-slate-100 dark:hover:bg-slate-800"
-			: "bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700";
+			? "bg-transparent hover:bg-muted"
+			: "bg-card hover:bg-muted";
 
 	return (
 		<>
@@ -72,7 +72,7 @@ export default function StyledBackButton({
 				type="button"
 				onClick={handleClick}
 				className={cn(
-					"group inline-flex items-center gap-2 p-0 duration-300 cursor-pointer border-none focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 rounded-full transition-all",
+					"group inline-flex cursor-pointer items-center gap-2 rounded-xl p-0 transition-all duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40",
 					variant === "default" && defaultStyles,
 					className,
 				)}
@@ -81,12 +81,12 @@ export default function StyledBackButton({
 				{variant === "default" ? (
 					<div
 						className={cn(
-							"flex items-center justify-center w-8 h-8 rounded-full group-active:scale-95 transition-all duration-300",
+							"flex size-9 items-center justify-center rounded-xl border-2 border-border text-foreground shadow-[0_3px_0_0_var(--border)] transition-all duration-300 group-hover:-translate-y-0.5 group-active:translate-y-0.5 group-active:shadow-none",
 							defaultStyles,
 						)}
 					>
 						{showIcon && (
-							<ArrowLeft className="w-4 h-4 text-slate-600 dark:text-slate-400 group-hover:-translate-x-0.5 transition-all duration-300" />
+							<ArrowLeft className="size-4 transition-all duration-300 group-hover:-translate-x-0.5" strokeWidth={2.5} />
 						)}
 					</div>
 				) : (
@@ -100,14 +100,17 @@ export default function StyledBackButton({
 			</button>
 
 			<AlertDialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-				<AlertDialogContent>
-					<AlertDialogHeader>
+				<AlertDialogContent className="max-w-sm">
+					<AlertDialogHeader className="items-center text-center sm:items-center sm:text-center">
+						<div className="mb-2 flex size-16 items-center justify-center rounded-3xl bg-pop-sun-soft text-pop-sun-ink">
+							<ArrowLeft className="size-7" strokeWidth={2.5} />
+						</div>
 						<AlertDialogTitle>{confirmTitle}</AlertDialogTitle>
 						<AlertDialogDescription>{confirmMessage}</AlertDialogDescription>
 					</AlertDialogHeader>
-					<AlertDialogFooter>
-						<AlertDialogCancel>Болих</AlertDialogCancel>
-						<AlertDialogAction onClick={handleConfirm}>Тийм</AlertDialogAction>
+					<AlertDialogFooter className="mt-2 gap-2 sm:justify-center">
+						<AlertDialogCancel className="flex-1">Болих</AlertDialogCancel>
+						<AlertDialogAction onClick={handleConfirm} className="flex-1">Тийм</AlertDialogAction>
 					</AlertDialogFooter>
 				</AlertDialogContent>
 			</AlertDialog>

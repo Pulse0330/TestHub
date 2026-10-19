@@ -120,6 +120,52 @@ async function apiClass(database: string, serverip: string) {
 	return r.json();
 }
 
+// ─── Visual helpers ───────────────────────────────────────────────────────────
+type Tone = "violet" | "sky" | "mint" | "sun" | "coral" | "pink";
+const TONE_CHIP: Record<Tone, string> = {
+	violet: "bg-pop-violet-soft text-pop-violet-ink",
+	sky: "bg-pop-sky-soft text-pop-sky-ink",
+	mint: "bg-pop-mint-soft text-pop-mint-ink",
+	sun: "bg-pop-sun-soft text-pop-sun-ink",
+	coral: "bg-pop-coral-soft text-pop-coral-ink",
+	pink: "bg-pop-pink-soft text-pop-pink-ink",
+};
+
+function IconChip({
+	tone,
+	children,
+	className = "",
+}: {
+	tone: Tone;
+	children: React.ReactNode;
+	className?: string;
+}) {
+	return (
+		<span
+			className={`flex size-10 shrink-0 items-center justify-center rounded-xl [&_svg]:size-5 ${TONE_CHIP[tone]} ${className}`}
+		>
+			{children}
+		</span>
+	);
+}
+
+function SectionTitle({
+	tone,
+	icon,
+	title,
+}: {
+	tone: Tone;
+	icon: React.ReactNode;
+	title: string;
+}) {
+	return (
+		<div className="mb-5 flex items-center gap-3">
+			<IconChip tone={tone}>{icon}</IconChip>
+			<h3 className="text-lg font-black tracking-tight">{title}</h3>
+		</div>
+	);
+}
+
 // ─── SelectField ──────────────────────────────────────────────────────────────
 interface SelectFieldProps {
 	label: string;
@@ -142,53 +188,81 @@ function SelectField({
 	icon,
 }: SelectFieldProps) {
 	return (
-		<div className="flex items-center p-4 bg-slate-50 dark:bg-slate-800 rounded-xl">
-			<div className="flex items-start gap-3 flex-1">
-				<div className="w-5 h-5 mt-0.5 shrink-0">{icon}</div>
-				<div className="flex-1">
-					<p className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1.5 mb-1">
-						{label}
-						{loading && (
-							<Loader2 className="w-3 h-3 animate-spin text-emerald-500" />
-						)}
-					</p>
-					{disabled && !value ? (
-						<p className="text-sm font-semibold text-slate-900 dark:text-white">
-							<span className="text-slate-400 font-normal">—</span>
-						</p>
-					) : (
-						<Select
-							value={value}
-							onValueChange={onValueChange}
-							disabled={disabled || loading}
-						>
-							<SelectTrigger className="h-8 w-full bg-transparent border-0 border-b border-slate-300 dark:border-slate-600 focus:border-blue-500 rounded-none px-0 text-sm font-semibold text-slate-900 dark:text-white shadow-none focus:ring-0">
-								<span className="truncate block text-left text-sm">
-									{value && options.length === 0 ? (
-										<Loader2 className="w-3 h-3 animate-spin text-emerald-500 inline" />
-									) : value ? (
-										(options.find((o) => o.value === value)?.label ?? value)
-									) : (
-										placeholder
-									)}
-								</span>
-							</SelectTrigger>
-							<SelectContent className="max-w-(--radix-select-trigger-width)">
-								{options
-									.filter((o) => o.value !== "")
-									.map((o) => (
-										<SelectItem
-											key={o.value}
-											value={o.value}
-											className="whitespace-normal"
-										>
-											{o.label}
-										</SelectItem>
-									))}
-							</SelectContent>
-						</Select>
+		<div className="flex items-start gap-3 rounded-2xl bg-muted p-4">
+			<span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-card [&_svg]:size-5">
+				{icon}
+			</span>
+			<div className="min-w-0 flex-1">
+				<p className="mb-1.5 flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-muted-foreground">
+					{label}
+					{loading && (
+						<Loader2 className="size-3 animate-spin text-primary" />
 					)}
-				</div>
+				</p>
+				{disabled && !value ? (
+					<p className="text-sm font-bold text-foreground">
+						<span className="font-semibold text-muted-foreground">—</span>
+					</p>
+				) : (
+					<Select
+						value={value}
+						onValueChange={onValueChange}
+						disabled={disabled || loading}
+					>
+						<SelectTrigger className="h-10 w-full rounded-xl border-2 border-input bg-card text-sm font-bold text-foreground">
+							<span className="block truncate text-left text-sm">
+								{value && options.length === 0 ? (
+									<Loader2 className="inline size-3 animate-spin text-primary" />
+								) : value ? (
+									(options.find((o) => o.value === value)?.label ?? value)
+								) : (
+									placeholder
+								)}
+							</span>
+						</SelectTrigger>
+						<SelectContent className="max-w-(--radix-select-trigger-width)">
+							{options
+								.filter((o) => o.value !== "")
+								.map((o) => (
+									<SelectItem
+										key={o.value}
+										value={o.value}
+										className="whitespace-normal"
+									>
+										{o.label}
+									</SelectItem>
+								))}
+						</SelectContent>
+					</Select>
+				)}
+			</div>
+		</div>
+	);
+}
+
+function InfoTile({
+	tone,
+	icon,
+	label,
+	children,
+	className = "",
+}: {
+	tone: Tone;
+	icon: React.ReactNode;
+	label: string;
+	children: React.ReactNode;
+	className?: string;
+}) {
+	return (
+		<div className={`flex items-start gap-3 rounded-2xl bg-muted p-4 ${className}`}>
+			<IconChip tone={tone}>{icon}</IconChip>
+			<div className="min-w-0 flex-1">
+				<p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
+					{label}
+				</p>
+				<p className="mt-0.5 break-words text-sm font-bold text-foreground">
+					{children}
+				</p>
 			</div>
 		</div>
 	);
@@ -782,142 +856,113 @@ export function ProfileContent({ user, userId }: ProfileContentProps) {
 	};
 
 	return (
-		<div className="min-h-screen p-4 md:p-6 lg:p-8">
+		<div className="w-full">
 			{showToast && (
-				<div className="fixed top-6 right-6 z-50 animate-in slide-in-from-top-5 fade-in duration-500">
-					<div className="bg-linear-to-r from-emerald-500 to-green-600 text-white px-5 py-3 rounded-2xl shadow-2xl flex items-center gap-3 min-w-[280px]">
-						<CheckCircle2 className="w-5 h-5" strokeWidth={2.5} />
-						<div>
-							<p className="font-bold text-sm">Амжилттай!</p>
-							<p className="text-xs opacity-90">Мэдээлэл шинэчлэгдлээ</p>
+				<div className="fixed right-4 top-6 z-50 animate-in fade-in slide-in-from-top-5 duration-500 sm:right-6">
+					<div className="flex min-w-[280px] items-center gap-3 rounded-2xl border-2 border-success bg-success px-5 py-3 text-white shadow-[0_4px_0_0_color-mix(in_oklch,var(--success)_65%,black)]">
+						<span className="flex size-9 items-center justify-center rounded-xl bg-white/20">
+							<CheckCircle2 className="size-5" strokeWidth={2.5} />
+						</span>
+						<div className="flex-1">
+							<p className="text-sm font-black">Амжилттай!</p>
+							<p className="text-xs font-semibold opacity-90">Мэдээлэл шинэчлэгдлээ</p>
 						</div>
 						<Button
 							onClick={() => setShowToast(false)}
 							variant="ghost"
 							size="icon"
-							className="w-7 h-7 hover:bg-white/20"
+							className="size-7 text-white hover:bg-white/20 hover:text-white"
 						>
-							<X className="w-4 h-4" />
+							<X className="size-4" />
 						</Button>
 					</div>
 				</div>
 			)}
 
-			<div className="max-w-6xl mx-auto">
-				<form onSubmit={handleSubmit}>
-					<div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-						{/* ── Left Column ── */}
-						<div className="lg:col-span-1">
-							<div className="bg-white dark:bg-slate-900 rounded-3xl shadow-xl p-8 relative overflow-hidden">
-								<div className="absolute top-0 left-0 right-0 h-32" />
-								<div className="relative space-y-6">
-									<div className="flex flex-col items-center">
-										<div className="relative group">
-											<Avatar className="w-32 h-32 border-4 border-white dark:border-slate-800 shadow-xl">
-												<AvatarImage
-													src={imagePreview || user.img_url || undefined}
-													className="object-cover"
-												/>
-												<AvatarFallback className="text-2xl font-bold">
-													{getInitials(user.username)}
-												</AvatarFallback>
-											</Avatar>
-											{isEditing && (
-												<>
-													<label
-														htmlFor="image-upload"
-														className="absolute bottom-1 right-1 w-10 h-10 rounded-full flex items-center justify-center cursor-pointer hover:scale-110 transition-all shadow-lg border-3 border-white dark:border-slate-800 bg-blue-500"
-													>
-														<Camera className="w-5 h-5 text-white" />
-													</label>
-													{selectedImage && (
-														<button
-															type="button"
-															onClick={() => {
-																setSelectedImage(null);
-																setImagePreview(user.img_url || "");
-																setUploadedImageUrl("");
-															}}
-															className="absolute -top-1 -right-1 w-7 h-7 rounded-full bg-red-500 text-white flex items-center justify-center hover:scale-110 transition-all shadow-lg"
-														>
-															<X className="w-4 h-4" />
-														</button>
-													)}
-												</>
-											)}
-										</div>
+			<div className="w-full">
+				<form onSubmit={handleSubmit} className="space-y-6">
+					{/* ── Header card ── */}
+					<div className="card-pop overflow-hidden animate-pop-in">
+						{/* Colorful banner */}
+						<div className="relative h-28 overflow-hidden bg-gradient-to-br from-pop-violet to-pop-pink sm:h-36">
+							<div aria-hidden className="pointer-events-none absolute inset-0">
+								<div className="absolute -right-8 -top-10 size-40 rounded-full bg-white/10" />
+								<div className="absolute -bottom-12 left-1/4 size-32 rounded-full bg-white/10" />
+								<div className="absolute right-1/3 top-6 size-3 rounded-full bg-pop-sun" />
+								<div className="absolute right-[18%] bottom-5 size-6 rotate-12 rounded-lg bg-pop-sky/80" />
+								<div className="absolute left-[12%] top-5 size-4 rounded-full bg-pop-mint/80" />
+							</div>
+						</div>
+
+						<div className="relative px-5 pb-6 sm:px-8">
+							<div className="-mt-14 flex flex-col items-center gap-4 sm:-mt-16 sm:flex-row sm:items-end">
+								{/* Avatar */}
+								<div className="flex flex-col items-center">
+									<div className="relative group">
+										<Avatar className="size-28 border-4 border-card bg-card shadow-[0_4px_0_0_var(--border)] sm:size-32">
+											<AvatarImage
+												src={imagePreview || user.img_url || undefined}
+												className="object-cover"
+											/>
+											<AvatarFallback className="bg-pop-violet-soft text-3xl font-black text-pop-violet-ink">
+												{getInitials(user.username)}
+											</AvatarFallback>
+										</Avatar>
 										{isEditing && (
 											<>
-												<Input
-													id="image-upload"
-													type="file"
-													accept="image/*"
-													className="hidden"
-													onChange={handleImageChange}
-													disabled={isUploadingImage}
-												/>
-												{isUploadingImage && (
-													<p className="text-xs mt-2 animate-pulse">
-														Уншиж байна...
-													</p>
+												<label
+													htmlFor="image-upload"
+													className="absolute bottom-1 right-1 flex size-10 cursor-pointer items-center justify-center rounded-full border-[3px] border-card bg-primary text-primary-foreground shadow-[0_3px_0_0_var(--primary-shade)] transition-all hover:scale-110"
+												>
+													<Camera className="size-5" strokeWidth={2.5} />
+												</label>
+												{selectedImage && (
+													<button
+														type="button"
+														onClick={() => {
+															setSelectedImage(null);
+															setImagePreview(user.img_url || "");
+															setUploadedImageUrl("");
+														}}
+														className="absolute -right-1 -top-1 flex size-7 items-center justify-center rounded-full border-2 border-card bg-destructive text-white transition-all hover:scale-110"
+													>
+														<X className="size-4" strokeWidth={2.75} />
+													</button>
 												)}
 											</>
 										)}
 									</div>
+									{isEditing && (
+										<>
+											<Input
+												id="image-upload"
+												type="file"
+												accept="image/*"
+												className="hidden"
+												onChange={handleImageChange}
+												disabled={isUploadingImage}
+											/>
+											{isUploadingImage && (
+												<p className="mt-2 animate-pulse text-xs font-bold text-primary">
+													Уншиж байна...
+												</p>
+											)}
+										</>
+									)}
+								</div>
 
-									<div className="text-center border-t border-slate-200 dark:border-slate-700 pt-6">
-										<h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-1">
-											{user.username}
-										</h2>
-										<p className="text-sm text-slate-500 dark:text-slate-400 mb-4">
-											{user.email}
-										</p>
-									</div>
+								{/* Name + email */}
+								<div className="min-w-0 flex-1 text-center sm:pb-1 sm:text-left">
+									<h2 className="break-words text-2xl font-black tracking-tight text-foreground sm:text-3xl">
+										{user.username}
+									</h2>
+									<p className="break-all text-sm font-semibold text-muted-foreground">
+										{user.email}
+									</p>
+								</div>
 
-									<div className="space-y-3">
-										<div className="flex items-start gap-3 text-sm">
-											<div className="w-5 h-5 mt-0.5 text-slate-400">
-												<User2 className="w-full h-full" />
-											</div>
-											<div className="flex-1">
-												<p className="text-slate-500 dark:text-slate-400 text-xs">
-													Нэр
-												</p>
-												<p className="text-slate-900 dark:text-white font-medium">
-													{user.lastname} {user.firstname}
-												</p>
-											</div>
-										</div>
-										<div className="flex items-start gap-3 text-sm">
-											<div className="w-5 h-5 mt-0.5 text-slate-400">
-												<Mail className="w-full h-full" />
-											</div>
-											<div className="flex-1">
-												<p className="text-slate-500 dark:text-slate-400 text-xs">
-													Имэйл
-												</p>
-												<p className="text-slate-900 dark:text-white font-medium break-all">
-													{user.email}
-												</p>
-											</div>
-										</div>
-										{user.Phone && (
-											<div className="flex items-start gap-3 text-sm">
-												<div className="w-5 h-5 mt-0.5 text-slate-400">
-													<Phone className="w-full h-full" />
-												</div>
-												<div className="flex-1">
-													<p className="text-slate-500 dark:text-slate-400 text-xs">
-														Утас
-													</p>
-													<p className="text-slate-900 dark:text-white font-medium">
-														{user.Phone}
-													</p>
-												</div>
-											</div>
-										)}
-									</div>
-
+								{/* Actions */}
+								<div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:pb-1">
 									<Button
 										type="button"
 										onClick={() => {
@@ -925,26 +970,28 @@ export function ProfileContent({ user, userId }: ProfileContentProps) {
 											setPasswordError("");
 											setPhoneError("");
 										}}
-										className="w-full rounded-xl h-11"
+										variant={isEditing ? "outline" : "default"}
+										className="w-full sm:w-auto"
 									>
-										<Edit2 className="w-4 h-4 mr-2" />
+										<Edit2 className="size-4" strokeWidth={2.5} />
 										{isEditing ? "Буцах" : "Засах"}
 									</Button>
 
 									{isEditing && (
 										<Button
 											type="submit"
+											variant="success"
 											disabled={updateMutation.isPending}
-											className="w-full bg-linear-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white rounded-xl h-11"
+											className="w-full sm:w-auto"
 										>
 											{updateMutation.isPending ? (
 												<>
-													<div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2" />
+													<div className="size-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
 													Хадгалж байна...
 												</>
 											) : (
 												<>
-													<Check className="w-4 h-4 mr-2" />
+													<Check className="size-4" strokeWidth={2.75} />
 													Хадгалах
 												</>
 											)}
@@ -953,61 +1000,81 @@ export function ProfileContent({ user, userId }: ProfileContentProps) {
 								</div>
 							</div>
 						</div>
+					</div>
+
+					<div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+						{/* ── Left Column ── */}
+						<div className="lg:col-span-1">
+							<div className="card-pop space-y-3 p-5 sm:p-6">
+								<InfoTile tone="violet" icon={<User2 strokeWidth={2.5} />} label="Нэр">
+									{user.lastname} {user.firstname}
+								</InfoTile>
+								<InfoTile tone="mint" icon={<Mail strokeWidth={2.5} />} label="Имэйл">
+									<span className="break-all">{user.email}</span>
+								</InfoTile>
+								{user.Phone && (
+									<InfoTile tone="sky" icon={<Phone strokeWidth={2.5} />} label="Утас">
+										{user.Phone}
+									</InfoTile>
+								)}
+							</div>
+						</div>
 
 						{/* ── Right Column ── */}
 						<div className="lg:col-span-2">
 							{isEditing && (
-								<div className="space-y-4">
+								<div className="space-y-6">
 									{/* Card 1: Утас + Нууц үг */}
-									<div className="bg-white dark:bg-slate-900 rounded-3xl shadow-xl p-6">
+									<div className="card-pop p-5 sm:p-6">
+										<SectionTitle tone="coral" icon={<Lock strokeWidth={2.5} />} title="Утас ба нууц үг" />
 										<div className="space-y-4">
 											<div
-												className={`flex items-center p-4 rounded-xl ${phoneError ? "bg-red-50 dark:bg-red-950/20" : "bg-slate-50 dark:bg-slate-800"}`}
+												className={`flex items-start gap-3 rounded-2xl p-4 ${phoneError ? "bg-destructive/10" : "bg-muted"}`}
 											>
-												<div className="flex items-center gap-3 flex-1">
-													<Phone
-														className={`w-5 h-5 ${phoneError ? "text-red-500" : "text-cyan-500"}`}
+												<IconChip tone={phoneError ? "coral" : "sky"}>
+													<Phone strokeWidth={2.5} />
+												</IconChip>
+												<div className="min-w-0 flex-1">
+													<p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
+														Утасны дугаар{" "}
+														<span className="text-destructive">*</span>
+													</p>
+													<p className="mt-0.5 text-xs font-semibold text-muted-foreground">
+														Одоо ашиглаж байгаа утасны дугаараа оруулна уу.
+														Энэ дугаараар нууц үг сэргээх боломжтой
+													</p>
+													<Input
+														type="tel"
+														value={editForm.Phone}
+														onChange={(e) => {
+															setEditForm({
+																...editForm,
+																Phone: e.target.value,
+															});
+															setPhoneError("");
+														}}
+														className={`mt-2 h-10 bg-card text-sm font-bold ${
+															phoneError
+																? "border-destructive focus-visible:border-destructive"
+																: ""
+														}`}
+														placeholder="Утасны дугаар"
 													/>
-													<div className="flex-1">
-														<p className="text-xs text-slate-500 dark:text-slate-400">
-															Утасны дугаар{" "}
-															<span className="text-red-500">*</span>
+													{phoneError && (
+														<p className="mt-1.5 text-xs font-bold text-destructive">
+															{phoneError}
 														</p>
-														<p className="text-xs text-slate-500 dark:text-slate-400">
-															Одоо ашиглаж байгаа утасны дугаараа оруулна уу.
-															Энэ дугаараар нууц үг сэргээх боломжтой
-														</p>
-														<Input
-															type="tel"
-															value={editForm.Phone}
-															onChange={(e) => {
-																setEditForm({
-																	...editForm,
-																	Phone: e.target.value,
-																});
-																setPhoneError("");
-															}}
-															className={`mt-1 h-8 bg-transparent border-0 border-b rounded-none px-0 text-sm font-semibold text-slate-900 dark:text-white focus-visible:ring-0 ${
-																phoneError
-																	? "border-red-500 focus:border-red-500"
-																	: "border-slate-300 dark:border-slate-600 focus:border-blue-500"
-															}`}
-															placeholder="Утасны дугаар"
-														/>
-														{phoneError && (
-															<p className="text-xs text-red-500 mt-1 font-medium">
-																{phoneError}
-															</p>
-														)}
-													</div>
+													)}
 												</div>
 											</div>
 
-											<div className="flex items-center p-4 bg-slate-50 dark:bg-slate-800 rounded-xl">
-												<div className="flex items-center gap-3 flex-1">
-													<Lock className="w-5 h-5 text-rose-500" />
-													<div className="flex-1">
-														<p className="text-xs text-slate-500 dark:text-slate-400">
+											<div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+												<div className="flex items-start gap-3 rounded-2xl bg-muted p-4">
+													<IconChip tone="coral">
+														<Lock strokeWidth={2.5} />
+													</IconChip>
+													<div className="min-w-0 flex-1">
+														<p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
 															Нууц үг
 														</p>
 														<Input
@@ -1021,18 +1088,18 @@ export function ProfileContent({ user, userId }: ProfileContentProps) {
 																});
 																setPasswordError("");
 															}}
-															className="mt-1 h-8 bg-transparent border-0 border-b border-slate-300 dark:border-slate-600 focus:border-blue-500 rounded-none px-0 text-sm font-semibold text-slate-900 dark:text-white focus-visible:ring-0"
+															className="mt-2 h-10 bg-card text-sm font-bold"
 															placeholder="Шинэ нууц үг"
 														/>
 													</div>
 												</div>
-											</div>
 
-											<div className="flex items-center p-4 bg-slate-50 dark:bg-slate-800 rounded-xl">
-												<div className="flex items-center gap-3 flex-1">
-													<Lock className="w-5 h-5 text-rose-400" />
-													<div className="flex-1">
-														<p className="text-xs text-slate-500 dark:text-slate-400">
+												<div className="flex items-start gap-3 rounded-2xl bg-muted p-4">
+													<IconChip tone="pink">
+														<Lock strokeWidth={2.5} />
+													</IconChip>
+													<div className="min-w-0 flex-1">
+														<p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
 															Нууц үг давтах
 														</p>
 														<Input
@@ -1046,11 +1113,11 @@ export function ProfileContent({ user, userId }: ProfileContentProps) {
 																});
 																setPasswordError("");
 															}}
-															className="mt-1 h-8 bg-transparent border-0 border-b border-slate-300 dark:border-slate-600 focus:border-blue-500 rounded-none px-0 text-sm font-semibold text-slate-900 dark:text-white focus-visible:ring-0"
+															className="mt-2 h-10 bg-card text-sm font-bold"
 															placeholder="Нууц үг давтах"
 														/>
 														{passwordError && (
-															<p className="text-xs text-red-500 mt-1">
+															<p className="mt-1.5 text-xs font-bold text-destructive">
 																{passwordError}
 															</p>
 														)}
@@ -1061,27 +1128,26 @@ export function ProfileContent({ user, userId }: ProfileContentProps) {
 									</div>
 
 									{/* Card 2: Байршил мэдээлэл */}
-									<div className="bg-white dark:bg-slate-900 rounded-3xl shadow-xl p-6">
-										<div className="flex items-start gap-3 mb-5 p-3 rounded-xl">
-											<p className="text-xs leading-relaxed">
+									<div className="card-pop p-5 sm:p-6">
+										<SectionTitle tone="mint" icon={<MapPin strokeWidth={2.5} />} title="Байршил мэдээлэл" />
+										<div className="mb-5 flex items-start gap-3 rounded-2xl bg-pop-sun-soft p-3.5 text-pop-sun-ink">
+											<span aria-hidden className="text-lg leading-none">💡</span>
+											<p className="text-xs font-semibold leading-relaxed">
 												Та өөрийн мэдээлэлээ үнэн зөв оруулсан үед таны шалгалт
 												идэвхтэй харагдах тул{" "}
-												<span className="font-bold">заавал оруулна уу</span>
+												<span className="font-black">заавал оруулна уу</span>
 											</p>
 										</div>
-										<p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-4">
-											Байршил мэдээлэл
-										</p>
 
 										{/* locationError харуулах */}
 										{locationError && (
-											<div className="mb-3 flex items-center gap-2 text-xs text-red-500 font-medium">
-												<AlertCircle className="w-4 h-4 shrink-0" />
+											<div className="mb-4 flex items-center gap-2 rounded-xl bg-destructive/10 px-3 py-2 text-xs font-bold text-destructive">
+												<AlertCircle className="size-4 shrink-0" />
 												{locationError}
 											</div>
 										)}
 
-										<div className="space-y-4">
+										<div className="grid grid-cols-1 gap-4 md:grid-cols-2">
 											<SelectField
 												label="Аймаг / Нийслэл"
 												placeholder={
@@ -1098,7 +1164,7 @@ export function ProfileContent({ user, userId }: ProfileContentProps) {
 												disabled={false}
 												loading={aimagLoading}
 												icon={
-													<MapPin className="w-full h-full text-emerald-500" />
+													<MapPin className="text-pop-mint-ink" strokeWidth={2.5} />
 												}
 											/>
 											<SelectField
@@ -1121,7 +1187,7 @@ export function ProfileContent({ user, userId }: ProfileContentProps) {
 												disabled={!selectedAimag}
 												loading={districtLoading}
 												icon={
-													<MapPin className="w-full h-full text-cyan-500" />
+													<MapPin className="text-pop-sky-ink" strokeWidth={2.5} />
 												}
 											/>
 											<SelectField
@@ -1141,7 +1207,7 @@ export function ProfileContent({ user, userId }: ProfileContentProps) {
 												disabled={!selectedDistrict}
 												loading={schoolLoading}
 												icon={
-													<School className="w-full h-full text-indigo-500" />
+													<School className="text-pop-violet-ink" strokeWidth={2.5} />
 												}
 											/>
 											{!isTeacher && (
@@ -1163,7 +1229,7 @@ export function ProfileContent({ user, userId }: ProfileContentProps) {
 													disabled={!selectedSchool}
 													loading={classLoading}
 													icon={
-														<School className="w-full h-full text-violet-500" />
+														<School className="text-pop-pink-ink" strokeWidth={2.5} />
 													}
 												/>
 											)}
@@ -1174,132 +1240,61 @@ export function ProfileContent({ user, userId }: ProfileContentProps) {
 
 							{/* View Mode */}
 							{!isEditing && (
-								<div className="bg-white dark:bg-slate-900 rounded-3xl shadow-xl p-6">
-									<div className="space-y-4">
-										<div className="flex items-center p-4 bg-slate-50 dark:bg-slate-800 rounded-xl">
-											<div className="flex items-center gap-3">
-												<User2 className="w-5 h-5 text-blue-500" />
-												<div>
-													<p className="text-xs text-slate-500 dark:text-slate-400">
-														Овог
-													</p>
-													<p className="text-sm font-semibold text-slate-900 dark:text-white">
-														{user.lastname}
-													</p>
-												</div>
-											</div>
+								<div className="space-y-6">
+									<div className="card-pop p-5 sm:p-6">
+										<SectionTitle tone="violet" icon={<User2 strokeWidth={2.5} />} title="Хувийн мэдээлэл" />
+										<div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+											<InfoTile tone="violet" icon={<User2 strokeWidth={2.5} />} label="Овог">
+												{user.lastname}
+											</InfoTile>
+											<InfoTile tone="pink" icon={<User2 strokeWidth={2.5} />} label="Нэр">
+												{user.firstname}
+											</InfoTile>
+											<InfoTile tone="mint" icon={<Mail strokeWidth={2.5} />} label="Имэйл">
+												<span className="break-all">{user.email}</span>
+											</InfoTile>
+											{user.Phone && (
+												<InfoTile tone="sky" icon={<Phone strokeWidth={2.5} />} label="Утас">
+													{user.Phone}
+												</InfoTile>
+											)}
 										</div>
-										<div className="flex items-center p-4 bg-slate-50 dark:bg-slate-800 rounded-xl">
-											<div className="flex items-center gap-3">
-												<User2 className="w-5 h-5 text-indigo-500" />
-												<div>
-													<p className="text-xs text-slate-500 dark:text-slate-400">
-														Нэр
-													</p>
-													<p className="text-sm font-semibold text-slate-900 dark:text-white">
-														{user.firstname}
-													</p>
-												</div>
-											</div>
+									</div>
+
+									<div className="card-pop p-5 sm:p-6">
+										<SectionTitle tone="mint" icon={<MapPin strokeWidth={2.5} />} title="Байршил мэдээлэл" />
+										<div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+											<InfoTile tone="mint" icon={<MapPin strokeWidth={2.5} />} label="Аймаг/Нийслэл">
+												{user.aimag_name || (
+													<span className="font-semibold text-muted-foreground">
+														—
+													</span>
+												)}
+											</InfoTile>
+											<InfoTile tone="sky" icon={<MapPin strokeWidth={2.5} />} label="Сум/Дүүрэг">
+												{user.sym_name || (
+													<span className="font-semibold text-muted-foreground">
+														—
+													</span>
+												)}
+											</InfoTile>
+											<InfoTile tone="violet" icon={<School strokeWidth={2.5} />} label="Сургууль">
+												{user.sch_name || (
+													<span className="font-semibold text-muted-foreground">
+														—
+													</span>
+												)}
+											</InfoTile>
+											{!isTeacher && (
+												<InfoTile tone="sun" icon={<School strokeWidth={2.5} />} label="Анги">
+													{user.studentgroupname || (
+														<span className="font-semibold text-muted-foreground">
+															—
+														</span>
+													)}
+												</InfoTile>
+											)}
 										</div>
-										<div className="flex items-center p-4 bg-slate-50 dark:bg-slate-800 rounded-xl">
-											<div className="flex items-center gap-3">
-												<Mail className="w-5 h-5 text-emerald-500" />
-												<div>
-													<p className="text-xs text-slate-500 dark:text-slate-400">
-														Имэйл
-													</p>
-													<p className="text-sm font-semibold text-slate-900 dark:text-white break-all">
-														{user.email}
-													</p>
-												</div>
-											</div>
-										</div>
-										{user.Phone && (
-											<div className="flex items-center p-4 bg-slate-50 dark:bg-slate-800 rounded-xl">
-												<div className="flex items-center gap-3">
-													<Phone className="w-5 h-5 text-cyan-500" />
-													<div>
-														<p className="text-xs text-slate-500 dark:text-slate-400">
-															Утас
-														</p>
-														<p className="text-sm font-semibold text-slate-900 dark:text-white">
-															{user.Phone}
-														</p>
-													</div>
-												</div>
-											</div>
-										)}
-										<div className="flex items-center p-4 bg-slate-50 dark:bg-slate-800 rounded-xl">
-											<div className="flex items-center gap-3">
-												<MapPin className="w-5 h-5 text-emerald-500" />
-												<div>
-													<p className="text-xs text-slate-500 dark:text-slate-400">
-														Аймаг/Нийслэл
-													</p>
-													<p className="text-sm font-semibold text-slate-900 dark:text-white">
-														{user.aimag_name || (
-															<span className="text-slate-400 font-normal">
-																—
-															</span>
-														)}
-													</p>
-												</div>
-											</div>
-										</div>
-										<div className="flex items-center p-4 bg-slate-50 dark:bg-slate-800 rounded-xl">
-											<div className="flex items-center gap-3">
-												<MapPin className="w-5 h-5 text-cyan-500" />
-												<div>
-													<p className="text-xs text-slate-500 dark:text-slate-400">
-														Сум/Дүүрэг
-													</p>
-													<p className="text-sm font-semibold text-slate-900 dark:text-white">
-														{user.sym_name || (
-															<span className="text-slate-400 font-normal">
-																—
-															</span>
-														)}
-													</p>
-												</div>
-											</div>
-										</div>
-										<div className="flex items-center p-4 bg-slate-50 dark:bg-slate-800 rounded-xl">
-											<div className="flex items-start gap-3">
-												<School className="w-5 h-5 text-indigo-500 mt-0.5 shrink-0" />
-												<div className="flex-1 min-w-0">
-													<p className="text-xs text-slate-500 dark:text-slate-400">
-														Сургууль
-													</p>
-													<p className="text-sm font-semibold text-slate-900 dark:text-white break-words">
-														{user.sch_name || (
-															<span className="text-slate-400 font-normal">
-																—
-															</span>
-														)}
-													</p>
-												</div>
-											</div>
-										</div>
-										{!isTeacher && (
-											<div className="flex items-center p-4 bg-slate-50 dark:bg-slate-800 rounded-xl">
-												<div className="flex items-center gap-3">
-													<School className="w-5 h-5 text-violet-500" />
-													<div>
-														<p className="text-xs text-slate-500 dark:text-slate-400">
-															Анги
-														</p>
-														<p className="text-sm font-semibold text-slate-900 dark:text-white">
-															{user.studentgroupname || (
-																<span className="text-slate-400 font-normal">
-																	—
-																</span>
-															)}
-														</p>
-													</div>
-												</div>
-											</div>
-										)}
 									</div>
 								</div>
 							)}
@@ -1308,13 +1303,15 @@ export function ProfileContent({ user, userId }: ProfileContentProps) {
 				</form>
 
 				{updateMutation.isError && (
-					<div className="mt-6 bg-red-50 dark:bg-red-950/20 border-2 border-red-200 dark:border-red-800 rounded-2xl p-4 flex items-start gap-3">
-						<AlertCircle className="w-5 h-5 text-red-600 mt-0.5" />
+					<div className="mt-6 flex items-start gap-3 rounded-2xl border-2 border-destructive/40 bg-destructive/10 p-4">
+						<span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-destructive text-white">
+							<AlertCircle className="size-5" strokeWidth={2.5} />
+						</span>
 						<div>
-							<p className="text-sm font-bold text-red-700 dark:text-red-400">
+							<p className="text-sm font-black text-destructive">
 								Алдаа гарлаа
 							</p>
-							<p className="text-xs text-red-600 dark:text-red-300 mt-1">
+							<p className="mt-1 text-xs font-semibold text-destructive">
 								{(updateMutation.error as Error).message}
 							</p>
 						</div>

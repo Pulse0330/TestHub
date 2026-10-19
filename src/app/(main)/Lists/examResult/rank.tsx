@@ -45,32 +45,36 @@ export default function RankModal({
 
 	return (
 		<Dialog open={open} onOpenChange={onClose}>
-			<DialogContent className="max-w-2xl max-h-[90vh] p-0 gap-0">
+			<DialogContent className="max-h-[90vh] max-w-2xl gap-0 overflow-hidden rounded-3xl border-2 p-0">
 				{/* Header */}
-				<DialogHeader className="border-b px-6 py-4">
+				<DialogHeader className="border-b-2 bg-pop-sun-soft px-6 py-5 text-left">
 					<div className="flex items-center justify-between">
-						<DialogTitle className="text-xl font-bold flex items-center gap-2">
-							<Trophy className="w-5 h-5" />
+						<DialogTitle className="flex items-center gap-3 text-xl font-black">
+							<span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-card text-pop-sun-ink shadow-[0_3px_0_0_var(--border)]">
+								<Trophy className="size-6" strokeWidth={2.5} />
+							</span>
 							Өндөр оноо асван хүүхдүүд
 						</DialogTitle>
 					</div>
-					<p className="text-sm text-muted-foreground">
+					<p className="pl-14 text-sm font-bold text-pop-sun-ink">
 						{leaderboard.length} оролцогч
 					</p>
 				</DialogHeader>
 
 				<ScrollArea className="h-[calc(90vh-80px)]">
-					<div className="p-6">
+					<div className="p-4 sm:p-6">
 						{isLoading ? (
 							<div className="space-y-3">
 								{[0, 1, 2, 3, 4, 5, 6, 7].map((id) => (
-									<Skeleton key={`skeleton-${id}`} className="h-20 w-full" />
+									<Skeleton key={`skeleton-${id}`} className="h-20 w-full rounded-2xl" />
 								))}
 							</div>
 						) : leaderboard.length === 0 ? (
 							<div className="text-center py-12">
-								<Trophy className="w-12 h-12 mx-auto mb-3 text-muted-foreground" />
-								<p className="text-muted-foreground">Мэдээлэл байхгүй байна</p>
+								<div className="mx-auto mb-3 flex size-20 items-center justify-center rounded-full bg-pop-sun-soft text-pop-sun-ink">
+									<Trophy className="size-10" strokeWidth={2.5} />
+								</div>
+								<p className="font-bold text-muted-foreground">Мэдээлэл байхгүй байна</p>
 							</div>
 						) : (
 							<div className="space-y-2">
@@ -82,18 +86,20 @@ export default function RankModal({
 									return (
 										<div
 											key={item.userid}
-											className={`flex items-center gap-3 p-3 rounded-lg border transition-all hover:bg-accent/50 ${
+											className={`flex items-center gap-3 rounded-2xl border-2 p-3 transition-all hover:bg-accent/50 ${
 												isCurrentUser
-													? "bg-primary/5 border-primary/30"
-													: "bg-card border-border"
+													? "border-primary bg-primary/10 shadow-[0_3px_0_0_var(--primary)]"
+													: medal
+														? "border-pop-sun/50 bg-pop-sun-soft/60"
+														: "border-border bg-card"
 											}`}
 										>
 											{/* Rank */}
-											<div className="w-10 flex items-center justify-center shrink-0">
+											<div className="flex w-10 shrink-0 items-center justify-center">
 												{medal ? (
-													<span className="text-2xl">{medal}</span>
+													<span className="text-3xl">{medal}</span>
 												) : (
-													<span className="text-base font-semibold text-muted-foreground">
+													<span className="flex size-8 items-center justify-center rounded-xl border-2 border-border bg-muted text-sm font-black text-muted-foreground">
 														{rank}
 													</span>
 												)}
@@ -106,26 +112,26 @@ export default function RankModal({
 													alt={item.fname}
 													width={48}
 													height={48}
-													className="rounded-full border-2 border-border shrink-0"
+													className="size-12 shrink-0 rounded-full border-2 border-border object-cover"
 												/>
 											) : (
-												<div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center border-2 border-border shrink-0">
-													<User className="w-6 h-6 text-muted-foreground" />
+												<div className="flex size-12 shrink-0 items-center justify-center rounded-full border-2 border-border bg-pop-violet-soft">
+													<User className="size-6 text-pop-violet-ink" />
 												</div>
 											)}
 
 											{/* User Info */}
 											<div className="flex-1 min-w-0">
 												<div className="flex items-center gap-2 mb-0.5">
-													<p className="font-semibold truncate">{item.fname}</p>
+													<p className="truncate font-extrabold">{item.fname}</p>
 													{isCurrentUser && (
-														<Badge variant="default" className="text-xs">
+														<Badge variant="default">
 															Та
 														</Badge>
 													)}
 												</div>
 												{item.sch_name && (
-													<p className="text-sm text-muted-foreground truncate">
+													<p className="truncate text-sm font-semibold text-muted-foreground">
 														{item.sch_name}
 													</p>
 												)}
@@ -133,8 +139,8 @@ export default function RankModal({
 
 											{/* Score */}
 											<div className="text-right shrink-0">
-												<p className="text-lg font-bold">{item.point}</p>
-												<p className="text-xs text-muted-foreground">оноо</p>
+												<p className="text-xl font-black tabular-nums text-primary">{item.point}</p>
+												<p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">оноо</p>
 											</div>
 										</div>
 									);

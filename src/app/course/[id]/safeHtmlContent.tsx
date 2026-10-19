@@ -28,8 +28,8 @@ export function SafeHtmlContent({ html }: SafeHtmlContentProps) {
 	// Хоосон эсвэл тодорхойгүй агуулга
 	if (!html || html.trim() === "") {
 		return (
-			<div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
-				<p className="text-gray-500 text-center text-sm">
+			<div className="p-6 bg-muted rounded-2xl border-2 border-dashed border-border">
+				<p className="text-muted-foreground text-center text-sm font-bold">
 					Агуулга байхгүй байна
 				</p>
 			</div>
@@ -47,7 +47,7 @@ export function SafeHtmlContent({ html }: SafeHtmlContentProps) {
 		if (isYouTubeId) {
 			return (
 				<div className="space-y-2">
-					<div className="bg-black rounded-lg overflow-hidden shadow-lg max-w-2xl mx-auto">
+					<div className="bg-black rounded-2xl overflow-hidden border-2 border-border shadow-[0_4px_0_0_var(--border)] max-w-2xl mx-auto">
 						<div
 							className="relative w-full bg-black"
 							style={{ paddingBottom: "56.25%" }}
@@ -73,7 +73,7 @@ export function SafeHtmlContent({ html }: SafeHtmlContentProps) {
 			const videoId = youtubeMatch[1];
 			return (
 				<div className="space-y-2">
-					<div className="bg-black rounded-lg overflow-hidden shadow-lg max-w-2xl mx-auto">
+					<div className="bg-black rounded-2xl overflow-hidden border-2 border-border shadow-[0_4px_0_0_var(--border)] max-w-2xl mx-auto">
 						<div
 							className="relative w-full bg-black"
 							style={{ paddingBottom: "56.25%" }}
@@ -101,7 +101,7 @@ export function SafeHtmlContent({ html }: SafeHtmlContentProps) {
 		) {
 			return (
 				<div className="space-y-2">
-					<div className="relative w-full max-h-[350px] overflow-hidden rounded-lg border">
+					<div className="relative w-full max-h-[350px] overflow-hidden rounded-2xl border-2 border-border bg-muted">
 						<Image
 							src={imgError ? "/placeholder-image.png" : trimmedHtml}
 							alt="Хичээлийн зураг"
@@ -122,11 +122,11 @@ export function SafeHtmlContent({ html }: SafeHtmlContentProps) {
 		) {
 			return (
 				<div className="space-y-2">
-					<div className="bg-purple-50 rounded-lg p-3 border border-purple-200">
-						<div className="flex items-center gap-2 mb-2">
-							<PlayCircle className="h-4 w-4 text-purple-600" />
+					<div className="bg-pop-violet-soft rounded-2xl p-4 border-2 border-pop-violet/30">
+						<div className="flex items-center gap-2 mb-3">
+							<PlayCircle className="h-5 w-5 text-pop-violet-ink" />
 							<div>
-								<p className="font-medium text-sm text-purple-900">
+								<p className="font-extrabold text-sm text-pop-violet-ink">
 									Аудио хичээл
 								</p>
 							</div>
@@ -144,7 +144,7 @@ export function SafeHtmlContent({ html }: SafeHtmlContentProps) {
 		if (["mp4", "webm", "ogv", "mov", "avi"].includes(fileExtension || "")) {
 			return (
 				<div className="space-y-2">
-					<div className="bg-black rounded-lg overflow-hidden max-h-[400px]">
+					<div className="bg-black rounded-2xl overflow-hidden border-2 border-border max-h-[400px]">
 						{/* biome-ignore lint/a11y/useMediaCaption: Educational content */}
 						<video controls className="w-full" src={trimmedHtml}>
 							Таны browser видео дэмжихгүй байна.
@@ -160,7 +160,7 @@ export function SafeHtmlContent({ html }: SafeHtmlContentProps) {
 				<div className="space-y-2">
 					<iframe
 						src={trimmedHtml}
-						className="w-full h-[400px] rounded-lg border"
+						className="w-full h-[400px] rounded-2xl border-2 border-border"
 						title="PDF Document"
 					/>
 					<Button
@@ -180,10 +180,10 @@ export function SafeHtmlContent({ html }: SafeHtmlContentProps) {
 		if (["ppt", "pptx"].includes(fileExtension || "")) {
 			return (
 				<div className="space-y-2">
-					<div className="bg-orange-50 rounded-lg overflow-hidden border border-orange-200">
-						<div className="flex items-center gap-2 p-2 bg-orange-100 border-b border-orange-200">
-							<FileText className="h-4 w-4 text-orange-600" />
-							<p className="font-medium text-sm text-orange-900">
+					<div className="bg-card rounded-2xl overflow-hidden border-2 border-border">
+						<div className="flex items-center gap-2 px-3 py-2.5 bg-pop-coral-soft border-b-2 border-border">
+							<FileText className="h-4 w-4 text-pop-coral-ink" />
+							<p className="font-extrabold text-sm text-pop-coral-ink">
 								PowerPoint танилцуулга
 							</p>
 						</div>
@@ -201,10 +201,10 @@ export function SafeHtmlContent({ html }: SafeHtmlContentProps) {
 		if (["xls", "xlsx"].includes(fileExtension || "")) {
 			return (
 				<div className="space-y-2">
-					<div className="bg-green-50 rounded-lg overflow-hidden border border-green-200">
-						<div className="flex items-center gap-2 p-2 bg-green-100 border-b border-green-200">
-							<FileText className="h-4 w-4 text-green-600" />
-							<p className="font-medium text-sm text-green-900">
+					<div className="bg-card rounded-2xl overflow-hidden border-2 border-border">
+						<div className="flex items-center gap-2 px-3 py-2.5 bg-pop-mint-soft border-b-2 border-border">
+							<FileText className="h-4 w-4 text-pop-mint-ink" />
+							<p className="font-extrabold text-sm text-pop-mint-ink">
 								Excel хүснэгт
 							</p>
 						</div>
@@ -222,10 +222,10 @@ export function SafeHtmlContent({ html }: SafeHtmlContentProps) {
 		if (["doc", "docx"].includes(fileExtension || "")) {
 			return (
 				<div className="space-y-2">
-					<div className="bg-blue-50 rounded-lg overflow-hidden border border-blue-200">
-						<div className="flex items-center gap-2 p-2 bg-blue-100 border-b border-blue-200">
-							<FileText className="h-4 w-4 text-blue-600" />
-							<p className="font-medium text-sm text-blue-900">Word документ</p>
+					<div className="bg-card rounded-2xl overflow-hidden border-2 border-border">
+						<div className="flex items-center gap-2 px-3 py-2.5 bg-pop-sky-soft border-b-2 border-border">
+							<FileText className="h-4 w-4 text-pop-sky-ink" />
+							<p className="font-extrabold text-sm text-pop-sky-ink">Word документ</p>
 						</div>
 						<iframe
 							src={`https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(trimmedHtml)}`}
@@ -240,12 +240,12 @@ export function SafeHtmlContent({ html }: SafeHtmlContentProps) {
 		// Бусад файлууд
 		return (
 			<div className="space-y-2">
-				<div className="p-3 bg-gray-100 rounded-lg border">
-					<div className="flex items-center gap-2">
-						<FileText className="h-5 w-5 text-gray-600" />
+				<div className="p-4 bg-muted rounded-2xl border-2 border-border">
+					<div className="flex items-center gap-3">
+						<FileText className="h-5 w-5 text-pop-violet-ink" />
 						<div>
-							<p className="font-medium text-sm">Файл</p>
-							<p className="text-xs text-gray-600">Файлыг татаж харна уу</p>
+							<p className="font-extrabold text-sm">Файл</p>
+							<p className="text-xs font-semibold text-muted-foreground">Файлыг татаж харна уу</p>
 						</div>
 					</div>
 				</div>
@@ -266,11 +266,12 @@ export function SafeHtmlContent({ html }: SafeHtmlContentProps) {
 	return (
 		<div
 			ref={contentRef}
-			className="prose prose-sm max-w-none
-				[&_iframe]:w-full [&_iframe]:max-h-[360px] [&_iframe]:aspect-video [&_iframe]:rounded-lg [&_iframe]:border [&_iframe]:mx-auto [&_iframe]:max-w-2xl
-				[&_img]:rounded-lg [&_img]:max-w-full [&_img]:max-h-[350px]
-				[&_a]:text-blue-600 [&_a]:no-underline hover:[&_a]:underline
-				[&_video]:w-full [&_video]:max-h-[400px] [&_video]:rounded-lg
+			className="prose prose-sm md:prose-base max-w-none dark:prose-invert text-foreground leading-relaxed
+				text-[15px] md:text-base [&_p]:my-3 [&_h1]:text-2xl [&_h1]:font-black [&_h1]:mt-6 [&_h1]:mb-3 [&_h2]:text-xl [&_h2]:font-black [&_h2]:mt-6 [&_h2]:mb-2 [&_h3]:text-lg [&_h3]:font-extrabold [&_h3]:mt-5 [&_h3]:mb-2 [&_strong]:font-extrabold [&_ul]:list-disc [&_ul]:pl-6 [&_ol]:list-decimal [&_ol]:pl-6 [&_li]:my-1 [&_blockquote]:border-l-4 [&_blockquote]:border-primary [&_blockquote]:bg-primary/5 [&_blockquote]:rounded-r-xl [&_blockquote]:px-4 [&_blockquote]:py-2 [&_table]:w-full [&_td]:border [&_td]:border-border [&_td]:p-2 [&_th]:border [&_th]:border-border [&_th]:bg-muted [&_th]:p-2
+				[&_iframe]:w-full [&_iframe]:max-h-[360px] [&_iframe]:aspect-video [&_iframe]:rounded-2xl [&_iframe]:border-2 [&_iframe]:border-border [&_iframe]:mx-auto [&_iframe]:max-w-2xl
+				[&_img]:rounded-2xl [&_img]:max-w-full [&_img]:max-h-[350px]
+				[&_a]:text-primary [&_a]:font-bold [&_a]:no-underline hover:[&_a]:underline
+				[&_video]:w-full [&_video]:max-h-[400px] [&_video]:rounded-2xl
 				[&_audio]:w-full [&_audio]:h-10"
 		/>
 	);

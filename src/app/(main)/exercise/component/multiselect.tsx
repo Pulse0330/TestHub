@@ -129,17 +129,19 @@ export default function MultiSelectQuestion({
 				<DialogTrigger asChild>
 					<button
 						type="button"
-						className="relative mb-4 w-full cursor-pointer hover:opacity-90 transition-opacity border rounded-md overflow-hidden group"
+						className="relative mb-4 w-full cursor-pointer hover:opacity-90 transition-opacity border-2 border-border rounded-2xl overflow-hidden group"
 					>
 						<Image
 							src={imageUrl}
 							alt={questionText || "Question"}
 							width={800}
 							height={300}
-							className="w-full h-auto object-contain bg-gray-50 max-h-[300px]"
+							className="w-full h-auto object-contain bg-muted max-h-[300px]"
 						/>
-						<div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">
-							<ZoomIn className="w-8 h-8 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+						<div className="absolute inset-0 bg-transparent group-hover:bg-foreground/10 transition-colors flex items-center justify-center">
+							<span className="flex size-12 items-center justify-center rounded-2xl bg-card text-foreground opacity-0 group-hover:opacity-100 transition-opacity">
+								<ZoomIn className="size-6" strokeWidth={2.5} />
+							</span>
 						</div>
 					</button>
 				</DialogTrigger>
@@ -173,7 +175,7 @@ export default function MultiSelectQuestion({
 						<button
 							type="button"
 							data-dialog-trigger
-							className="cursor-pointer hover:opacity-90 transition-opacity rounded overflow-hidden border w-full"
+							className="cursor-pointer hover:opacity-90 transition-opacity rounded-xl overflow-hidden border-2 border-border bg-card w-full"
 							onClick={(e) => e.stopPropagation()}
 						>
 							<Image
@@ -200,7 +202,7 @@ export default function MultiSelectQuestion({
 								/>
 							</div>
 							{option.answer_name_html && (
-								<p className="text-center text-lg font-medium">
+								<p className="text-center text-lg font-bold">
 									{parse(option.answer_name_html)}
 								</p>
 							)}
@@ -211,7 +213,7 @@ export default function MultiSelectQuestion({
 		}
 
 		return (
-			<span className="text-sm sm:text-base leading-relaxed whitespace-pre-wrap">
+			<span className="text-sm sm:text-base font-bold leading-relaxed whitespace-pre-wrap">
 				{option.answer_name_html ? parse(option.answer_name_html) : ""}
 			</span>
 		);
@@ -229,14 +231,15 @@ export default function MultiSelectQuestion({
 		<div className="space-y-4">
 			{renderQuestionContent()}
 
-			<div className="space-y-3">
-				<p className="text-sm text-gray-600 dark:text-gray-400">
+			<div className="space-y-2.5 sm:space-y-3">
+				<p className="inline-flex items-center gap-1.5 rounded-full bg-muted px-3 py-1 text-xs sm:text-sm font-bold text-muted-foreground">
 					Олон хариулт сонгох боломжтой
 				</p>
-				{uniqueAnswers.map((option) => {
+				{uniqueAnswers.map((option, optionIndex) => {
 					const selected = isSelected(option.answer_id);
 					const hasImage = isValidImageUrl(option.answer_img);
 					const isCorrect = option.is_true;
+					const letter = String.fromCharCode(65 + optionIndex);
 
 					// ⭐ Show correct answers when user finished selecting (optional)
 					const shouldHighlight = isReviewMode && isCorrect;
@@ -247,34 +250,34 @@ export default function MultiSelectQuestion({
 							onClick={(e) => handleToggle(option.answer_id, e)}
 							variant="outline"
 							disabled={isReviewMode}
-							className={`flex items-center gap-3 w-full justify-start text-left p-3 border rounded-md transition-colors ${
-								hasImage ? "h-auto min-h-[100px]" : "min-h-[50px]"
+							className={`group flex items-center gap-3 w-full justify-start text-left h-auto whitespace-normal p-3 sm:p-4 border-2 rounded-2xl font-bold transition-all duration-150 active:translate-y-0.5 active:shadow-none ${
+								hasImage ? "min-h-[100px]" : "min-h-[56px]"
 							} ${
 								selected
-									? "border-primary bg-primary/10"
+									? "border-primary bg-primary/10 text-primary shadow-[0_4px_0_0_var(--primary)] hover:bg-primary/15 hover:text-primary"
 									: shouldHighlight
-										? "border-green-400 bg-green-50 dark:bg-green-900/20"
-										: "border-border"
-							} ${isReviewMode ? "cursor-default opacity-70" : ""}`}
+										? "border-success bg-success/10 shadow-[0_4px_0_0_var(--success)]"
+										: "border-border bg-card shadow-[0_4px_0_0_var(--border)] hover:border-primary/40 hover:bg-accent/40 hover:-translate-y-0.5"
+							} ${isReviewMode ? "cursor-default disabled:opacity-80" : ""}`}
 						>
 							<span
-								className={`w-4 h-4 rounded border flex items-center justify-center shrink-0 ${
-									hasImage ? "self-start mt-2" : ""
+								className={`size-8 rounded-xl border-2 flex items-center justify-center shrink-0 text-sm font-black transition-colors ${
+									hasImage ? "self-start" : ""
 								} ${
 									selected
-										? "border-primary bg-primary"
+										? "border-primary bg-primary text-primary-foreground"
 										: shouldHighlight
-											? "border-green-500 bg-green-500"
-											: "border-border bg-background"
+											? "border-success bg-success text-primary-foreground"
+											: "border-border bg-muted text-muted-foreground group-hover:border-primary/40 group-hover:text-primary"
 								}`}
 							>
-								{(selected || shouldHighlight) && (
+								{selected || shouldHighlight ? (
 									<svg
-										className="w-3 h-3 text-primary-foreground"
+										className="size-4 text-primary-foreground"
 										fill="none"
 										strokeLinecap="round"
 										strokeLinejoin="round"
-										strokeWidth="2"
+										strokeWidth="3.5"
 										viewBox="0 0 24 24"
 										stroke="currentColor"
 										aria-hidden="true"
@@ -282,15 +285,17 @@ export default function MultiSelectQuestion({
 										<title>Checkmark</title>
 										<path d="M5 13l4 4L19 7" />
 									</svg>
+								) : (
+									<span aria-hidden="true">{letter}</span>
 								)}
 							</span>
 
-							<div className="flex-1">{renderOptionContent(option)}</div>
+							<div className="flex-1 min-w-0">{renderOptionContent(option)}</div>
 
 							{/* ⭐ Show correct badge in review mode */}
 							{isReviewMode && isCorrect && (
-								<span className="text-green-600 dark:text-green-400 font-medium text-xs sm:text-sm flex items-center gap-1 shrink-0">
-									<CheckCircle2 className="w-4 h-4" />
+								<span className="text-success font-extrabold text-xs sm:text-sm flex items-center gap-1 shrink-0 rounded-full bg-success/10 px-2.5 py-1">
+									<CheckCircle2 className="size-4" strokeWidth={2.75} />
 									Зөв
 								</span>
 							)}
@@ -301,17 +306,17 @@ export default function MultiSelectQuestion({
 
 			{/* ⭐ Show feedback below */}
 			{showAnswerFeedback && (
-				<div className="mt-4">
+				<div className="mt-4 animate-pop-in">
 					{allCorrect ? (
-						<div className="bg-green-50 dark:bg-green-900/20 border-l-4 border-green-500 p-3 sm:p-4 rounded-lg">
-							<p className="text-green-800 dark:text-green-300 font-semibold text-sm sm:text-base flex items-center gap-2">
-								<CheckCircle2 className="w-5 h-5" />
+						<div className="bg-success/10 border-2 border-success p-3 sm:p-4 rounded-2xl">
+							<p className="text-success font-extrabold text-sm sm:text-base flex items-center gap-2">
+								<CheckCircle2 className="size-5 shrink-0" strokeWidth={2.75} />
 								Таны сонголт хадгалагдсан: {selectedAnswers.length} хариулт
 							</p>
 						</div>
 					) : (
-						<div className="bg-purple-50 dark:bg-purple-900/20 border-l-4 border-purple-500 p-3 sm:p-4 rounded-lg">
-							<p className="text-purple-800 dark:text-purple-300 font-semibold text-sm sm:text-base">
+						<div className="bg-pop-violet-soft border-2 border-pop-violet/50 p-3 sm:p-4 rounded-2xl">
+							<p className="text-pop-violet-ink font-extrabold text-sm sm:text-base">
 								Таны сонголт хадгалагдсан: {selectedAnswers.length} хариулт
 							</p>
 						</div>

@@ -71,7 +71,11 @@ const DragAndDrop: React.FC<DragAndDropProps> = ({
 		<DragDropContext onDragEnd={onDragEnd}>
 			<Droppable droppableId={droppableId}>
 				{(provided: DroppableProvided) => (
-					<div {...provided.droppableProps} ref={provided.innerRef}>
+					<div
+						{...provided.droppableProps}
+						ref={provided.innerRef}
+						className="space-y-2.5"
+					>
 						{items.map((item, index) => (
 							<Draggable
 								key={item.answer_id}
@@ -92,21 +96,21 @@ const DragAndDrop: React.FC<DragAndDropProps> = ({
 												variant: "outline",
 												size: "default",
 											}),
-											"w-full mb-2 justify-start transition-colors duration-200 select-none relative",
+											"relative h-auto min-h-14 w-full select-none justify-start gap-3 whitespace-normal rounded-2xl py-3 pr-4 pl-3 text-left transition-colors duration-200",
 											disabled
 												? "cursor-default"
 												: "cursor-grab active:cursor-grabbing",
 											snapshot.isDragging &&
-												"bg-accent ring-2 ring-ring/50 cursor-grabbing shadow-lg scale-105",
+												"cursor-grabbing border-primary bg-primary/10 text-primary shadow-[0_6px_0_0_var(--primary)] ring-4 ring-primary/20",
 										)}
 										style={{ ...providedDraggable.draggableProps.style }}
 									>
 										{/* Дугаар */}
-										<div className="absolute left-2 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold text-primary">
+										<div className="flex size-8 shrink-0 items-center justify-center rounded-xl border-2 border-primary/30 bg-primary/10 text-sm font-black text-primary">
 											{index + 1}
 										</div>
 
-										<div className="flex-1 text-sm text-gray-900 dark:text-gray-100 pl-8">
+										<div className="min-w-0 flex-1 text-sm font-bold text-foreground sm:text-base">
 											{item.answer_name_html
 												? parse(item.answer_name_html)
 												: ""}
@@ -114,10 +118,13 @@ const DragAndDrop: React.FC<DragAndDropProps> = ({
 
 										{/* Drag indicator */}
 										{!disabled && (
-											<div className="flex flex-col gap-0.5 opacity-40">
-												<div className="w-1 h-1 rounded-full bg-current" />
-												<div className="w-1 h-1 rounded-full bg-current" />
-												<div className="w-1 h-1 rounded-full bg-current" />
+											<div className="grid shrink-0 grid-cols-2 gap-0.5 text-muted-foreground opacity-60">
+												<div className="size-1 rounded-full bg-current" />
+												<div className="size-1 rounded-full bg-current" />
+												<div className="size-1 rounded-full bg-current" />
+												<div className="size-1 rounded-full bg-current" />
+												<div className="size-1 rounded-full bg-current" />
+												<div className="size-1 rounded-full bg-current" />
 											</div>
 										)}
 									</div>
@@ -214,18 +221,18 @@ const DragAndDropWrapper: React.FC<DragAndDropWrapperProps> = ({
 	return (
 		<>
 			<div className="space-y-4">
-				<div className="p-4 border rounded-lg shadow-sm space-y-3">
+				<div className="space-y-3 rounded-2xl border-2 border-border bg-muted/40 p-3 sm:p-4">
 					<div className="flex items-center justify-between gap-2">
-						<h3 className="font-semibold text-base sm:text-lg text-gray-900 dark:text-gray-100">
+						<h3 className="text-sm font-extrabold text-foreground sm:text-base">
 							Зөв дараалалд оруулна уу:
 						</h3>
 						<button
 							type="button"
 							onClick={() => setShowHelp(true)}
-							className="p-1.5 rounded-full hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors shrink-0"
+							className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-pop-sky-soft text-pop-sky-ink transition-transform hover:-translate-y-0.5"
 							title="Заавар харах"
 						>
-							<HelpCircle className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+							<HelpCircle className="size-5" strokeWidth={2.5} />
 						</button>
 					</div>
 
@@ -240,21 +247,23 @@ const DragAndDropWrapper: React.FC<DragAndDropWrapperProps> = ({
 			{/* Help Dialog */}
 			<Dialog open={showHelp} onOpenChange={setShowHelp}>
 				<DialogContent className="max-w-md">
-					<DialogTitle className="flex items-center gap-2">
-						<HelpCircle className="w-6 h-6 text-blue-600" />
-						<span className="text-xl font-bold">Хэрхэн ашиглах вэ?</span>
+					<DialogTitle className="flex items-center gap-3">
+						<span className="flex size-10 items-center justify-center rounded-xl bg-pop-sky-soft text-pop-sky-ink">
+							<HelpCircle className="size-5" strokeWidth={2.5} />
+						</span>
+						<span className="text-xl font-black">Хэрхэн ашиглах вэ?</span>
 					</DialogTitle>
 
 					<div className="space-y-4">
 						<div className="space-y-3 text-sm">
-							<div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-								<h3 className="font-semibold text-blue-900 dark:text-blue-100 mb-2">
+							<div className="rounded-2xl bg-pop-sky-soft p-3.5">
+								<h3 className="mb-2 font-extrabold text-pop-sky-ink">
 									🖱️ Компьютер дээр
 								</h3>
-								<ol className="space-y-2 text-gray-700 dark:text-gray-300 list-decimal list-inside">
+								<ol className="list-inside list-decimal space-y-2 font-semibold text-foreground/80">
 									<li>
 										Хариултын хэсгийг{" "}
-										<strong className="text-blue-600 dark:text-blue-400">
+										<strong className="text-pop-sky-ink">
 											чирж
 										</strong>{" "}
 										зөв байрлалд нь тавина
@@ -265,14 +274,14 @@ const DragAndDropWrapper: React.FC<DragAndDropWrapperProps> = ({
 								</ol>
 							</div>
 
-							<div className="p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
-								<h3 className="font-semibold text-green-900 dark:text-green-100 mb-2">
+							<div className="rounded-2xl bg-pop-mint-soft p-3.5">
+								<h3 className="mb-2 font-extrabold text-pop-mint-ink">
 									📱 Гар утсан дээр
 								</h3>
-								<ol className="space-y-2 text-gray-700 dark:text-gray-300 list-decimal list-inside">
+								<ol className="list-inside list-decimal space-y-2 font-semibold text-foreground/80">
 									<li>
 										Хариултыг{" "}
-										<strong className="text-green-600 dark:text-green-400">
+										<strong className="text-pop-mint-ink">
 											удаан дарж
 										</strong>
 										{} барьж, чирч хөдөлгөнө
@@ -282,9 +291,9 @@ const DragAndDropWrapper: React.FC<DragAndDropWrapperProps> = ({
 								</ol>
 							</div>
 
-							<div className="p-3 bg-gray-100 dark:bg-gray-800 rounded-lg">
-								<h3 className="font-semibold mb-2">💡 Тэмдэглэл</h3>
-								<ul className="space-y-1 text-sm text-gray-700 dark:text-gray-300">
+							<div className="rounded-2xl bg-muted p-3.5">
+								<h3 className="mb-2 font-extrabold">💡 Тэмдэглэл</h3>
+								<ul className="space-y-1 text-sm font-semibold text-foreground/80">
 									<li>🔢 Дугаарууд автоматаар шинэчлэгдэнэ</li>
 									<li>🎯 Зөв дараалал нь дээрээс доош чиглэлтэй</li>
 									<li>🔄 Хэдэн ч удаа өөрчлөх боломжтой</li>
@@ -292,25 +301,25 @@ const DragAndDropWrapper: React.FC<DragAndDropWrapperProps> = ({
 								</ul>
 							</div>
 
-							<div className="p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-200 dark:border-purple-800">
-								<h3 className="font-semibold text-purple-900 dark:text-purple-100 mb-2">
+							<div className="rounded-2xl bg-pop-violet-soft p-3.5">
+								<h3 className="mb-2 font-extrabold text-pop-violet-ink">
 									⌨️ Гарын товчлуур
 								</h3>
-								<ul className="space-y-1 text-sm text-gray-700 dark:text-gray-300">
+								<ul className="space-y-1 text-sm font-semibold text-foreground/80">
 									<li>
-										<kbd className="px-1.5 py-0.5 bg-white dark:bg-gray-700 border rounded text-xs">
+										<kbd className="rounded-md border-2 border-border bg-card px-1.5 py-0.5 text-xs font-bold">
 											Tab
 										</kbd>{" "}
 										- Элементүүдийг сонгох
 									</li>
 									<li>
-										<kbd className="px-1.5 py-0.5 bg-white dark:bg-gray-700 border rounded text-xs">
+										<kbd className="rounded-md border-2 border-border bg-card px-1.5 py-0.5 text-xs font-bold">
 											Space
 										</kbd>{" "}
 										- Элементийг барих/суллах
 									</li>
 									<li>
-										<kbd className="px-1.5 py-0.5 bg-white dark:bg-gray-700 border rounded text-xs">
+										<kbd className="rounded-md border-2 border-border bg-card px-1.5 py-0.5 text-xs font-bold">
 											↑↓
 										</kbd>{" "}
 										- Дээш/доош хөдөлгөх
@@ -322,6 +331,7 @@ const DragAndDropWrapper: React.FC<DragAndDropWrapperProps> = ({
 						<Button
 							onClick={() => setShowHelp(false)}
 							className="w-full"
+							size="lg"
 							variant="default"
 						>
 							Ойлголоо

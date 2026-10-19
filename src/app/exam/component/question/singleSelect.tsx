@@ -44,7 +44,7 @@ function SingleSelectQuestion({
 	);
 
 	return (
-		<div className="space-y-3 sm:space-y-4 w-full">
+		<div className="w-full space-y-4">
 			{questionImage && (
 				<div className="mb-4 flex justify-center">
 					<div className="w-full max-w-md">
@@ -52,11 +52,11 @@ function SingleSelectQuestion({
 					</div>
 				</div>
 			)}
-			<div className="space-y-2 sm:space-y-3">
-				<p className="text-sm text-gray-600 dark:text-gray-400">
+			<div className="space-y-2.5 sm:space-y-3">
+				<p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
 					Нэг хариулт сонгох боломжтой
 				</p>
-				{answers.map((option) => {
+				{answers.map((option, idx) => {
 					const isSelected = selectedAnswer === option.answer_id;
 					const hasContent = option.answer_name_html || option.answer_name;
 					const hasImage = option.answer_img || option.source_img;
@@ -65,54 +65,52 @@ function SingleSelectQuestion({
 					return (
 						<div
 							key={option.answer_id}
-							className={`relative w-full rounded-lg border-2 transition-all duration-200 overflow-hidden ${
+							className={`relative w-full overflow-hidden rounded-2xl border-2 transition-all duration-150 ${
 								isSelected
-									? "border-primary bg-primary/10"
-									: "border-border bg-background hover:bg-gray-50 dark:hover:bg-gray-800/50"
+									? "border-primary bg-primary/10 text-primary shadow-[0_4px_0_0_var(--primary)]"
+									: "border-border bg-card shadow-[0_3px_0_0_var(--border)] hover:-translate-y-0.5 hover:border-primary/40 hover:bg-accent/40"
 							}`}
 						>
 							<button
 								type="button"
 								onClick={() => handleSelect(option.answer_id)}
-								className="w-full text-left p-3 sm:p-4 flex items-start gap-2 sm:gap-3 bg-transparent border-0 cursor-pointer"
+								className="flex w-full cursor-pointer items-start gap-3 border-0 bg-transparent p-3.5 text-left font-bold sm:p-4"
 								// ✅ Давхар дарахаас хамгаалах
 								aria-pressed={isSelected}
 							>
 								<span
-									className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 mt-1 transition-all ${
+									className={`flex size-8 shrink-0 items-center justify-center rounded-xl border-2 text-sm font-black transition-all ${
 										isSelected
-											? "border-primary bg-primary"
-											: "border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800"
+											? "border-primary bg-primary text-primary-foreground"
+											: "border-border bg-muted text-muted-foreground"
 									}`}
 								>
-									{isSelected && (
-										<span className="w-2.5 h-2.5 bg-white rounded-full" />
-									)}
+									{String.fromCharCode(65 + idx)}
 								</span>
-								<div className="flex-1 min-w-0 flex flex-col gap-3 overflow-hidden">
+								<div className="flex min-w-0 flex-1 flex-col gap-3 overflow-hidden pt-0.5">
 									{hasContent && (
 										<div
-											className="text-left text-sm sm:text-base w-full"
+											className={`w-full text-left text-sm sm:text-base ${
+												isSelected ? "text-primary" : "text-foreground"
+											}`}
 											style={{ lineHeight: "1.8" }}
 										>
 											{option.answer_name_html ? (
 												<MathContent html={option.answer_name_html} />
 											) : (
-												<span className="text-gray-900 dark:text-gray-100">
-													{option.answer_name}
-												</span>
+												<span>{option.answer_name}</span>
 											)}
 										</div>
 									)}
 									{!hasImage && !hasContent && (
-										<span className="text-sm text-gray-400 italic">
+										<span className="text-sm font-semibold italic text-muted-foreground">
 											Хариулт байхгүй
 										</span>
 									)}
 								</div>
 							</button>
 							{hasImage && imageUrl && (
-								<div className="px-3 sm:px-4 pb-3 sm:pb-4 flex justify-center">
+								<div className="flex justify-center px-3 pb-3 sm:px-4 sm:pb-4">
 									<div className="w-full max-w-xs">
 										<QuestionImage src={imageUrl} alt="Хариултын зураг" />
 									</div>

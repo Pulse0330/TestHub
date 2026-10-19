@@ -43,7 +43,7 @@ const NumberInputQuestion: React.FC<NumberInputQuestionProps> = ({
 
 	return (
 		<div className="space-y-3">
-			<div className="flex flex-col gap-2">
+			<div className="flex flex-col gap-2.5">
 				{answers.map((ans, idx) => {
 					// Use answer_name if available, otherwise use alphabetic label
 					const label = ans.answer_name
@@ -51,10 +51,13 @@ const NumberInputQuestion: React.FC<NumberInputQuestionProps> = ({
 						: `${String.fromCharCode(97 + idx)}=`;
 
 					return (
-						<div key={ans.answer_id} className="flex items-center gap-2">
+						<div
+							key={ans.answer_id}
+							className="flex items-center gap-3 rounded-2xl border-2 border-border bg-muted/50 p-2.5 sm:p-3"
+						>
 							<label
 								htmlFor={`number-input-${ans.answer_id}`}
-								className="text-sm text-gray-600 min-w-8"
+								className="flex h-10 min-w-10 shrink-0 items-center justify-center rounded-xl border-2 border-border bg-card px-2.5 text-sm font-black text-primary"
 							>
 								{label}
 							</label>
@@ -65,7 +68,7 @@ const NumberInputQuestion: React.FC<NumberInputQuestionProps> = ({
 								value={values[ans.answer_id]}
 								onChange={(e) => handleChange(ans.answer_id, e.target.value)}
 								placeholder=""
-								className="max-w-xs"
+								className="h-11 max-w-xs rounded-xl border-2 bg-card text-base font-bold tabular-nums"
 							/>
 						</div>
 					);

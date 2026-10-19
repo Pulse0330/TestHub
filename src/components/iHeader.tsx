@@ -2,365 +2,399 @@
 import { useQueryClient } from "@tanstack/react-query";
 import Cookies from "js-cookie";
 import {
-    BarChart3,
-    ChevronDown,
-    ClipboardList,
-    CreditCard,
-    FileText,
-    LogOut,
-    type LucideIcon,
-    Menu,
-    School,
-    TrendingUp,
-    UserCircle,
-    X,
-    Home,
-    Bell
+	BarChart3,
+	BookOpen,
+	ChevronDown,
+	ClipboardList,
+	CreditCard,
+	Dumbbell,
+	FileText,
+	Home,
+	LogOut,
+	type LucideIcon,
+	School,
+	Target,
+	TrendingUp,
+	UserCircle,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useTheme } from "next-themes";
 import * as React from "react";
 import {
-    AlertDialog,
-    AlertDialogAction,
-    AlertDialogCancel,
-    AlertDialogContent,
-    AlertDialogDescription,
-    AlertDialogFooter,
-    AlertDialogHeader,
-    AlertDialogTitle,
+	AlertDialog,
+	AlertDialogAction,
+	AlertDialogCancel,
+	AlertDialogContent,
+	AlertDialogDescription,
+	AlertDialogFooter,
+	AlertDialogHeader,
+	AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-
 import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuSeparator,
-    DropdownMenuTrigger,
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuItem,
+	DropdownMenuSeparator,
+	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-
 import { ThemeSwitch } from "@/components/ui/ui-theme";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/stores/useAuthStore";
 
-const NAV_LINKS = [
-    { href: "/home", label: "Үндсэн хуудас", icon: Home },
-    { href: "/Lists/exerciseList", label: "Дасгал ажил", icon: ClipboardList },
+// ════════════════════════════════════════════════════════════════
+// Navigation model
+// Нэг "хэсэг" (section) нь 1+ дэд хуудастай. Дэд хуудсууд нь
+// header-ийн доор segmented tab болж харагдана.
+// ════════════════════════════════════════════════════════════════
+type SubLink = { href: string; label: string; icon: LucideIcon };
+type Section = {
+	key: string;
+	label: string;
+	short: string;
+	icon: LucideIcon;
+	tone: string; // active pill colors
+	links: SubLink[];
+};
+
+export const NAV: Section[] = [
+	{
+		key: "home",
+		label: "Нүүр",
+		short: "Нүүр",
+		icon: Home,
+		tone: "bg-pop-violet text-white",
+		links: [{ href: "/home", label: "Үндсэн хуудас", icon: Home }],
+	},
+	{
+		key: "exam",
+		label: "Шалгалт",
+		short: "Шалгалт",
+		icon: FileText,
+		tone: "bg-pop-sky text-white",
+		links: [
+			{ href: "/Lists/examList", label: "Шалгалтын жагсаалт", icon: FileText },
+			{ href: "/Lists/examResult", label: "Шалгалтын үр дүн", icon: BarChart3 },
+		],
+	},
+	{
+		key: "soril",
+		label: "Сорил",
+		short: "Сорил",
+		icon: Target,
+		tone: "bg-pop-sun text-[oklch(0.3_0.08_70)]",
+		links: [
+			{ href: "/Lists/sorilList", label: "Сорилын жагсаалт", icon: ClipboardList },
+			{ href: "/Lists/sorilResult", label: "Сорилын үр дүн", icon: TrendingUp },
+		],
+	},
+	{
+		key: "exercise",
+		label: "Дасгал ажил",
+		short: "Дасгал",
+		icon: Dumbbell,
+		tone: "bg-pop-mint text-white",
+		links: [{ href: "/Lists/exerciseList", label: "Дасгал ажил", icon: Dumbbell }],
+	},
+	{
+		key: "course",
+		label: "Цахим сургалт",
+		short: "Хичээл",
+		icon: BookOpen,
+		tone: "bg-pop-pink text-white",
+		links: [
+			{ href: "/Lists/courseList", label: "Хичээл", icon: School },
+			{ href: "/Lists/paymentCoureList", label: "Төлбөртэй хичээл", icon: CreditCard },
+		],
+	},
 ];
 
-const EXAM_LINKS: Array<{ href: string; label: string; icon: LucideIcon }> = [
-    { href: "/Lists/examList", label: "Шалгалтын жагсаалт", icon: FileText },
-    { href: "/Lists/examResult", label: "Шалгалтын үр дүн", icon: BarChart3 },
-];
+const isLinkActive = (pathname: string, href: string) =>
+	pathname === href || pathname.startsWith(`${href}/`);
 
-const SORIL_LINKS: Array<{ href: string; label: string; icon: LucideIcon }> = [
-    { href: "/Lists/sorilList", label: "Сорилын жагсаалт", icon: ClipboardList },
-    { href: "/Lists/sorilResult", label: "Сорилын үр дүн", icon: TrendingUp },
-];
-
-const COURSE_LINKS: Array<{ href: string; label: string; icon: LucideIcon }> = [
-    { href: "/Lists/courseList", label: "Хичээл", icon: School },
-    { href: "/Lists/paymentCoureList", label: "Төлбөртэй хичээл", icon: CreditCard },
-];
-
-const NAV_SECTIONS = [
-    { label: "Шалгалт", links: EXAM_LINKS },
-    { label: "Сорил", links: SORIL_LINKS },
-    { label: "Цахим сургалт", links: COURSE_LINKS },
-];
+export const findSection = (pathname: string) =>
+	NAV.find((s) => s.links.some((l) => isLinkActive(pathname, l.href)));
 
 // ── User Avatar ─────────────────────────────────────────────────
 const UserAvatar: React.FC<{
-    userImage: string;
-    userName: string;
-    size?: "sm" | "md";
+	userImage: string;
+	userName: string;
+	size?: "sm" | "md";
 }> = ({ userImage, userName, size = "md" }) => {
-    const dim = size === "sm" ? 34 : 42;
-    const cls = size === "sm" ? "w-8 h-8" : "w-10 h-10";
-    if (userImage) {
-        return (
-            <Image 
-                src={userImage} 
-                alt={userName} 
-                width={dim} 
-                height={dim}
-                className={cn("rounded-full object-cover flex-shrink-0 ring-2 ring-emerald-500/20 dark:ring-emerald-400/20", cls)} 
-            />
-        );
-    }
-    const initials = userName.slice(0, 1).toUpperCase();
-    return (
-        <div className={cn(
-            "rounded-full bg-gradient-to-tr from-emerald-600 to-teal-500 flex items-center justify-center text-white font-semibold flex-shrink-0 shadow-sm", 
-            cls,
-            size === "sm" ? "text-xs" : "text-sm"
-        )}>
-            {initials}
-        </div>
-    );
+	const dim = size === "sm" ? 36 : 44;
+	const cls = size === "sm" ? "size-9" : "size-11";
+	if (userImage) {
+		return (
+			<Image
+				src={userImage}
+				alt={userName}
+				width={dim}
+				height={dim}
+				className={cn("flex-shrink-0 rounded-full object-cover ring-2 ring-pop-violet/40 ring-offset-2 ring-offset-card", cls)}
+			/>
+		);
+	}
+	return (
+		<div
+			className={cn(
+				"flex flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-pop-violet to-pop-pink font-black text-white",
+				cls,
+				size === "sm" ? "text-sm" : "text-base",
+			)}
+		>
+			{userName.slice(0, 1).toUpperCase()}
+		</div>
+	);
 };
 
-// ── Sidebar Section ──────────────────────────────────────────────
-const SidebarSection: React.FC<{
-    label: string;
-    links: Array<{ href: string; label: string; icon: LucideIcon }>;
-    onClose?: () => void;
-}> = ({ label, links, onClose }) => {
-    const pathname = usePathname();
-    const [open, setOpen] = React.useState(
-        links.some((l) => pathname === l.href)
-    );
+// ── Logo ─────────────────────────────────────────────────────────
+const Logo = () => (
+	<Link href="/home" className="group flex shrink-0 items-center gap-2.5">
+		<span className="flex size-10 items-center justify-center rounded-2xl bg-gradient-to-br from-pop-violet via-pop-pink to-pop-sun p-[2px] transition-transform group-hover:rotate-6">
+			<span className="flex size-full items-center justify-center rounded-[14px] bg-card">
+				<Image
+					src="/image/asd.png"
+					alt="EXMO"
+					width={24}
+					height={24}
+					priority
+					style={{ width: 24, height: 24, objectFit: "contain" }}
+				/>
+			</span>
+		</span>
+		<span className="text-xl font-black tracking-tight text-gradient">EXMO</span>
+	</Link>
+);
 
-    return (
-        <div className="space-y-1">
-            <button
-                type="button"
-                onClick={() => setOpen((p) => !p)}
-                className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 transition-colors"
-            >
-                {label}
-                <ChevronDown className={cn("w-3.5 h-3.5 transition-transform duration-300", open && "rotate-180")} />
-            </button>
-            {open && (
-                <div className="space-y-0.5 pl-1">
-                    {links.map((item) => {
-                        const Icon = item.icon;
-                        const active = pathname === item.href;
-                        return (
-                            <Link 
-                                key={item.href} 
-                                href={item.href}
-                                onClick={onClose}
-                                className={cn(
-                                    "group flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all relative",
-                                    active
-                                        ? "bg-emerald-50/60 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400 font-semibold shadow-[0_0_12px_rgba(16,185,129,0.05)] before:absolute before:left-0 before:top-2 before:bottom-2 before:w-1 before:bg-emerald-500 before:rounded-r"
-                                        : "text-slate-600 dark:text-slate-400 hover:bg-slate-50/60 dark:hover:bg-slate-800/40 hover:text-slate-900 dark:hover:text-white"
-                                )}
-                            >
-                                <Icon className={cn(
-                                    "w-4 h-4 flex-shrink-0 transition-transform group-hover:scale-105", 
-                                    active ? "text-emerald-600 dark:text-emerald-400 opacity-100" : "opacity-60"
-                                )} />
-                                {item.label}
-                            </Link>
-                        );
-                    })}
-                </div>
-            )}
-        </div>
-    );
+// ── User menu (shared desktop/mobile) ────────────────────────────
+const UserMenu: React.FC<{
+	userInfo: { userName: string; userImage: string; schoolName: string; userEmail: string };
+	onLogout: () => void;
+	compact?: boolean;
+}> = ({ userInfo, onLogout, compact }) => {
+	const router = useRouter();
+	return (
+		<DropdownMenu modal={false}>
+			<DropdownMenuTrigger asChild>
+				<button
+					type="button"
+					aria-label="Хэрэглэгчийн цэс"
+					className={cn(
+						"flex items-center gap-2.5 rounded-full transition-colors",
+						compact ? "p-0.5" : "border-2 border-border bg-card py-1 pr-3 pl-1 hover:bg-accent",
+					)}
+				>
+					<UserAvatar userImage={userInfo.userImage} userName={userInfo.userName} size="sm" />
+					{!compact && (
+						<>
+							<span className="hidden max-w-32 truncate text-sm font-extrabold xl:block">
+								{userInfo.userName}
+							</span>
+							<ChevronDown className="size-4 text-muted-foreground" />
+						</>
+					)}
+				</button>
+			</DropdownMenuTrigger>
+			<DropdownMenuContent align="end" sideOffset={10} className="w-64 p-2">
+				<div className="mb-2 flex items-center gap-3 rounded-xl bg-muted p-3">
+					<UserAvatar userImage={userInfo.userImage} userName={userInfo.userName} />
+					<div className="min-w-0">
+						<p className="truncate text-sm font-extrabold">{userInfo.userName}</p>
+						{(userInfo.schoolName || userInfo.userEmail) && (
+							<p className="truncate text-xs font-semibold text-muted-foreground">
+								{userInfo.schoolName || userInfo.userEmail}
+							</p>
+						)}
+					</div>
+				</div>
+				<DropdownMenuItem
+					onClick={() => router.push("/userProfile")}
+					className="cursor-pointer gap-3 rounded-xl px-3 py-2.5 text-sm font-bold"
+				>
+					<UserCircle className="size-4" />
+					Профайл
+				</DropdownMenuItem>
+				<div className="flex items-center rounded-xl px-1.5 py-1 transition-colors hover:bg-accent">
+					<ThemeSwitch showLabels className="h-9 min-w-0 justify-start gap-3 rounded-xl px-1.5 text-sm font-bold" />
+				</div>
+				<DropdownMenuSeparator className="my-1.5" />
+				<DropdownMenuItem
+					onClick={onLogout}
+					className="cursor-pointer gap-3 rounded-xl px-3 py-2.5 text-sm font-bold text-destructive focus:bg-pop-coral-soft focus:text-destructive"
+				>
+					<LogOut className="size-4" />
+					Гарах
+				</DropdownMenuItem>
+			</DropdownMenuContent>
+		</DropdownMenu>
+	);
 };
 
-// ── Sidebar Content ──────────────────────────────────────────────
-const SidebarContent: React.FC<{
-    userInfo: { userName: string; userImage: string; schoolName: string };
-    onClose?: () => void;
-    onLogout: () => void;
-}> = ({ userInfo, onClose, onLogout }) => {
-    const pathname = usePathname();
-    const router = useRouter();
-
-    return (
-        <div className="flex flex-col h-full bg-white/70 dark:bg-slate-900/70 backdrop-blur-md">
-            {/* Logo */}
-            <div className="flex items-center gap-3 px-6 py-5 border-b border-slate-100/80 dark:border-slate-800/40">
-                <div className="p-1.5 bg-slate-50 dark:bg-slate-800 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700/30">
-                    <Image src="/image/asd.png" alt="EXMO" width={26} height={26} priority
-                        style={{ width: 26, height: 26, objectFit: "contain" }} />
-                </div>
-                <span className="text-base font-black tracking-widest bg-gradient-to-r from-emerald-600 to-teal-500 bg-clip-text text-transparent">EXMO</span>
-            </div>
-
-            {/* Nav */}
-            <nav className="flex-1 overflow-y-auto px-4 py-6 space-y-6 scrollbar-none">
-                {/* Main links */}
-                <div className="space-y-1">
-                    <p className="px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Үндсэн</p>
-                    {NAV_LINKS.map((link) => {
-                        const Icon = link.icon;
-                        const active = pathname === link.href;
-                        return (
-                            <Link 
-                                key={link.href} 
-                                href={link.href} 
-                                onClick={onClose}
-                                className={cn(
-                                    "group flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all relative",
-                                    active
-                                        ? "bg-emerald-50/60 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400 font-semibold shadow-[0_0_12px_rgba(16,185,129,0.05)] before:absolute before:left-0 before:top-2 before:bottom-2 before:w-1 before:bg-emerald-500 before:rounded-r"
-                                        : "text-slate-600 dark:text-slate-400 hover:bg-slate-50/60 dark:hover:bg-slate-800/40 hover:text-slate-900 dark:hover:text-white"
-                                )}
-                            >
-                                <Icon className={cn(
-                                    "w-4 h-4 flex-shrink-0 transition-transform group-hover:scale-105", 
-                                    active ? "text-emerald-600 dark:text-emerald-400 opacity-100" : "opacity-60"
-                                )} />
-                                {link.label}
-                            </Link>
-                        );
-                    })}
-                </div>
-
-                {/* Sectioned links */}
-                <div className="space-y-4">
-                    {NAV_SECTIONS.map((section) => (
-                        <SidebarSection key={section.label} label={section.label} links={section.links} onClose={onClose} />
-                    ))}
-                </div>
-            </nav>
-
-            {/* User footer */}
-            <div className="p-4 border-t border-slate-100/80 dark:border-slate-800/40 bg-slate-50/30 dark:bg-slate-900/30 backdrop-blur-md">
-                <DropdownMenu modal={false}>
-                    <DropdownMenuTrigger asChild>
-                        <button type="button"
-                            className="w-full flex items-center gap-3 p-2 rounded-xl hover:bg-white dark:hover:bg-slate-800 border border-transparent hover:border-slate-100 dark:hover:border-slate-700/50 transition-all text-left shadow-none hover:shadow-sm">
-                            <UserAvatar userImage={userInfo.userImage} userName={userInfo.userName} size="sm" />
-                            <div className="flex-1 min-w-0">
-                                <p className="text-sm font-semibold text-slate-800 dark:text-slate-200 truncate">{userInfo.userName}</p>
-                                {userInfo.schoolName && (
-                                    <p className="text-xs text-slate-400 dark:text-slate-500 truncate mt-0.5">{userInfo.schoolName}</p>
-                                )}
-                            </div>
-                            <ChevronDown className="w-4 h-4 text-slate-400 flex-shrink-0 opacity-60" />
-                        </button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent side="top" align="start" sideOffset={12}
-                        className="w-52 rounded-2xl border border-slate-100 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md shadow-xl p-1.5 anim-fade-in animate-in slide-in-from-bottom-2 duration-200">
-                        <DropdownMenuItem onClick={() => router.push("/userProfile")}
-                            className="gap-3 px-3 py-2.5 rounded-xl text-sm cursor-pointer text-slate-700 dark:text-slate-300 focus:bg-slate-50 dark:focus:bg-slate-800">
-                            <UserCircle className="w-4 h-4 text-slate-400" />
-                            Профайл
-                        </DropdownMenuItem>
-                        <div className="flex items-center px-1.5 py-1 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors cursor-pointer">
-                            <ThemeSwitch className="p-0 min-w-0 w-full justify-start gap-3 h-9 px-1.5 rounded-xl text-sm" />
-                        </div>
-                        <DropdownMenuSeparator className="my-1.5 bg-slate-100 dark:bg-slate-800" />
-                        <DropdownMenuItem onClick={onLogout}
-                            className="gap-3 px-3 py-2.5 rounded-xl text-sm cursor-pointer text-red-600 dark:text-red-400 focus:bg-red-50 dark:focus:bg-red-950/30 font-medium">
-                            <LogOut className="w-4 h-4" />
-                            Гарах
-                        </DropdownMenuItem>
-                    </DropdownMenuContent>
-                </DropdownMenu>
-            </div>
-        </div>
-    );
+// ── Section sub-tabs (Жагсаалт | Үр дүн) ─────────────────────────
+export const SectionTabs: React.FC = () => {
+	const pathname = usePathname();
+	const section = findSection(pathname);
+	if (!section || section.links.length < 2) return null;
+	return (
+		<div className="mb-6 flex justify-center sm:justify-start">
+			<div className="inline-flex w-full gap-1 rounded-2xl border-2 border-border bg-card p-1 sm:w-auto">
+				{section.links.map((l) => {
+					const active = isLinkActive(pathname, l.href);
+					const Icon = l.icon;
+					return (
+						<Link
+							key={l.href}
+							href={l.href}
+							className={cn(
+								"flex flex-1 items-center justify-center gap-2 rounded-xl px-4 py-2 text-sm font-extrabold whitespace-nowrap transition-all sm:flex-none",
+								active ? section.tone : "text-muted-foreground hover:bg-muted hover:text-foreground",
+							)}
+						>
+							<Icon className="size-4" strokeWidth={2.5} />
+							{l.label}
+						</Link>
+					);
+				})}
+			</div>
+		</div>
+	);
 };
 
-// ── Main Navbar (Topbar) ─────────────────────────────────────────
+// ── Main Navbar ──────────────────────────────────────────────────
 export const Navbar01: React.FC = () => {
-    const [mobileOpen, setMobileOpen] = React.useState(false);
-    const [showLogoutDialog, setShowLogoutDialog] = React.useState(false);
-    const router = useRouter();
-    const queryClient = useQueryClient();
-    const { user, firstname, imgUrl, clearAuth } = useAuthStore();
+	const [showLogoutDialog, setShowLogoutDialog] = React.useState(false);
+	const router = useRouter();
+	const pathname = usePathname();
+	const queryClient = useQueryClient();
+	const { user, firstname, imgUrl, clearAuth } = useAuthStore();
+	const current = findSection(pathname);
 
-    const userInfo = React.useMemo(() => ({
-        userName: user?.fname || firstname || "Хэрэглэгч",
-        userEmail: user?.email || "",
-        userImage: imgUrl || user?.img_url || "",
-        schoolName: user?.sch_name || "",
-    }), [user, firstname, imgUrl]);
+	const userInfo = React.useMemo(
+		() => ({
+			userName: user?.fname || firstname || "Хэрэглэгч",
+			userEmail: user?.email || "",
+			userImage: imgUrl || user?.img_url || "",
+			schoolName: user?.sch_name || "",
+		}),
+		[user, firstname, imgUrl],
+	);
 
-    React.useEffect(() => {
-        document.body.style.overflow = mobileOpen ? "hidden" : "";
-        return () => { document.body.style.overflow = ""; };
-    }, [mobileOpen]);
+	const handleLogout = async () => {
+		try {
+			for (const c of ["auth-token", "user-id", "firstname", "img-url"]) {
+				Cookies.remove(c, { path: "/" });
+			}
+			clearAuth();
+			localStorage.clear();
+			sessionStorage.clear();
+			queryClient.clear();
+			router.push("/login");
+		} catch {
+			window.location.href = "/login";
+		}
+	};
 
-    const handleLogout = async () => {
-        try {
-            for (const c of ["auth-token", "user-id", "firstname", "img-url"]) {
-                Cookies.remove(c, { path: "/" });
-            }
-            clearAuth();
-            localStorage.clear();
-            sessionStorage.clear();
-            queryClient.clear();
-            router.push("/login");
-        } catch {
-            window.location.href = "/login";
-        }
-    };
+	return (
+		<>
+			{/* ── Top bar (desktop + mobile) ── */}
+			<header className="fixed inset-x-0 top-0 z-40 border-b-2 border-border bg-card/90 backdrop-blur-xl">
+				<div className="mx-auto flex h-16 max-w-7xl items-center gap-4 px-4 md:px-6 lg:px-10">
+					<Logo />
 
-    return (
-        <>
-            {/* ── Desktop: Sidebar ── */}
-            <aside className="hidden lg:flex flex-col fixed left-0 top-0 h-full w-60 bg-transparent border-r border-slate-100/80 dark:border-slate-800/40 z-40">
-                <SidebarContent
-                    userInfo={userInfo}
-                    onLogout={() => setShowLogoutDialog(true)}
-                />
-            </aside>
+					{/* Desktop nav */}
+					<nav className="ml-4 hidden flex-1 items-center gap-1 lg:flex">
+						{NAV.map((s) => {
+							const Icon = s.icon;
+							const active = current?.key === s.key;
+							return (
+								<Link
+									key={s.key}
+									href={s.links[0].href}
+									className={cn(
+										"flex items-center gap-2 rounded-full px-4 py-2 text-sm font-extrabold transition-all",
+										active
+											? `${s.tone} shadow-[0_3px_0_0_rgb(0_0_0/0.15)]`
+											: "text-muted-foreground hover:bg-muted hover:text-foreground",
+									)}
+								>
+									<Icon className="size-4" strokeWidth={2.5} />
+									{s.label}
+								</Link>
+							);
+						})}
+					</nav>
 
-            {/* ── Mobile: Topbar ── */}
-            <header className="lg:hidden fixed top-0 left-0 right-0 h-14 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-100/80 dark:border-slate-800/40 z-30 flex items-center justify-between px-4 shadow-sm">
-                <button type="button" onClick={() => setMobileOpen(true)}
-                    className="p-2 rounded-xl text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors active:scale-95"
-                    aria-label="Цэс нээх">
-                    <Menu className="w-5 h-5" />
-                </button>
-                <div className="flex items-center gap-2">
-                    <Image src="/image/asd.png" alt="EXMO" width={26} height={26}
-                        style={{ width: 26, height: 26, objectFit: "contain" }} />
-                    <span className="text-sm font-black tracking-widest bg-gradient-to-r from-emerald-600 to-teal-500 bg-clip-text text-transparent">EXMO</span>
-                </div>
-                <button type="button"
-                    className="w-9 h-9 flex items-center justify-center rounded-xl border border-slate-100/80 dark:border-slate-800/40 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors active:scale-95">
-                    <Bell className="w-4 h-4" />
-                </button>
-            </header>
+					<div className="ml-auto flex items-center gap-2">
+						<div className="hidden lg:block">
+							<UserMenu userInfo={userInfo} onLogout={() => setShowLogoutDialog(true)} />
+						</div>
+						<div className="lg:hidden">
+							<UserMenu compact userInfo={userInfo} onLogout={() => setShowLogoutDialog(true)} />
+						</div>
+					</div>
+				</div>
+			</header>
 
-            {/* ── Mobile: Drawer ── */}
-            {mobileOpen && (
-                <div className="lg:hidden fixed inset-0 z-50 animate-fade-in">
-                    <button type="button" className="absolute inset-0 bg-slate-900/30 backdrop-blur-sm transition-opacity" onClick={() => setMobileOpen(false)} aria-label="Хаах" />
-                    <div className={cn(
-                        "absolute left-0 top-0 h-full w-64 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-r border-slate-100/80 dark:border-slate-800/40 shadow-2xl",
-                        "transform transition-transform duration-300 ease-out translate-x-0"
-                    )}>
-                        <div className="absolute top-4 right-4 z-10">
-                            <button type="button" onClick={() => setMobileOpen(false)}
-                                className="p-2 rounded-xl text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors active:scale-95">
-                                <X className="w-4 h-4" />
-                            </button>
-                        </div>
-                        <SidebarContent
-                            userInfo={userInfo}
-                            onClose={() => setMobileOpen(false)}
-                            onLogout={() => { setMobileOpen(false); setShowLogoutDialog(true); }}
-                        />
-                    </div>
-                </div>
-            )}
+			{/* ── Mobile bottom tab bar ── */}
+			<nav
+				aria-label="Үндсэн цэс"
+				className="fixed inset-x-0 bottom-0 z-40 border-t-2 border-border bg-card/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl lg:hidden"
+			>
+				<div className="mx-auto grid max-w-lg grid-cols-5">
+					{NAV.map((s) => {
+						const Icon = s.icon;
+						const active = current?.key === s.key;
+						return (
+							<Link
+								key={s.key}
+								href={s.links[0].href}
+								className="group flex flex-col items-center gap-1 py-2"
+							>
+								<span
+									className={cn(
+										"flex h-8 w-14 items-center justify-center rounded-full transition-all",
+										active ? s.tone : "text-muted-foreground group-active:scale-90",
+									)}
+								>
+									<Icon className="size-5" strokeWidth={2.5} />
+								</span>
+								<span
+									className={cn(
+										"text-[11px] font-extrabold",
+										active ? "text-foreground" : "text-muted-foreground",
+									)}
+								>
+									{s.short}
+								</span>
+							</Link>
+						);
+					})}
+				</div>
+			</nav>
 
-            {/* ── Logout Dialog ── */}
-            <AlertDialog open={showLogoutDialog} onOpenChange={setShowLogoutDialog}>
-                <AlertDialogContent className="rounded-2xl border-slate-100 dark:border-slate-800/60 max-w-sm bg-white/95 dark:bg-slate-900/95 backdrop-blur-md shadow-2xl p-6">
-                    <AlertDialogHeader>
-                        <AlertDialogTitle className="flex items-center gap-3 text-base font-bold text-slate-900 dark:text-white">
-                            <div className="p-2 bg-red-50 dark:bg-red-950/30 rounded-xl">
-                                <LogOut className="w-4 h-4 text-red-500" />
-                            </div>
-                            Системээс гарах уу?
-                        </AlertDialogTitle>
-                        <AlertDialogDescription className="text-sm text-slate-500 dark:text-slate-400 pt-2 leading-relaxed">
-                            Та системээс гарахдаа итгэлтэй байна уу? Дахин нэвтрэхийн тулд бүртгэлтэй имэйл, нууц үгээ оруулах шаардлагатай.
-                        </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter className="gap-2 mt-4">
-                        <AlertDialogCancel className="rounded-xl text-sm border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 font-medium px-4 py-2.5">
-                            Цуцлах
-                        </AlertDialogCancel>
-                        <AlertDialogAction onClick={handleLogout} className="rounded-xl text-sm bg-red-600 hover:bg-red-700 text-white font-medium border-none shadow-sm shadow-red-600/20 px-4 py-2.5">
-                            Тийм, гарах
-                        </AlertDialogAction>
-                    </AlertDialogFooter>
-                </AlertDialogContent>
-            </AlertDialog>
-        </>
-    );
+			{/* ── Logout Dialog ── */}
+			<AlertDialog open={showLogoutDialog} onOpenChange={setShowLogoutDialog}>
+				<AlertDialogContent className="max-w-sm">
+					<AlertDialogHeader className="items-center text-center sm:items-center sm:text-center">
+						<div className="mb-2 flex size-16 items-center justify-center rounded-3xl bg-pop-coral-soft text-pop-coral-ink">
+							<LogOut className="size-7" strokeWidth={2.5} />
+						</div>
+						<AlertDialogTitle>Системээс гарах уу?</AlertDialogTitle>
+						<AlertDialogDescription className="leading-relaxed">
+							Дахин нэвтрэхийн тулд бүртгэлтэй имэйл, нууц үгээ оруулах шаардлагатай.
+						</AlertDialogDescription>
+					</AlertDialogHeader>
+					<AlertDialogFooter className="mt-2 gap-2 sm:justify-center">
+						<AlertDialogCancel className="flex-1">Цуцлах</AlertDialogCancel>
+						<AlertDialogAction
+							onClick={handleLogout}
+							className="flex-1 bg-destructive text-white shadow-[0_4px_0_0_color-mix(in_oklch,var(--destructive)_70%,black)] hover:bg-destructive"
+						>
+							Тийм, гарах
+						</AlertDialogAction>
+					</AlertDialogFooter>
+				</AlertDialogContent>
+			</AlertDialog>
+		</>
+	);
 };

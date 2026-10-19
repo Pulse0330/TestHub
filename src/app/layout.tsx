@@ -1,4 +1,4 @@
-import { Inter } from "next/font/google"; // ✅ Roboto устгах
+import { Nunito } from "next/font/google";
 import type { ReactNode } from "react";
 import "./globals.css";
 import type { Metadata } from "next";
@@ -7,9 +7,11 @@ import { Suspense } from "react";
 import Providers from "@/app/Providers";
 import IdleTimerProvider from "@/components/timeLogOut";
 
-const inter = Inter({
-	variable: "--font-inter",
+const nunito = Nunito({
+	variable: "--font-nunito",
 	subsets: ["latin", "cyrillic"],
+	weight: ["400", "500", "600", "700", "800", "900"],
+	display: "swap",
 });
 
 interface RootLayoutProps {
@@ -28,7 +30,10 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: RootLayoutProps) {
 	return (
 		<html lang="mn" suppressHydrationWarning>
-			<body className={inter.variable} suppressHydrationWarning>
+			<body
+				className={`${nunito.variable} font-sans antialiased`}
+				suppressHydrationWarning
+			>
 				{/* ✅ MathJax config — afterInteractive болгох */}
 				<Script
 					id="mathjax-config"

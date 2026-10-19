@@ -92,13 +92,13 @@ export default function FixedScrollButton({
 			variant="default"
 			size="icon"
 			onClick={isAtTop ? scrollToBottom : scrollToTop}
-			className="fixed bottom-6 right-6 z-40 rounded-full shadow-lg transition-all duration-300 hover:scale-110"
+			className="fixed right-6 bottom-6 z-40 size-12 rounded-2xl animate-pop-in hover:-translate-y-0.5"
 			aria-label={isAtTop ? "Доошоо гүйлгэх" : "Дээшээ гүйлгэх"}
 		>
 			{isAtTop ? (
-				<ArrowDown className="h-5 w-5" />
+				<ArrowDown className="size-5" strokeWidth={2.5} />
 			) : (
-				<ArrowUp className="h-5 w-5" />
+				<ArrowUp className="size-5" strokeWidth={2.5} />
 			)}
 		</Button>
 	);

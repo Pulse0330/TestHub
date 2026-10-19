@@ -3,12 +3,17 @@
 import { motion } from "framer-motion";
 import {
 	ArrowRight,
+	Award,
 	Calendar,
+	ChevronDown,
 	Clock,
 	Eye,
 	EyeOff,
 	FileText,
+	Hash,
 	Target,
+	TrendingUp,
+	Trophy,
 	XCircle,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -43,233 +48,392 @@ const getScoreLevel = (score?: number) => {
 	return "fail";
 };
 
+// Онооны өнгө: өндөр = success, дунд = warning, бага = destructive
+export const getScoreTone = (score?: number) => {
+	const v = score ?? 0;
+	if (v >= 75)
+		return { fill: "var(--success)", bar: "bg-success", text: "text-success" };
+	if (v >= 50)
+		return {
+			fill: "var(--warning)",
+			bar: "bg-warning",
+			text: "text-pop-sun-ink",
+		};
+	return {
+		fill: "var(--destructive)",
+		bar: "bg-destructive",
+		text: "text-destructive",
+	};
+};
+
+const WEEKDAYS = ["Ня", "Да", "Мя", "Лх", "Пү", "Ба", "Бя"];
+
+export const monthKeyOf = (d: Date) =>
+	Number.isNaN(d.getTime())
+		? "none"
+		: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+
+export const monthLabelOf = (d: Date) =>
+	Number.isNaN(d.getTime())
+		? "Огноогүй"
+		: `${d.getFullYear()} оны ${d.getMonth() + 1}-р сар`;
+
+/* ------------------------------------------------------------------ */
+/* Summary strip: average / best / count + recent score bars          */
+/* ------------------------------------------------------------------ */
+export const ResultSummaryStrip: React.FC<{
+	avgScore: number;
+	highScore: number;
+	finishedCount: number;
+	totalCount: number;
+	unit: string;
+	recent: { id: number; title: string; score: number }[];
+	showScore: boolean;
+}> = ({
+	avgScore,
+	highScore,
+	finishedCount,
+	totalCount,
+	unit,
+	recent,
+	showScore,
+}) => {
+	const blur = showScore ? "" : "blur-md select-none";
+	const tiles = [
+		{
+			key: "avg",
+			icon: TrendingUp,
+			value: `${avgScore}%`,
+			label: "Дундаж үр дүн",
+			tone: "bg-pop-mint-soft text-pop-mint-ink",
+			hideable: true,
+		},
+		{
+			key: "high",
+			icon: Award,
+			value: `${highScore}%`,
+			label: "Хамгийн өндөр",
+			tone: "bg-pop-sun-soft text-pop-sun-ink",
+			hideable: true,
+		},
+		{
+			key: "count",
+			icon: Hash,
+			value: `${finishedCount}/${totalCount}`,
+			label: `Дууссан ${unit}`,
+			tone: "bg-pop-sky-soft text-pop-sky-ink",
+			hideable: false,
+		},
+	];
+	const barW = 14;
+	const gap = 6;
+	const h = 64;
+	const w = Math.max(1, recent.length) * (barW + gap) - gap;
+
+	return (
+		<section className="card-pop grid animate-pop-in gap-4 p-4 md:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] md:p-5">
+			<div className="grid grid-cols-3 gap-2 sm:gap-3">
+				{tiles.map((t) => (
+					<div key={t.key} className={`rounded-2xl p-3 sm:p-4 ${t.tone}`}>
+						<t.icon className="mb-2 size-5" strokeWidth={2.5} />
+						<div
+							className={`text-xl font-black leading-none tabular-nums sm:text-2xl ${t.hideable ? blur : ""}`}
+						>
+							{t.value}
+						</div>
+						<div className="mt-1 text-[10px] font-bold uppercase tracking-wide sm:text-xs">
+							{t.label}
+						</div>
+					</div>
+				))}
+			</div>
+
+			<div className="flex min-w-0 flex-col rounded-2xl bg-muted/60 p-3 sm:p-4">
+				<div className="mb-2 flex items-center justify-between gap-2">
+					<span className="text-xs font-extrabold uppercase tracking-wide text-muted-foreground">
+						Сүүлийн {recent.length} үр дүн
+					</span>
+					<div className="flex items-center gap-2 text-[10px] font-bold text-muted-foreground">
+						<span className="flex items-center gap-1">
+							<span className="size-2 rounded-full bg-success" />
+							75+
+						</span>
+						<span className="flex items-center gap-1">
+							<span className="size-2 rounded-full bg-warning" />
+							50+
+						</span>
+						<span className="flex items-center gap-1">
+							<span className="size-2 rounded-full bg-destructive" />
+							&lt;50
+						</span>
+					</div>
+				</div>
+				{recent.length > 0 ? (
+					<svg
+						viewBox={`0 0 ${w} ${h}`}
+						preserveAspectRatio="xMinYMax meet"
+						className="h-20 w-full"
+						role="img"
+						aria-label="Сүүлийн үр дүнгийн график"
+					>
+						<line
+							x1={0}
+							x2={w}
+							y1={h * 0.5}
+							y2={h * 0.5}
+							stroke="var(--border)"
+							strokeDasharray="3 3"
+							strokeWidth={1}
+						/>
+						{recent.map((r, i) => {
+							const pct = Math.max(0, Math.min(100, r.score));
+							const bh = showScore ? Math.max(3, (pct / 100) * h) : h * 0.35;
+							return (
+								<rect
+									key={r.id}
+									x={i * (barW + gap)}
+									y={h - bh}
+									width={barW}
+									height={bh}
+									rx={4}
+									fill={showScore ? getScoreTone(pct).fill : "var(--border)"}
+									className="transition-all duration-700"
+								>
+									<title>
+										{showScore ? `${r.title}: ${pct.toFixed(1)}%` : r.title}
+									</title>
+								</rect>
+							);
+						})}
+					</svg>
+				) : (
+					<p className="py-6 text-center text-sm font-semibold text-muted-foreground">
+						Дууссан {unit} алга
+					</p>
+				)}
+			</div>
+		</section>
+	);
+};
+
+/* ------------------------------------------------------------------ */
+/* Timeline row                                                        */
+/* ------------------------------------------------------------------ */
 export const ExamListItem: React.FC<ExamListItemProps> = ({
 	exam,
-
+	onViewRank,
 	globalShowScore = false,
 	index = 0,
 }) => {
 	const router = useRouter();
 	const [localShowScore, setLocalShowScore] = useState(false);
+	const [expanded, setExpanded] = useState(false);
 
 	const finished = exam.isfinished === 1;
 	const showScore = globalShowScore || localShowScore;
 	const examDate = new Date(exam.Ognoo);
 	const _scoreLevel = getScoreLevel(exam.test_perc);
+	const validDate = !Number.isNaN(examDate.getTime());
 
 	const formatDate = (d: Date) =>
 		`${d.getFullYear()}/${String(d.getMonth() + 1).padStart(2, "0")}/${String(d.getDate()).padStart(2, "0")}`;
 	const formatTime = (d: Date) =>
 		`${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
 
-	const iconClass = "w-2.5 h-2.5 sm:w-3 sm:h-3 shrink-0";
-	const textClass = "text-[8px] sm:text-[9px] md:text-xs";
-	const btnClass =
-		"h-6 sm:h-7 md:h-8 text-[8px] sm:text-[9px] md:text-xs px-1.5 sm:px-2";
+	const iconClass = "size-3.5 shrink-0";
+	const score = Math.max(0, Math.min(100, exam.test_perc ?? 0));
+	const tone = getScoreTone(score);
+	const toggle = () => setExpanded((v) => !v);
 
 	return (
 		<motion.div
-			initial={{ opacity: 0, y: 20 }}
+			initial={{ opacity: 0, y: 12 }}
 			animate={{ opacity: 1, y: 0 }}
-			transition={{ duration: 0.4, delay: index * 0.05 }}
-			className="h-full"
+			transition={{ duration: 0.3, delay: Math.min(index, 10) * 0.03 }}
+			className="relative pl-7 sm:pl-9"
 		>
-			<div className="group h-full w-full relative flex flex-col border border-border/40 bg-card/50 backdrop-blur-md transition-all duration-500 ease-out hover:shadow-xl hover:shadow-primary/10 hover:border-primary/20 rounded-lg sm:rounded-xl overflow-hidden">
-				{/* Image Header */}
-				<div className="relative w-full aspect-4/2 bg-muted shrink-0">
-					<div className="absolute inset-0 bg-linear-to-br opacity-20" />
-					<div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,rgba(120,119,198,0.1),rgba(255,255,255,0))]" />
-					<div className="absolute inset-0 bg-linear-to-t from-background/85 via-background/50 to-transparent" />
+			{/* Timeline dot */}
+			<span
+				aria-hidden="true"
+				className={`absolute top-6 left-[3px] size-3.5 rounded-full border-[3px] border-background ring-2 sm:left-[7px] ${
+					finished
+						? showScore
+							? `${tone.bar} ring-border`
+							: "bg-primary ring-primary/30"
+						: "bg-muted ring-border"
+				}`}
+			/>
 
-					{/* Status Badge */}
-					<div className="absolute top-1.5 left-1.5 sm:top-2 sm:left-2 z-10">
-						<Badge
-							className={`border-0 px-1 sm:px-1.5 md:px-2 py-0 text-[7px] sm:text-[8px] md:text-[9px] shadow-lg whitespace-nowrap ${finished ? "bg-green-500/90 text-white" : ""}`}
-						>
-							{finished ? (
-								<FileText className={`${iconClass} mr-0.5`} />
-							) : (
-								<XCircle className={`${iconClass} mr-0.5`} />
+			<div
+				className={`overflow-hidden rounded-2xl border-2 bg-card transition-all ${
+					expanded
+						? "border-primary/50 shadow-[0_4px_0_0_color-mix(in_oklch,var(--primary)_30%,transparent)]"
+						: "border-border shadow-[0_3px_0_0_var(--border)] hover:-translate-y-0.5"
+				}`}
+			>
+				{/* biome-ignore lint/a11y/useSemanticElements: row contains nested buttons */}
+				<div
+					role="button"
+					tabIndex={0}
+					aria-expanded={expanded}
+					onClick={toggle}
+					onKeyDown={(e) => {
+						if (e.key === "Enter" || e.key === " ") {
+							e.preventDefault();
+							toggle();
+						}
+					}}
+					className="group flex cursor-pointer items-center gap-3 p-3 transition-colors hover:bg-accent/40 sm:gap-4 sm:p-4"
+				>
+					{/* Date block */}
+					<div className="flex w-12 shrink-0 flex-col items-center rounded-xl bg-pop-violet-soft py-1.5 text-pop-violet-ink">
+						<span className="text-lg font-black leading-none tabular-nums">
+							{validDate ? examDate.getDate() : "–"}
+						</span>
+						<span className="mt-0.5 text-[10px] font-bold uppercase">
+							{validDate ? WEEKDAYS[examDate.getDay()] : ""}
+						</span>
+					</div>
+
+					{/* Title + meta */}
+					<div className="min-w-0 flex-1">
+						<h3 className="line-clamp-2 break-words text-sm font-extrabold leading-snug text-foreground transition-colors group-hover:text-primary sm:text-base">
+							{exam.title}
+						</h3>
+						<div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs font-bold text-muted-foreground">
+							<span className="flex items-center gap-1">
+								<Clock className={iconClass} />
+								{formatTime(examDate)}
+							</span>
+							{!finished && (
+								<Badge variant="secondary" className="px-2 py-0 text-[10px]">
+									<XCircle className="size-3" />
+									Дуусаагүй
+								</Badge>
 							)}
-							{finished ? "Дууссан" : "Дуусаагүй"}
-						</Badge>
-					</div>
-
-					{/* Date & Time */}
-					<div className="absolute bottom-0 left-0 right-0 p-1 sm:p-1.5 z-10 flex items-center gap-1 sm:gap-2">
-						<Tooltip>
-							<TooltipTrigger asChild>
-								<div className="flex items-center gap-0.5 sm:gap-1">
-									<Calendar className={`${iconClass} text-white/90`} />
-									<span className={`font-medium ${textClass} text-white/90`}>
-										{formatDate(examDate)}
-									</span>
-								</div>
-							</TooltipTrigger>
-							<TooltipContent>
-								<p>Шалгалтын огноо</p>
-							</TooltipContent>
-						</Tooltip>
-
-						<Tooltip>
-							<TooltipTrigger asChild>
-								<div className="flex items-center gap-0.5 sm:gap-1">
-									<Clock className={`${iconClass} text-white/90`} />
-									<span className={`font-medium ${textClass} text-white/90`}>
-										{formatTime(examDate)}
-									</span>
-								</div>
-							</TooltipTrigger>
-							<TooltipContent>
-								<p>Эхлэх цаг</p>
-							</TooltipContent>
-						</Tooltip>
-					</div>
-
-					{/* Score Display */}
-					{finished && exam.test_perc !== undefined && (
-						<div className="absolute top-1.5 right-1.5 sm:top-2 sm:right-2 z-10">
-							<div className="relative">
-								<div className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-xl bg-linear-to-br flex flex-col items-center justify-center transition-all duration-300 group-hover:scale-105 shadow-lg">
-									<div
-										className={`text-sm sm:text-base md:text-lg font-black leading-none  ${showScore ? "" : "blur-md select-none"}`}
-									>
-										{exam.test_perc?.toFixed(1)}%
-									</div>
-								</div>
-
-								<Tooltip>
-									<TooltipTrigger asChild>
-										<Button
-											onClick={(e) => {
-												e.stopPropagation();
-												setLocalShowScore(!localShowScore);
-											}}
-											size="icon"
-											variant="outline"
-											className="absolute -bottom-1 -right-1 w-5 h-5 sm:w-6 sm:h-6 rounded-full hover:scale-110 transition-transform duration-200 hover:border-blue-400 p-0"
-										>
-											{showScore ? (
-												<EyeOff className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-gray-600" />
-											) : (
-												<Eye className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-blue-600" />
-											)}
-										</Button>
-									</TooltipTrigger>
-									<TooltipContent>
-										<p>{showScore ? "Оноо нуух" : "Оноо харуулах"}</p>
-									</TooltipContent>
-								</Tooltip>
-							</div>
 						</div>
-					)}
-				</div>
 
-				{/* Content */}
-				<div className="p-1.5 sm:p-2 md:p-2.5 pb-16 sm:pb-18 md:pb-20 flex flex-col flex-1 space-y-1 sm:space-y-1.5">
-					<Tooltip>
-						<TooltipTrigger asChild>
-							<h3 className="text-[8px] sm:text-xs md:text-sm font-semibold text-foreground leading-tight group-hover:text-primary transition-colors duration-300 break-words">
-								{exam.title}
-							</h3>
-						</TooltipTrigger>
-						<TooltipContent className="max-w-xs">
-							<p>{exam.title}</p>
-						</TooltipContent>
-					</Tooltip>
-
-					{/* Stats */}
-					<div className="flex items-center justify-between gap-1 sm:gap-1.5 pt-1 border-t border-border/50">
-						<Tooltip>
-							<TooltipTrigger asChild>
-								<div className="flex items-center gap-0.5 sm:gap-1 text-muted-foreground min-w-0">
-									<Target className={iconClass} />
-									<span className={`font-medium ${textClass} truncate`}>
-										{exam.exam_minute} мин
-									</span>
+						{/* Score bar (mobile: under the title) */}
+						{finished && exam.test_perc !== undefined && (
+							<div className="mt-2 flex items-center gap-2 sm:hidden">
+								<div className="h-2.5 flex-1 overflow-hidden rounded-full bg-muted">
+									<div
+										className={`h-full rounded-full transition-all duration-700 ${showScore ? tone.bar : "bg-border"}`}
+										style={{ width: showScore ? `${score}%` : "25%" }}
+									/>
 								</div>
-							</TooltipTrigger>
-							<TooltipContent>
-								<p>Шалгалтын нийт хугацаа</p>
-							</TooltipContent>
-						</Tooltip>
-
-						{finished && (
-							<Tooltip>
-								<TooltipTrigger asChild>
-									<div className="flex items-center gap-0.5 sm:gap-1 text-muted-foreground min-w-0">
-										<Clock className={iconClass} />
-										<span className={`font-medium ${textClass} truncate`}>
-											{exam.test_time}
-										</span>
-									</div>
-								</TooltipTrigger>
-								<TooltipContent>
-									<p>Таны зарцуулсан хугацаа</p>
-								</TooltipContent>
-							</Tooltip>
+								<span
+									className={`w-14 text-right text-sm font-black tabular-nums ${showScore ? tone.text : "blur-sm select-none"}`}
+								>
+									{exam.test_perc?.toFixed(1)}%
+								</span>
+							</div>
 						)}
 					</div>
 
-					{/* Actions */}
-					{finished ? (
-						<div className="absolute bottom-1.5 left-1.5 right-1.5 sm:bottom-2 sm:left-2 sm:right-2 flex flex-col gap-1 sm:gap-1.5">
-							{/* Top Row - Rank & Score */}
-							{/* <div className="flex items-center gap-1 sm:gap-1.5">
-								<Button
-									onClick={() => onViewResults?.(exam.exam_id, exam.test_id)}
-									size="sm"
-									variant="outline"
-									className={`flex-1 ${btnClass} hover:bg-blue-50 hover:border-blue-300`}
-								>
-									<FileText className={`${iconClass} mr-0.5 sm:mr-1`} />
-									Оноо
-								</Button>
-
-								{onViewRank && (
-									<Button
-										onClick={(e) => {
-											e.stopPropagation();
-											onViewRank(exam.exam_id);
-										}}
-										size="sm"
-										variant="outline"
-										className={`flex-1 ${btnClass} hover:bg-purple-50 hover:border-purple-300`}
-									>
-										<Award className={`${iconClass} mr-0.5 sm:mr-1`} />
-										Ранк
-									</Button>
-								)}
-							</div> */}
-							{/* Bottom Row - Details */}
-
-							<Button
-								onClick={() =>
-									router.push(`/examResult/${exam.exam_id}_${exam.test_id}`)
-								}
-								size="sm"
-								className={`group/btn w-full ${btnClass} bg-linear-to-br from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 relative overflow-hidden`}
+					{/* Score bar (desktop) */}
+					{finished && exam.test_perc !== undefined && (
+						<div className="hidden w-48 shrink-0 items-center gap-2 sm:flex lg:w-64">
+							<div className="h-3 flex-1 overflow-hidden rounded-full bg-muted">
+								<div
+									className={`h-full rounded-full transition-all duration-700 ${showScore ? tone.bar : "bg-border"}`}
+									style={{ width: showScore ? `${score}%` : "25%" }}
+								/>
+							</div>
+							<span
+								className={`w-16 text-right text-base font-black tabular-nums ${showScore ? tone.text : "blur-md select-none"}`}
 							>
-								<span className="flex items-center justify-center gap-1 relative z-10">
-									<FileText className={`${iconClass}`} />
-									Дэлгэрэнгүй үзэх
-									<ArrowRight
-										className={`${iconClass} transition-transform duration-300 group-hover/btn:translate-x-1`}
-									/>
-								</span>
-							</Button>
-						</div>
-					) : (
-						<div className="absolute bottom-1.5 left-1.5 right-1.5 sm:bottom-2 sm:left-2 sm:right-2 text-center py-1.5 sm:py-2 bg-gray-50 rounded-lg border border-dashed border-gray-200">
-							<p className="text-[8px] sm:text-[9px] font-semibold text-gray-600">
-								Шалгалтын үр харуулах хугацаа
-							</p>
-							<p className="text-[8px] sm:text-[9px] font-semibold text-gray-600">
-								{formatDateStr(exam.enddate)}
-							</p>
+								{exam.test_perc?.toFixed(1)}%
+							</span>
 						</div>
 					)}
+
+					{/* Eye toggle */}
+					{finished && exam.test_perc !== undefined && (
+						<Tooltip>
+							<TooltipTrigger asChild>
+								<Button
+									onClick={(e) => {
+										e.stopPropagation();
+										setLocalShowScore(!localShowScore);
+									}}
+									size="icon"
+									variant="outline"
+									className="size-8 shrink-0 rounded-full p-0 shadow-[0_2px_0_0_var(--border)]"
+								>
+									{showScore ? (
+										<EyeOff className="size-3.5 text-muted-foreground" />
+									) : (
+										<Eye className="size-3.5 text-primary" />
+									)}
+								</Button>
+							</TooltipTrigger>
+							<TooltipContent>
+								<p>{showScore ? "Оноо нуух" : "Оноо харуулах"}</p>
+							</TooltipContent>
+						</Tooltip>
+					)}
+
+					<ChevronDown
+						className={`size-5 shrink-0 text-muted-foreground transition-transform duration-200 ${expanded ? "rotate-180" : ""}`}
+					/>
 				</div>
+
+				{/* Expanded: details + actions */}
+				{expanded && (
+					<div className="animate-in fade-in-0 slide-in-from-top-1 space-y-3 border-t-2 border-border bg-muted/30 p-3 duration-200 sm:p-4">
+						<div className="flex flex-wrap items-center gap-1.5 text-xs">
+							<span className="inline-flex items-center gap-1 rounded-full bg-pop-violet-soft px-2.5 py-1 font-bold text-pop-violet-ink">
+								<Calendar className={iconClass} />
+								{formatDate(examDate)} · {formatTime(examDate)}
+							</span>
+							<span className="inline-flex items-center gap-1 rounded-full bg-pop-sky-soft px-2.5 py-1 font-bold text-pop-sky-ink">
+								<Target className={iconClass} />
+								Шалгалтын нийт хугацаа: {exam.exam_minute} мин
+							</span>
+							{finished && (
+								<span className="inline-flex items-center gap-1 rounded-full bg-pop-pink-soft px-2.5 py-1 font-bold text-pop-pink-ink">
+									<Clock className={iconClass} />
+									Таны зарцуулсан хугацаа: {exam.test_time}
+								</span>
+							)}
+						</div>
+
+						{finished ? (
+							<div className="flex flex-col gap-2 sm:flex-row">
+								<Button
+									onClick={() =>
+										router.push(`/examResult/${exam.exam_id}_${exam.test_id}`)
+									}
+									className="group/btn flex-1"
+								>
+									<FileText className="size-4" />
+									Дэлгэрэнгүй үзэх
+									<ArrowRight className="size-4 transition-transform duration-200 group-hover/btn:translate-x-1" />
+								</Button>
+								{onViewRank && (
+									<Button
+										variant="outline"
+										onClick={() => onViewRank(exam.exam_id)}
+										className="flex-1 sm:flex-none"
+									>
+										<Trophy className="size-4 text-pop-sun-ink" />
+										Чансаа харах
+									</Button>
+								)}
+							</div>
+						) : (
+							<div className="rounded-2xl border-2 border-dashed border-border bg-card px-3 py-2 text-center">
+								<p className="text-xs font-bold text-muted-foreground">
+									Шалгалтын үр харуулах хугацаа
+								</p>
+								<p className="text-sm font-extrabold text-foreground">
+									{formatDateStr(exam.enddate)}
+								</p>
+							</div>
+						)}
+					</div>
+				)}
 			</div>
 		</motion.div>
 	);

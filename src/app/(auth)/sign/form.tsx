@@ -2,7 +2,19 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import axios from "axios";
-import { Loader2, MessageSquare, ShieldCheck, X } from "lucide-react";
+import {
+	KeyRound,
+	Loader2,
+	Lock,
+	Mail,
+	MessageSquare,
+	Phone,
+	ShieldCheck,
+	User,
+	UserPlus,
+	Users,
+	X,
+} from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -11,16 +23,13 @@ import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { UAParser } from "ua-parser-js";
 import * as z from "zod";
+import {
+	AUTH_CLOSE_BUTTON_CLASS,
+	AUTH_INPUT_ICON_CLASS,
+	AuthShell,
+} from "@/app/(auth)/login/form";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import {
-	Card,
-	CardContent,
-	CardDescription,
-	CardFooter,
-	CardHeader,
-	CardTitle,
-} from "@/components/ui/card";
 import {
 	Form,
 	FormControl,
@@ -203,42 +212,48 @@ export function SignForm({ onClose }: SignFormProps) {
 	};
 
 	return (
-		<Card className="w-full max-w-md bg-white dark:bg-[#0d1117] border border-gray-200 dark:border-neutral-800 shadow-2xl rounded-2xl overflow-hidden">
-			<CardHeader className="space-y-1 relative pb-4 border-b border-gray-100 dark:border-neutral-800">
-				{onClose && (
-					<button
-						type="button"
-						onClick={onClose}
-						className="absolute top-0 right-0 w-7 h-7 rounded-lg flex items-center justify-center text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 hover:bg-gray-100 dark:hover:bg-neutral-800 transition-all"
-						aria-label="Хаах"
-					>
-						<X className="w-4 h-4" />
-					</button>
-				)}
-				<Image src="/image/asd.png" alt="EXMO" width={110} height={36} className="h-9 w-auto mb-3" />
-				<CardTitle className="text-lg font-bold text-gray-900 dark:text-white">Бүртгүүлэх</CardTitle>
-				<CardDescription className="text-sm text-gray-500 dark:text-neutral-400">Шинэ бүртгэл үүсгэх</CardDescription>
-			</CardHeader>
+		<AuthShell>
+			{onClose && (
+				<button type="button" onClick={onClose} className={AUTH_CLOSE_BUTTON_CLASS} aria-label="Хаах">
+					<X className="size-4" strokeWidth={2.5} />
+				</button>
+			)}
+
+			<div className="px-6 pt-6 pr-14 pb-2 sm:px-8 sm:pt-8 sm:pr-14">
+				<Image src="/image/asd.png" alt="EXMO" width={110} height={36} className="mb-5 hidden h-8 w-auto md:block" />
+				<div className="flex items-center gap-3">
+					<div className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-pop-mint-soft text-2xl shadow-[0_4px_0_0_color-mix(in_oklch,var(--pop-mint)_35%,transparent)]">
+						<span aria-hidden="true">🚀</span>
+					</div>
+					<div className="min-w-0">
+						<h2 className="text-2xl font-black tracking-tight text-foreground">Бүртгүүлэх</h2>
+						<p className="text-sm font-semibold text-muted-foreground">Шинэ бүртгэл үүсгэх</p>
+					</div>
+				</div>
+			</div>
 
 			<Form {...form}>
 				<form onSubmit={form.handleSubmit(onSubmit)}>
-					<CardContent className="grid gap-4 px-6 pt-5 pb-2">
+					<div className="grid gap-4 px-6 pt-5 pb-2 sm:px-8">
 						<FormField
 							control={form.control}
 							name="phone"
 							render={({ field }) => (
 								<FormItem>
-									<FormLabel className="text-sm font-medium text-gray-700 dark:text-neutral-300">Утасны дугаар</FormLabel>
-									<FormControl>
-										<Input
-											placeholder="88888888"
-											type="tel"
-											{...field}
-											disabled={isPending || isVerified}
-											maxLength={8}
-											className="h-10 text-base bg-gray-50 dark:bg-neutral-900 border-gray-200 dark:border-neutral-700"
-										/>
-									</FormControl>
+									<FormLabel className="text-sm font-bold text-foreground">Утасны дугаар</FormLabel>
+									<div className="relative">
+										<FormControl>
+											<Input
+												placeholder="88888888"
+												type="tel"
+												{...field}
+												disabled={isPending || isVerified}
+												maxLength={8}
+												className="peer pl-11 text-base tracking-wider"
+											/>
+										</FormControl>
+										<Phone className={AUTH_INPUT_ICON_CLASS} strokeWidth={2.5} />
+									</div>
 									<FormMessage />
 								</FormItem>
 							)}
@@ -249,7 +264,7 @@ export function SignForm({ onClose }: SignFormProps) {
 								<Button
 									type="button"
 									variant="outline"
-									className="w-full h-10 border-gray-200 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-300"
+									className="w-full"
 									onClick={handleRequestCode}
 									disabled={isChecking || isWaitingForSMS}
 								>
@@ -266,38 +281,38 @@ export function SignForm({ onClose }: SignFormProps) {
 									)}
 								</Button>
 								{isWaitingForSMS && verificationCode && (
-									<Alert className="bg-blue-50/50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800 shadow-sm">
+									<Alert className="animate-pop-in rounded-2xl border-2 border-pop-sky/40 bg-pop-sky-soft">
 										<AlertDescription className="py-2">
 											<div className="space-y-4">
 												<div className="flex gap-3">
-													<div className="shrink-0 w-6 h-6 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-bold">
+													<div className="flex size-7 shrink-0 items-center justify-center rounded-full bg-pop-sky text-xs font-black text-primary-foreground">
 														1
 													</div>
-													<p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
+													<p className="text-sm leading-relaxed font-semibold text-foreground">
 														Доорх кодыг{" "}
-														<span className="font-bold text-blue-700 dark:text-blue-400">
+														<span className="font-black text-pop-sky-ink">
 															142076
 														</span>{" "}
 														дугаарт мессежээр илгээнэ үү.
 													</p>
 												</div>
-												<div className="bg-white dark:bg-slate-900 border-2 border-dashed border-blue-300 dark:border-blue-700 rounded-xl p-4 flex items-center justify-center">
-													<span className="text-3xl font-black tracking-widest text-blue-600 dark:text-blue-400 select-all">
+												<div className="flex items-center justify-center rounded-2xl border-2 border-dashed border-pop-sky bg-card p-4">
+													<span className="text-3xl font-black tracking-widest text-pop-sky-ink select-all">
 														{verificationCode}
 													</span>
 												</div>
 												<div className="flex gap-3 pt-2">
-													<div className="shrink-0 w-6 h-6 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-bold">
+													<div className="flex size-7 shrink-0 items-center justify-center rounded-full bg-pop-sky text-xs font-black text-primary-foreground">
 														2
 													</div>
 													<div className="flex-1 space-y-3">
-														<p className="text-sm text-slate-700 dark:text-slate-300">
+														<p className="text-sm font-semibold text-foreground">
 															Мессеж илгээсний дараа доорх товчийг дарж
 															баталгаажуулна уу.
 														</p>
 														<Button
 															type="button"
-															className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold"
+															className="w-full"
 															onClick={handleCheckVerification}
 															disabled={isChecking}
 														>
@@ -320,9 +335,9 @@ export function SignForm({ onClose }: SignFormProps) {
 						)}
 
 						{isVerified && (
-							<Alert className="bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800">
-								<ShieldCheck className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
-								<AlertDescription className="text-emerald-800 dark:text-emerald-200">
+							<Alert className="animate-pop-in rounded-2xl border-2 border-success/30 bg-success/10 text-success">
+								<ShieldCheck className="h-4 w-4 text-success" />
+								<AlertDescription className="font-bold text-success">
 									Утасны дугаар амжилттай баталгаажлаа
 								</AlertDescription>
 							</Alert>
@@ -330,21 +345,24 @@ export function SignForm({ onClose }: SignFormProps) {
 
 						{isVerified && (
 							<>
-								<div className="grid grid-cols-2 gap-3">
+								<div className="grid grid-cols-1 gap-3 min-[400px]:grid-cols-2">
 									<FormField
 										control={form.control}
 										name="lastname"
 										render={({ field }) => (
 											<FormItem>
-												<FormLabel className="text-sm font-medium text-gray-700 dark:text-neutral-300">Овог</FormLabel>
-												<FormControl>
-													<Input
-														placeholder="Овог"
-														{...field}
-														disabled={isPending}
-														className="h-10 bg-gray-50 dark:bg-neutral-900 border-gray-200 dark:border-neutral-700"
-													/>
-												</FormControl>
+												<FormLabel className="text-sm font-bold text-foreground">Овог</FormLabel>
+												<div className="relative">
+													<FormControl>
+														<Input
+															placeholder="Овог"
+															{...field}
+															disabled={isPending}
+															className="peer pl-11"
+														/>
+													</FormControl>
+													<Users className={AUTH_INPUT_ICON_CLASS} strokeWidth={2.5} />
+												</div>
 												<FormMessage />
 											</FormItem>
 										)}
@@ -354,15 +372,18 @@ export function SignForm({ onClose }: SignFormProps) {
 										name="firstname"
 										render={({ field }) => (
 											<FormItem>
-												<FormLabel className="text-sm font-medium text-gray-700 dark:text-neutral-300">Нэр</FormLabel>
-												<FormControl>
-													<Input
-														placeholder="Нэр"
-														{...field}
-														disabled={isPending}
-														className="h-10 bg-gray-50 dark:bg-neutral-900 border-gray-200 dark:border-neutral-700"
-													/>
-												</FormControl>
+												<FormLabel className="text-sm font-bold text-foreground">Нэр</FormLabel>
+												<div className="relative">
+													<FormControl>
+														<Input
+															placeholder="Нэр"
+															{...field}
+															disabled={isPending}
+															className="peer pl-11"
+														/>
+													</FormControl>
+													<User className={AUTH_INPUT_ICON_CLASS} strokeWidth={2.5} />
+												</div>
 												<FormMessage />
 											</FormItem>
 										)}
@@ -373,52 +394,59 @@ export function SignForm({ onClose }: SignFormProps) {
 									name="email"
 									render={({ field }) => (
 										<FormItem>
-											<FormLabel className="text-sm font-medium text-gray-700 dark:text-neutral-300">Имэйл хаяг</FormLabel>
-											<FormControl>
-												<Input
-													placeholder="example@email.com"
-													type="email"
-													{...field}
-													disabled={isPending}
-													className="h-10 bg-gray-50 dark:bg-neutral-900 border-gray-200 dark:border-neutral-700"
-												/>
-											</FormControl>
+											<FormLabel className="text-sm font-bold text-foreground">Имэйл хаяг</FormLabel>
+											<div className="relative">
+												<FormControl>
+													<Input
+														placeholder="example@email.com"
+														type="email"
+														{...field}
+														disabled={isPending}
+														className="peer pl-11"
+													/>
+												</FormControl>
+												<Mail className={AUTH_INPUT_ICON_CLASS} strokeWidth={2.5} />
+											</div>
 											<FormMessage />
 										</FormItem>
 									)}
 								/>
-								<div className="flex items-center gap-3 rounded-lg border border-gray-200 dark:border-neutral-700 bg-gray-50 dark:bg-neutral-900 px-3 py-2.5">
+								<div className="flex items-center gap-3 rounded-2xl border-2 border-border bg-muted px-4 py-3 transition-colors has-[:checked]:border-primary has-[:checked]:bg-primary/10">
 									<input
 										type="checkbox"
 										id="isTeacher"
 										checked={isTeacher}
 										onChange={(e) => setIsTeacher(e.target.checked)}
 										disabled={isPending}
-										className="h-4 w-4 rounded border-gray-300 accent-emerald-600 cursor-pointer"
+										className="size-5 cursor-pointer rounded accent-primary"
 									/>
 									<label
 										htmlFor="isTeacher"
-										className="text-sm text-gray-700 dark:text-neutral-300 cursor-pointer select-none"
+										className="flex flex-1 cursor-pointer items-center gap-2 text-sm font-bold text-foreground select-none"
 									>
+										<span aria-hidden="true">🧑‍🏫</span>
 										Багшаар бүртгүүлэх
 									</label>
 								</div>
-								<div className="grid grid-cols-2 gap-3">
+								<div className="grid grid-cols-1 gap-3 min-[400px]:grid-cols-2">
 									<FormField
 										control={form.control}
 										name="password"
 										render={({ field }) => (
 											<FormItem>
-												<FormLabel className="text-sm font-medium text-gray-700 dark:text-neutral-300">Нууц үг</FormLabel>
-												<FormControl>
-													<Input
-														placeholder="••••••"
-														type="password"
-														{...field}
-														disabled={isPending}
-														className="h-10 bg-gray-50 dark:bg-neutral-900 border-gray-200 dark:border-neutral-700"
-													/>
-												</FormControl>
+												<FormLabel className="text-sm font-bold text-foreground">Нууц үг</FormLabel>
+												<div className="relative">
+													<FormControl>
+														<Input
+															placeholder="••••••"
+															type="password"
+															{...field}
+															disabled={isPending}
+															className="peer pl-11"
+														/>
+													</FormControl>
+													<Lock className={AUTH_INPUT_ICON_CLASS} strokeWidth={2.5} />
+												</div>
 												<FormMessage />
 											</FormItem>
 										)}
@@ -428,16 +456,19 @@ export function SignForm({ onClose }: SignFormProps) {
 										name="confirmPassword"
 										render={({ field }) => (
 											<FormItem>
-												<FormLabel className="text-sm font-medium text-gray-700 dark:text-neutral-300">Давтах</FormLabel>
-												<FormControl>
-													<Input
-														placeholder="••••••"
-														type="password"
-														{...field}
-														disabled={isPending}
-														className="h-10 bg-gray-50 dark:bg-neutral-900 border-gray-200 dark:border-neutral-700"
-													/>
-												</FormControl>
+												<FormLabel className="text-sm font-bold text-foreground">Давтах</FormLabel>
+												<div className="relative">
+													<FormControl>
+														<Input
+															placeholder="••••••"
+															type="password"
+															{...field}
+															disabled={isPending}
+															className="peer pl-11"
+														/>
+													</FormControl>
+													<KeyRound className={AUTH_INPUT_ICON_CLASS} strokeWidth={2.5} />
+												</div>
 												<FormMessage />
 											</FormItem>
 										)}
@@ -445,36 +476,39 @@ export function SignForm({ onClose }: SignFormProps) {
 								</div>
 								<Button
 									type="submit"
-									className="w-full h-11 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg"
+									size="lg"
+									className="mt-2 w-full"
 									disabled={isPending}
 								>
-									{isPending && (
-										<Loader2 className="mr-2 h-4 w-4 animate-spin" />
+									{isPending ? (
+										<Loader2 className="size-5 animate-spin" />
+									) : (
+										<UserPlus className="size-5" strokeWidth={2.5} />
 									)}
 									{isPending ? "Бүртгүүлж байна..." : "Бүртгүүлэх"}
 								</Button>
 							</>
 						)}
-					</CardContent>
+					</div>
 				</form>
 			</Form>
 
-			<CardFooter className="flex-col gap-4 px-6 pt-4 pb-5 border-t border-gray-100 dark:border-neutral-800">
+			<div className="flex flex-col gap-4 px-6 pt-4 pb-6 sm:px-8 sm:pb-8">
 				<div className="relative w-full">
 					<div className="absolute inset-0 flex items-center">
-						<span className="w-full border-t border-gray-200 dark:border-neutral-700" />
+						<span className="w-full border-t-2 border-dashed border-border" />
 					</div>
 					<div className="relative flex justify-center text-xs uppercase">
-						<span className="bg-white dark:bg-[#0d1117] px-2 text-gray-400 dark:text-neutral-500 tracking-wider">Эсвэл</span>
+						<span className="bg-card px-3 font-extrabold tracking-wider text-muted-foreground">Эсвэл</span>
 					</div>
 				</div>
-				<p className="text-sm text-center text-gray-500 dark:text-neutral-400">
+				<p className="text-center text-sm font-semibold text-muted-foreground">
 					Бүртгэлтэй юу?{" "}
-					<Link href="/login" className="text-emerald-600 dark:text-emerald-400 font-semibold hover:underline">
+					<Link href="/login" className="font-extrabold text-primary hover:underline">
 						Нэвтрэх
 					</Link>
 				</p>
-			</CardFooter>
-		</Card>
+			</div>
+		</AuthShell>
 	);
 }

@@ -170,12 +170,12 @@ export function ExamTimeTable({ data, timeId, exam_id }: ExamRoomTableProps) {
 	// 	: 0;
 
 	return (
-		<div className="rounded-xl border border-border bg-card shadow-sm overflow-hidden flex flex-col h-full">
+		<div className="card-pop flex h-full flex-col overflow-hidden">
 			{/* ── Header ── */}
-			<div className="px-5 py-3.5 border-b flex items-center justify-between bg-muted/30 gap-4 flex-wrap">
-				<div className="flex items-center gap-3">
+			<div className="flex flex-wrap items-center justify-between gap-4 border-b-2 border-border bg-muted/50 px-4 py-4 md:px-5">
+				<div className="flex w-full items-center gap-3 sm:w-auto">
 					<Select value={selectedRoomId} onValueChange={setSelectedRoomId}>
-						<SelectTrigger className="w-64 h-9 text-sm">
+						<SelectTrigger className="h-10 w-full rounded-xl text-sm font-bold sm:w-64">
 							<SelectValue placeholder="Өрөөгөө сонгоно уу..." />
 						</SelectTrigger>
 						<SelectContent>
@@ -185,9 +185,9 @@ export function ExamTimeTable({ data, timeId, exam_id }: ExamRoomTableProps) {
 									value={room.exam_room_id.toString()}
 								>
 									<span className="flex items-center gap-2">
-										<Monitor size={13} className="text-muted-foreground" />
+										<Monitor size={14} className="text-pop-sky-ink" strokeWidth={2.5} />
 										{room.room_number}-р өрөө
-										<span className="ml-auto text-xs text-muted-foreground">
+										<span className="ml-auto text-xs font-semibold text-muted-foreground">
 											({room.total_students} сурагч)
 										</span>
 									</span>
@@ -198,7 +198,7 @@ export function ExamTimeTable({ data, timeId, exam_id }: ExamRoomTableProps) {
 				</div>
 
 				{selectedRoom && (
-					<div className="flex items-center gap-2">
+					<div className="flex flex-wrap items-center gap-2">
 						<Button
 							onClick={() => mutate({ room_id: selectedRoom.exam_room_id })}
 							disabled={isPending}
@@ -210,7 +210,7 @@ export function ExamTimeTable({ data, timeId, exam_id }: ExamRoomTableProps) {
 								</>
 							) : (
 								<>
-									<Armchair size={14} />
+									<Armchair size={14} strokeWidth={2.5} />
 									Суудал хуваарилах
 								</>
 							)}
@@ -221,6 +221,7 @@ export function ExamTimeTable({ data, timeId, exam_id }: ExamRoomTableProps) {
 							}
 							disabled={variantIsPending}
 							size="sm"
+							variant="secondary"
 						>
 							{variantIsPending ? (
 								<>
@@ -228,7 +229,7 @@ export function ExamTimeTable({ data, timeId, exam_id }: ExamRoomTableProps) {
 								</>
 							) : (
 								<>
-									<Layers />
+									<Layers strokeWidth={2.5} />
 									Вариант хуваарилах{" "}
 								</>
 							)}
@@ -248,22 +249,25 @@ export function ExamTimeTable({ data, timeId, exam_id }: ExamRoomTableProps) {
 			{/* ── Body ── */}
 			<ScrollArea className="flex-1">
 				{selectedRoom ? (
-					<div className="p-5 space-y-5">
+					<div className="space-y-5 p-4 md:p-5">
 						{/* Stat cards */}
-						<div className="grid grid-cols-3 gap-3">
+						<div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
 							<StatCard
-								icon={<Monitor size={16} />}
+								icon={<Monitor size={16} strokeWidth={2.5} />}
 								label="Компьютерын тоо"
+								tone="sky"
 								value={selectedRoom.num_of_pc}
 							/>
 							<StatCard
-								icon={<Armchair size={16} />}
+								icon={<Armchair size={16} strokeWidth={2.5} />}
 								label="Хуваарилагдсан"
+								tone="mint"
 								value={selectedRoom.assigned_seats}
 							/>
 							<StatCard
-								icon={<Users size={16} />}
+								icon={<Users size={16} strokeWidth={2.5} />}
 								label="Нийт сурагч"
+								tone="violet"
 								value={selectedRoom.total_students}
 							/>
 						</div>
@@ -288,13 +292,13 @@ export function ExamTimeTable({ data, timeId, exam_id }: ExamRoomTableProps) {
 						</div> */}
 
 						{/* Table */}
-						<div className="rounded-lg border border-border overflow-hidden">
+						<div className="overflow-hidden rounded-2xl border-2 border-border">
 							<div className="overflow-x-auto">
 								{" "}
 								{/* ← нэмэх */}
 								<Table>
 									<TableHeader>
-										<TableRow className="bg-muted/40 hover:bg-muted/40">
+										<TableRow className="border-b-2 border-border bg-muted text-xs font-extrabold tracking-wide uppercase hover:bg-muted [&_th]:text-xs [&_th]:font-extrabold [&_th]:text-muted-foreground">
 											<TableHead className="w-8 text-center">
 												<Hash
 													size={13}
@@ -305,14 +309,14 @@ export function ExamTimeTable({ data, timeId, exam_id }: ExamRoomTableProps) {
 												<span className="flex items-center gap-1.5">
 													<BookOpen
 														size={13}
-														className="text-muted-foreground"
+														strokeWidth={2.5}
 													/>
 													Овог нэр
 												</span>
 											</TableHead>
 											<TableHead>
 												<span className="flex items-center gap-1.5">
-													<School size={13} className="text-muted-foreground" />
+													<School size={13} strokeWidth={2.5} />
 													Анги
 												</span>
 											</TableHead>
@@ -320,7 +324,7 @@ export function ExamTimeTable({ data, timeId, exam_id }: ExamRoomTableProps) {
 												<span className="flex items-center gap-1.5">
 													<Armchair
 														size={13}
-														className="text-muted-foreground"
+														strokeWidth={2.5}
 													/>
 													Суудал №
 												</span>
@@ -329,14 +333,14 @@ export function ExamTimeTable({ data, timeId, exam_id }: ExamRoomTableProps) {
 												<span className="flex items-center gap-1.5">
 													<ClipboardList
 														size={13}
-														className="text-muted-foreground"
+														strokeWidth={2.5}
 													/>
 													Төлөв
 												</span>
 											</TableHead>
 											<TableHead>
 												<span className="flex items-center gap-1.5 justify-end">
-													<Upload size={13} className="text-muted-foreground" />
+													<Upload size={13} strokeWidth={2.5} />
 													Хариултын хуудас илгээх
 												</span>
 											</TableHead>
@@ -346,11 +350,11 @@ export function ExamTimeTable({ data, timeId, exam_id }: ExamRoomTableProps) {
 										{selectedRoom.students.map((s, idx) => {
 											const hasUploaded = !!s.file_url;
 											return (
-												<TableRow key={s.id} className="group">
-													<TableCell className="text-center text-xs text-muted-foreground w-8">
+												<TableRow key={s.id} className="group hover:bg-accent/50">
+													<TableCell className="w-8 text-center text-xs font-bold text-muted-foreground">
 														{idx + 1}
 													</TableCell>
-													<TableCell className="font-medium">
+													<TableCell className="font-bold">
 														<span className="text-muted-foreground">
 															{s.last_name[0]}.
 														</span>{" "}
@@ -358,28 +362,32 @@ export function ExamTimeTable({ data, timeId, exam_id }: ExamRoomTableProps) {
 													</TableCell>
 													<TableCell>
 														<Badge
-															variant="outline"
-															className="gap-1 font-normal text-xs"
+															variant="sky"
+															className="gap-1 rounded-full text-xs font-bold"
 														>
 															<School size={10} />
 															{s.studentgroupname}
 														</Badge>
 													</TableCell>
 													<TableCell>
-														<span className="inline-flex items-center justify-center w-8 h-8 rounded-md bg-primary/10 text-primary font-bold text-sm">
+														<span className="inline-flex size-8 items-center justify-center rounded-xl bg-primary/10 text-sm font-black text-primary">
 															{s.seat_number}
 														</span>
 													</TableCell>
-													<TableCell>{s.status_text}</TableCell>
+													<TableCell>
+														<span className="inline-flex rounded-full bg-muted px-2.5 py-1 text-xs font-bold text-foreground">
+															{s.status_text}
+														</span>
+													</TableCell>
 													{
 														<TableCell>
 															<div className="flex justify-end items-center">
 																{hasUploaded ? (
 																	<Badge
-																		variant="secondary"
-																		className="gap-1 h-7 px-3 text-green-500"
+																		variant="mint"
+																		className="h-7 gap-1 rounded-full px-3 font-bold"
 																	>
-																		<Check size={12} />
+																		<Check size={12} strokeWidth={3} />
 																		Илгээгдсэн
 																	</Badge>
 																) : (
@@ -392,7 +400,7 @@ export function ExamTimeTable({ data, timeId, exam_id }: ExamRoomTableProps) {
 																		}}
 																		disabled={s.status_code !== 3}
 																	>
-																		<Upload /> Эсээ илгээх PDF
+																		<Upload strokeWidth={2.5} /> Эсээ илгээх PDF
 																	</Button>
 																)}
 															</div>
@@ -408,15 +416,15 @@ export function ExamTimeTable({ data, timeId, exam_id }: ExamRoomTableProps) {
 					</div>
 				) : (
 					/* Empty state */
-					<div className="h-64 flex flex-col items-center justify-center gap-3 text-muted-foreground select-none">
-						<div className="p-4 rounded-2xl bg-muted/40">
-							<Database size={36} className="opacity-40" />
+					<div className="flex h-72 flex-col items-center justify-center gap-3 text-muted-foreground select-none">
+						<div className="flex size-20 items-center justify-center rounded-full bg-pop-sky-soft text-pop-sky-ink">
+							<Database size={36} strokeWidth={2.25} />
 						</div>
 						<div className="text-center space-y-0.5">
-							<p className="text-sm font-medium text-foreground/60">
+							<p className="text-base font-black text-foreground">
 								Өрөө сонгогдоогүй байна
 							</p>
-							<p className="text-xs text-muted-foreground">
+							<p className="text-sm font-semibold text-muted-foreground">
 								Үргэлжлүүлэхийн тулд дээрээс өрөө сонгоно уу.
 							</p>
 						</div>
@@ -434,26 +442,47 @@ export function ExamTimeTable({ data, timeId, exam_id }: ExamRoomTableProps) {
 	);
 }
 
+const STAT_TONES = {
+	sky: { tile: "bg-pop-sky-soft", ink: "text-pop-sky-ink" },
+	mint: { tile: "bg-pop-mint-soft", ink: "text-pop-mint-ink" },
+	violet: { tile: "bg-pop-violet-soft", ink: "text-pop-violet-ink" },
+} as const;
+
 function StatCard({
 	icon,
 	label,
 	value,
+	tone = "violet",
 }: {
 	icon: React.ReactNode;
 	label: string;
 	value: number;
+	tone?: keyof typeof STAT_TONES;
 }) {
 	return (
 		<div
 			className={cn(
-				"rounded-xl p-4 flex flex-col gap-2 border border-transparent bg-muted",
+				"flex flex-col gap-2 rounded-2xl p-4",
+				STAT_TONES[tone].tile,
 			)}
 		>
-			<div className={cn("flex items-center gap-1.5 text-xs font-medium")}>
+			<div
+				className={cn(
+					"flex items-center gap-1.5 text-xs font-bold tracking-wide uppercase",
+					STAT_TONES[tone].ink,
+				)}
+			>
 				{icon}
 				{label}
 			</div>
-			<p className={cn("text-2xl font-bold leading-none")}>{value}</p>
+			<p
+				className={cn(
+					"text-2xl leading-none font-black",
+					STAT_TONES[tone].ink,
+				)}
+			>
+				{value}
+			</p>
 		</div>
 	);
 }

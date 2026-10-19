@@ -8,8 +8,11 @@ import {
 	ArrowLeft,
 	Eye,
 	EyeOff,
+	KeyRound,
 	Loader2,
+	Lock,
 	MessageSquare,
+	Phone,
 	ShieldCheck,
 	X,
 } from "lucide-react";
@@ -19,16 +22,13 @@ import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { UAParser } from "ua-parser-js";
 import * as z from "zod";
+import {
+	AUTH_CLOSE_BUTTON_CLASS,
+	AUTH_INPUT_ICON_CLASS,
+	AuthShell,
+} from "@/app/(auth)/login/form";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import {
-	Card,
-	CardContent,
-	CardDescription,
-	CardFooter,
-	CardHeader,
-	CardTitle,
-} from "@/components/ui/card";
 import {
 	Form,
 	FormControl,
@@ -211,28 +211,28 @@ export default function ForgotForm({ onClose }: ForgotFormProps) {
 
 	if (isSubmitted) {
 		return (
-			<Card className="w-full max-w-sm bg-white/60 dark:bg-gray-900/60 backdrop-blur-xl border border-gray-200/50 dark:border-gray-700/50">
-				<CardHeader className="space-y-1 text-center relative">
-					{onClose && (
-						<button
-							type="button"
-							onClick={onClose}
-							className="absolute top-0 right-0 w-7 h-7 rounded-md flex items-center justify-center text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-all"
-							aria-label="Хаах"
-						>
-							<X className="w-4 h-4" />
-						</button>
-					)}
+			<AuthShell>
+				{onClose && (
+					<button
+						type="button"
+						onClick={onClose}
+						className={AUTH_CLOSE_BUTTON_CLASS}
+						aria-label="Хаах"
+					>
+						<X className="size-4" strokeWidth={2.5} />
+					</button>
+				)}
+				<div className="flex flex-1 flex-col items-center justify-center px-6 py-8 text-center sm:px-8">
 					<Image
 						src="/image/logoLogin.png"
 						alt="EXMO logo"
 						width={120}
 						height={40}
-						className="h-10 w-auto mb-1 mx-auto"
+						className="mx-auto mb-6 h-9 w-auto"
 					/>
-					<div className="mx-auto w-12 h-12 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center mb-4">
+					<div className="relative mx-auto mb-5 flex size-20 animate-pop-in items-center justify-center rounded-full bg-success/15 text-success shadow-[0_4px_0_0_color-mix(in_oklch,var(--success)_35%,transparent)]">
 						<svg
-							className="w-6 h-6 text-green-600 dark:text-green-400"
+							className="size-10"
 							fill="none"
 							viewBox="0 0 24 24"
 							stroke="currentColor"
@@ -242,56 +242,67 @@ export default function ForgotForm({ onClose }: ForgotFormProps) {
 							<path
 								strokeLinecap="round"
 								strokeLinejoin="round"
-								strokeWidth={2}
+								strokeWidth={3}
 								d="M5 13l4 4L19 7"
 							/>
 						</svg>
+						<span aria-hidden="true" className="absolute -top-2 -right-3 animate-float text-2xl">
+							🎉
+						</span>
 					</div>
-					<CardTitle className="text-2xl font-semibold">
+					<h2 className="text-2xl font-black tracking-tight text-foreground">
 						Амжилттай солигдлоо
-					</CardTitle>
-					<CardDescription className="text-center">
+					</h2>
+					<p className="mt-2 max-w-xs text-sm font-semibold text-muted-foreground">
 						Таны нууц үг амжилттай солигдлоо. Одоо шинэ нууц үгээрээ нэвтэрч
 						болно.
-					</CardDescription>
-				</CardHeader>
-				<CardFooter className="flex flex-col gap-4">
-					<Button asChild className="w-full">
+					</p>
+					<Button asChild size="lg" className="mt-6 w-full">
 						<Link href="/login">
-							<ArrowLeft className="mr-2 h-4 w-4" />
+							<ArrowLeft className="size-5" strokeWidth={2.5} />
 							Нэвтрэх хуудас руу буцах
 						</Link>
 					</Button>
-				</CardFooter>
-			</Card>
+				</div>
+			</AuthShell>
 		);
 	}
 
 	return (
-		<Card className="w-full max-w-sm bg-white/60 dark:bg-gray-900/60 backdrop-blur-xl border border-gray-200/50 dark:border-gray-700/50">
-			<CardHeader className="space-y-1 relative">
-				{onClose && (
-					<button
-						type="button"
-						onClick={onClose}
-						className="absolute top-0 right-0 w-7 h-7 rounded-md flex items-center justify-center text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-all"
-						aria-label="Хаах"
-					>
-						<X className="w-4 h-4" />
-					</button>
-				)}
+		<AuthShell>
+			{onClose && (
+				<button
+					type="button"
+					onClick={onClose}
+					className={AUTH_CLOSE_BUTTON_CLASS}
+					aria-label="Хаах"
+				>
+					<X className="size-4" strokeWidth={2.5} />
+				</button>
+			)}
+
+			<div className="px-6 pt-6 pr-14 pb-2 sm:px-8 sm:pt-8 sm:pr-14">
 				<Image
 					src="/image/logoLogin.png"
 					alt="EXMO logo"
 					width={120}
 					height={40}
-					className="h-10 w-auto mb-1"
+					className="mb-5 hidden h-8 w-auto md:block"
 				/>
-				<CardTitle className="text-2xl font-semibold">
-					Нууц үг сэргээх
-				</CardTitle>
-				<CardDescription>Бүртгэлтэй утасны дугаараа оруулна уу</CardDescription>
-			</CardHeader>
+				<div className="flex items-center gap-3">
+					<div className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-pop-sun-soft text-2xl shadow-[0_4px_0_0_color-mix(in_oklch,var(--pop-sun)_40%,transparent)]">
+						<span aria-hidden="true">🔑</span>
+					</div>
+					<div className="min-w-0">
+						<h2 className="text-2xl font-black tracking-tight text-foreground">
+							Нууц үг сэргээх
+						</h2>
+						<p className="text-sm font-semibold text-muted-foreground">
+							Бүртгэлтэй утасны дугаараа оруулна уу
+						</p>
+					</div>
+				</div>
+			</div>
 
 			<Form {...form}>
 				<form
@@ -300,27 +311,32 @@ export default function ForgotForm({ onClose }: ForgotFormProps) {
 						form.handleSubmit(onSubmit)(e);
 					}}
 				>
-					<CardContent className="grid gap-4">
+					<div className="grid gap-4 px-6 pt-5 pb-2 sm:px-8">
 						<FormField
 							control={form.control}
 							name="phone"
 							render={({ field }) => (
 								<FormItem>
-									<FormLabel>Утасны дугаар</FormLabel>
-									<FormControl>
-										<Input
-											placeholder="88888888"
-											type="tel"
-											{...field}
-											disabled={isPending || isVerified}
-											maxLength={8}
-											className="text-lg"
-											onChange={(e) => {
-												const value = e.target.value.replace(/\D/g, "");
-												field.onChange(value);
-											}}
-										/>
-									</FormControl>
+									<FormLabel className="text-sm font-bold text-foreground">
+										Утасны дугаар
+									</FormLabel>
+									<div className="relative">
+										<FormControl>
+											<Input
+												placeholder="88888888"
+												type="tel"
+												{...field}
+												disabled={isPending || isVerified}
+												maxLength={8}
+												className="peer pl-11 text-lg tracking-wider"
+												onChange={(e) => {
+													const value = e.target.value.replace(/\D/g, "");
+													field.onChange(value);
+												}}
+											/>
+										</FormControl>
+										<Phone className={AUTH_INPUT_ICON_CLASS} strokeWidth={2.5} />
+									</div>
 									<FormMessage />
 								</FormItem>
 							)}
@@ -348,37 +364,37 @@ export default function ForgotForm({ onClose }: ForgotFormProps) {
 									)}
 								</Button>
 								{isWaitingForSMS && verificationCode && (
-									<Alert className="bg-blue-50/50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800">
+									<Alert className="animate-pop-in rounded-2xl border-2 border-pop-sky/40 bg-pop-sky-soft">
 										<AlertDescription className="py-2">
 											<div className="space-y-4">
 												<div className="flex gap-3">
-													<div className="shrink-0 w-6 h-6 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-bold">
+													<div className="flex size-7 shrink-0 items-center justify-center rounded-full bg-pop-sky text-xs font-black text-primary-foreground">
 														1
 													</div>
-													<p className="text-sm text-slate-700 dark:text-slate-300">
+													<p className="text-sm font-semibold text-foreground">
 														Доорх кодыг{" "}
-														<span className="font-bold text-blue-700 dark:text-blue-400">
+														<span className="font-black text-pop-sky-ink">
 															142076
 														</span>{" "}
 														дугаарт мессежээр илгээнэ үү.
 													</p>
 												</div>
-												<div className="bg-white dark:bg-slate-900 border-2 border-dashed border-blue-300 dark:border-blue-700 rounded-xl p-4 flex items-center justify-center">
-													<span className="text-3xl font-black tracking-widest text-blue-600 dark:text-blue-400 select-all">
+												<div className="flex items-center justify-center rounded-2xl border-2 border-dashed border-pop-sky bg-card p-4">
+													<span className="text-3xl font-black tracking-widest text-pop-sky-ink select-all">
 														{verificationCode}
 													</span>
 												</div>
 												<div className="flex gap-3 pt-2">
-													<div className="shrink-0 w-6 h-6 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-bold">
+													<div className="flex size-7 shrink-0 items-center justify-center rounded-full bg-pop-sky text-xs font-black text-primary-foreground">
 														2
 													</div>
 													<div className="flex-1 space-y-3">
-														<p className="text-sm text-slate-700 dark:text-slate-300">
+														<p className="text-sm font-semibold text-foreground">
 															Мессеж илгээсний дараа доорх товчийг дарна уу.
 														</p>
 														<Button
 															type="button"
-															className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold"
+															className="w-full"
 															onClick={handleCheckVerification}
 															disabled={isChecking}
 														>
@@ -401,9 +417,9 @@ export default function ForgotForm({ onClose }: ForgotFormProps) {
 						)}
 
 						{isVerified && (
-							<Alert className="bg-green-50 dark:bg-green-950 border-green-200 dark:border-green-800">
-								<ShieldCheck className="h-4 w-4 text-green-600 dark:text-green-400" />
-								<AlertDescription className="text-green-800 dark:text-green-200">
+							<Alert className="animate-pop-in rounded-2xl border-2 border-success/30 bg-success/10 text-success">
+								<ShieldCheck className="h-4 w-4 text-success" />
+								<AlertDescription className="font-bold text-success">
 									Утасны дугаар амжилттай баталгаажлаа
 								</AlertDescription>
 							</Alert>
@@ -416,33 +432,36 @@ export default function ForgotForm({ onClose }: ForgotFormProps) {
 									name="password"
 									render={({ field }) => (
 										<FormItem>
-											<FormLabel>Шинэ нууц үг</FormLabel>
-											<FormControl>
-												<div className="relative">
+											<FormLabel className="text-sm font-bold text-foreground">
+												Шинэ нууц үг
+											</FormLabel>
+											<div className="relative">
+												<FormControl>
 													<Input
 														placeholder="••••••••"
 														type={showPassword ? "text" : "password"}
 														{...field}
 														disabled={isPending}
-														className="pr-10"
+														className="peer pr-11 pl-11"
 													/>
-													<Button
-														type="button"
-														variant="ghost"
-														size="sm"
-														className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-														onClick={() => setShowPassword(!showPassword)}
-														disabled={isPending}
-														tabIndex={-1}
-													>
-														{showPassword ? (
-															<EyeOff className="h-4 w-4 text-gray-400" />
-														) : (
-															<Eye className="h-4 w-4 text-gray-400" />
-														)}
-													</Button>
-												</div>
-											</FormControl>
+												</FormControl>
+												<Lock className={AUTH_INPUT_ICON_CLASS} strokeWidth={2.5} />
+												<Button
+													type="button"
+													variant="ghost"
+													size="sm"
+													className="absolute top-0 right-0 h-full px-3 py-2 text-muted-foreground hover:bg-transparent hover:text-foreground"
+													onClick={() => setShowPassword(!showPassword)}
+													disabled={isPending}
+													tabIndex={-1}
+												>
+													{showPassword ? (
+														<EyeOff className="h-4 w-4" />
+													) : (
+														<Eye className="h-4 w-4" />
+													)}
+												</Button>
+											</div>
 											<FormMessage />
 										</FormItem>
 									)}
@@ -452,58 +471,70 @@ export default function ForgotForm({ onClose }: ForgotFormProps) {
 									name="confirmPassword"
 									render={({ field }) => (
 										<FormItem>
-											<FormLabel>Нууц үг баталгаажуулах</FormLabel>
-											<FormControl>
-												<div className="relative">
+											<FormLabel className="text-sm font-bold text-foreground">
+												Нууц үг баталгаажуулах
+											</FormLabel>
+											<div className="relative">
+												<FormControl>
 													<Input
 														placeholder="••••••••"
 														type={showConfirmPassword ? "text" : "password"}
 														{...field}
 														disabled={isPending}
-														className="pr-10"
+														className="peer pr-11 pl-11"
 													/>
-													<Button
-														type="button"
-														variant="ghost"
-														size="sm"
-														className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-														onClick={() =>
-															setShowConfirmPassword(!showConfirmPassword)
-														}
-														disabled={isPending}
-														tabIndex={-1}
-													>
-														{showConfirmPassword ? (
-															<EyeOff className="h-4 w-4 text-gray-400" />
-														) : (
-															<Eye className="h-4 w-4 text-gray-400" />
-														)}
-													</Button>
-												</div>
-											</FormControl>
+												</FormControl>
+												<KeyRound className={AUTH_INPUT_ICON_CLASS} strokeWidth={2.5} />
+												<Button
+													type="button"
+													variant="ghost"
+													size="sm"
+													className="absolute top-0 right-0 h-full px-3 py-2 text-muted-foreground hover:bg-transparent hover:text-foreground"
+													onClick={() =>
+														setShowConfirmPassword(!showConfirmPassword)
+													}
+													disabled={isPending}
+													tabIndex={-1}
+												>
+													{showConfirmPassword ? (
+														<EyeOff className="h-4 w-4" />
+													) : (
+														<Eye className="h-4 w-4" />
+													)}
+												</Button>
+											</div>
 											<FormMessage />
 										</FormItem>
 									)}
 								/>
-								<Button type="submit" className="w-full" disabled={isPending}>
-									{isPending && (
-										<Loader2 className="mr-2 h-4 w-4 animate-spin" />
+								<Button
+									type="submit"
+									size="lg"
+									className="mt-2 w-full"
+									disabled={isPending}
+								>
+									{isPending ? (
+										<Loader2 className="size-5 animate-spin" />
+									) : (
+										<ShieldCheck className="size-5" strokeWidth={2.5} />
 									)}
 									{isPending ? "Солиж байна..." : "Нууц үг солих"}
 								</Button>
 							</>
 						)}
-					</CardContent>
+					</div>
 				</form>
 			</Form>
 
-			<CardFooter className="flex-col gap-4">
+			<div className="flex flex-col gap-3 px-6 pt-4 pb-6 sm:px-8 sm:pb-8">
 				<div className="relative w-full">
 					<div className="absolute inset-0 flex items-center">
-						<span className="w-full border-t" />
+						<span className="w-full border-t-2 border-dashed border-border" />
 					</div>
 					<div className="relative flex justify-center text-xs uppercase">
-						<span className="bg-card px-2 text-muted-foreground">Эсвэл</span>
+						<span className="bg-card px-3 font-extrabold tracking-wider text-muted-foreground">
+							Эсвэл
+						</span>
 					</div>
 				</div>
 				<Button asChild variant="link" className="w-full">
@@ -512,7 +543,7 @@ export default function ForgotForm({ onClose }: ForgotFormProps) {
 						Нэвтрэх хуудас руу буцах
 					</Link>
 				</Button>
-			</CardFooter>
-		</Card>
+			</div>
+		</AuthShell>
 	);
 }

@@ -87,16 +87,27 @@ export default function ExmoLanding() {
     forgot: "Нууц үг сэргээх",
   };
 
-  return (
-    <div className="min-h-screen bg-white dark:bg-[#030704] text-neutral-900 dark:text-neutral-100 font-sans antialiased transition-colors duration-300 overflow-x-hidden">
+  const popTones = [
+    { tile: "bg-pop-violet-soft", ink: "text-pop-violet-ink", shadow: "shadow-[0_4px_0_0_color-mix(in_oklch,var(--pop-violet)_35%,transparent)]" },
+    { tile: "bg-pop-sky-soft", ink: "text-pop-sky-ink", shadow: "shadow-[0_4px_0_0_color-mix(in_oklch,var(--pop-sky)_35%,transparent)]" },
+    { tile: "bg-pop-mint-soft", ink: "text-pop-mint-ink", shadow: "shadow-[0_4px_0_0_color-mix(in_oklch,var(--pop-mint)_35%,transparent)]" },
+    { tile: "bg-pop-sun-soft", ink: "text-pop-sun-ink", shadow: "shadow-[0_4px_0_0_color-mix(in_oklch,var(--pop-sun)_40%,transparent)]" },
+    { tile: "bg-pop-coral-soft", ink: "text-pop-coral-ink", shadow: "shadow-[0_4px_0_0_color-mix(in_oklch,var(--pop-coral)_35%,transparent)]" },
+    { tile: "bg-pop-pink-soft", ink: "text-pop-pink-ink", shadow: "shadow-[0_4px_0_0_color-mix(in_oklch,var(--pop-pink)_35%,transparent)]" },
+  ];
 
-      {/* BG glow */}
-      <div className="pointer-events-none absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-4xl h-[480px] bg-gradient-to-b from-emerald-500/10 to-transparent blur-[100px]" />
+  const authDialogClass =
+    "p-0 border-0 bg-transparent shadow-none w-full max-w-[calc(100%-1.5rem)] sm:max-w-md md:max-w-3xl max-h-[94vh] overflow-y-auto scrollbar-none gap-3 [&>button:last-child]:hidden outline-none ring-0 focus:outline-none";
+  const authDialogLinksClass =
+    "flex flex-wrap items-center gap-2 rounded-2xl border-2 border-border bg-card px-5 py-3 text-sm font-bold text-muted-foreground shadow-[0_4px_0_0_var(--border)]";
+
+  return (
+    <div className="min-h-screen bg-page-gradient text-foreground font-sans antialiased transition-colors duration-300 overflow-x-hidden">
 
       {/* NAV */}
-      <nav className="sticky top-0 z-50 border-b border-neutral-200/50 dark:border-neutral-900 bg-white/80 dark:bg-[#030704]/80 backdrop-blur-md">
-        <div className="max-w-6xl mx-auto px-4 sm:px-8 lg:px-12 h-14 flex items-center justify-between">
-          <div className="flex items-center flex-shrink-0">
+      <nav className="sticky top-0 z-50 border-b-2 border-border bg-card">
+        <div className="max-w-6xl mx-auto px-4 sm:px-8 lg:px-12 h-16 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2 flex-shrink-0 min-w-0">
             <Image
               src="/image/asd.png"
               alt="EXMO"
@@ -105,50 +116,57 @@ export default function ExmoLanding() {
               className="h-8 w-auto"
               priority
             />
-             <span className="text-sm font-black tracking-[3px] uppercase bg-gradient-to-r from-teal-400 to-cyan-500 bg-clip-text text-transparent">EXMO</span>
+             <span className="text-lg font-black tracking-[3px] uppercase text-gradient">EXMO</span>
           </div>
 
           <div className="flex items-center gap-2">
             <Button
               onClick={toggleTheme}
-              className="w-8 h-8 rounded-lg border border-neutral-200 dark:border-neutral-800 bg-neutral-100 dark:bg-neutral-900 flex items-center justify-center text-neutral-500 dark:text-neutral-400 hover:border-emerald-500/50 transition-all"
+              variant="outline"
+              size="icon-sm"
+              aria-label="Theme"
             >
-              {isDark ? <Sun className="w-3.5 h-3.5 text-amber-400" /> : <Moon className="w-3.5 h-3.5" />}
+              {isDark ? <Sun className="size-4 text-pop-sun" strokeWidth={2.5} /> : <Moon className="size-4 text-pop-violet" strokeWidth={2.5} />}
             </Button>
             <Button
               onClick={() => setModal("login")}
-              className="hidden sm:block text-xs font-medium text-neutral-500 dark:text-neutral-400 px-3 py-1.5 hover:text-neutral-900 dark:hover:text-white transition-colors"
+              variant="ghost"
+              size="sm"
+              className="hidden sm:inline-flex"
             >
               Нэвтрэх
             </Button>
             <Button
               onClick={() => setModal("sign")}
-              className="text-xs font-bold bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-1.5 rounded-lg transition-colors"
+              size="sm"
             >
               Бүртгүүлэх
             </Button>
             <Button
-              className="md:hidden w-8 h-8 flex items-center justify-center text-neutral-500 dark:text-neutral-400"
+              variant="ghost"
+              size="icon-sm"
+              className="md:hidden"
               onClick={() => setMenuOpen((v) => !v)}
             >
-              {menuOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
+              {menuOpen ? <X className="size-5" strokeWidth={2.5} /> : <Menu className="size-5" strokeWidth={2.5} />}
             </Button>
           </div>
         </div>
 
         {/* Mobile menu */}
         {menuOpen && (
-          <div className="md:hidden border-t border-neutral-200 dark:border-neutral-900 bg-white dark:bg-[#030704] px-4 py-4 flex flex-col gap-3">
+          <div className="md:hidden border-t-2 border-border bg-card px-4 py-4 flex flex-col gap-3 animate-pop-in">
             <div className="flex gap-2">
               <Button
                 onClick={() => { setMenuOpen(false); setModal("login"); }}
-                className="flex-1 text-sm font-medium border border-neutral-200 dark:border-neutral-800 text-neutral-700 dark:text-neutral-300 py-2 rounded-lg"
+                variant="outline"
+                className="flex-1"
               >
                 Нэвтрэх
               </Button>
               <Button
                 onClick={() => { setMenuOpen(false); setModal("sign"); }}
-                className="flex-1 text-sm font-bold bg-emerald-500 text-white py-2 rounded-lg"
+                className="flex-1"
               >
                 Бүртгүүлэх
               </Button>
@@ -160,84 +178,109 @@ export default function ExmoLanding() {
       <div className="max-w-6xl mx-auto px-4 sm:px-8 lg:px-12 relative">
 
         {/* HERO */}
-        <section className="pt-16 sm:pt-24 pb-16 sm:pb-20 text-center">
-          <div className="inline-flex items-center gap-2 bg-neutral-100 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-full px-4 py-1.5 text-xs text-neutral-500 dark:text-neutral-400 mb-7">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-            Шалгалт · Дасгал ажил · Сургалт — нэг дор
-          </div>
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tighter leading-[1.02] mb-5 text-neutral-900 dark:text-white">
-            Шалгалт, Сургалт,<br />
-            <span className="bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent">
-              Дасгал
-            </span>
-          </h1>
-          <p className="text-sm sm:text-base text-neutral-500 dark:text-neutral-400 max-w-lg mx-auto mb-8 leading-relaxed font-light">
-            Сурагч, оюутан, багш нарт зориулсан цахим шалгалт, дасгал ажил, сургалтын нэгдсэн платформ. Хаанаас ч нэвтэрч, мэдлэгээ хэмжээрэй.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-3 justify-center mb-12 sm:mb-16">
-            <Button className="w-full sm:w-auto bg-transparent border border-neutral-200 dark:border-neutral-800 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-900 font-medium text-sm px-7 py-3 rounded-xl transition-all">
-              Хэрхэн ажилладаг вэ?
-            </Button>
+        <section className="relative pt-14 sm:pt-20 pb-14 sm:pb-20 text-center">
+          {/* Decorative floaters */}
+          <div aria-hidden="true" className="pointer-events-none absolute inset-0 hidden sm:block">
+            <span className="absolute top-16 left-[4%] text-5xl animate-float">📚</span>
+            <span className="absolute top-28 right-[6%] text-4xl animate-float [animation-delay:1.3s]">✏️</span>
+            <span className="absolute top-[52%] left-[10%] text-4xl animate-float [animation-delay:2.4s]">🎯</span>
+            <span className="absolute top-[48%] right-[12%] text-5xl animate-float [animation-delay:0.7s]">🏆</span>
           </div>
 
-          {/* Stats */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 bg-neutral-50 dark:bg-neutral-900/40 border border-neutral-200 dark:border-neutral-800 rounded-2xl overflow-hidden">
-            {stats.map((s, i) => (
-              <div
-                key={s.label}
-                className={`py-5 px-4 text-left ${i < stats.length - 1 ? "border-b sm:border-b-0 border-r-0 sm:border-r border-neutral-200 dark:border-neutral-800" : ""} ${i === 1 ? "border-r border-neutral-200 dark:border-neutral-800 sm:border-r" : ""}`}
-              >
-                <div className="text-xl sm:text-2xl font-black text-neutral-900 dark:text-white tracking-tight">{s.num}</div>
-                <div className="text-[10px] sm:text-xs text-neutral-400 mt-1 uppercase tracking-wide">{s.label}</div>
-              </div>
-            ))}
+          <div className="relative">
+            <div className="inline-flex items-center gap-2 rounded-full border-2 border-border bg-card px-4 py-1.5 text-xs font-bold text-muted-foreground mb-7 shadow-[0_3px_0_0_var(--border)]">
+              <span className="size-2 rounded-full bg-pop-mint" />
+              Шалгалт · Дасгал ажил · Сургалт — нэг дор
+            </div>
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tighter leading-[1.05] mb-5 text-foreground">
+              Шалгалт, Сургалт,<br />
+              <span className="text-gradient">
+                Дасгал
+              </span>
+            </h1>
+            <p className="text-sm sm:text-base font-semibold text-muted-foreground max-w-lg mx-auto mb-8 leading-relaxed">
+              Сурагч, оюутан, багш нарт зориулсан цахим шалгалт, дасгал ажил, сургалтын нэгдсэн платформ. Хаанаас ч нэвтэрч, мэдлэгээ хэмжээрэй.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center mb-12 sm:mb-16">
+              <Button variant="outline" size="lg" className="w-full sm:w-auto">
+                Хэрхэн ажилладаг вэ?
+              </Button>
+            </div>
+
+            {/* Stats */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              {stats.map((s, i) => {
+                const tone = popTones[i % popTones.length];
+                return (
+                  <div
+                    key={s.label}
+                    className={`rounded-2xl p-4 text-left animate-pop-in ${tone.tile} ${tone.shadow}`}
+                    style={{ animationDelay: `${i * 70}ms` }}
+                  >
+                    <div className={`text-2xl sm:text-3xl font-black tracking-tight ${tone.ink}`}>{s.num}</div>
+                    <div className="text-[10px] sm:text-xs font-bold text-muted-foreground mt-1 uppercase tracking-wide">{s.label}</div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </section>
 
         {/* FEATURES */}
-        <section id="features" className="py-12 sm:py-16 border-t border-neutral-200 dark:border-neutral-900">
+        <section id="features" className="py-12 sm:py-16 border-t-2 border-dashed border-border">
           <div className="mb-8 sm:mb-10">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-emerald-500 mb-2">Платформын боломжууд</p>
-            <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-neutral-900 dark:text-white">Бүх хэрэгтэй зүйл нэг дор</h2>
+            <p className="text-xs font-extrabold uppercase tracking-widest text-primary mb-2">Платформын боломжууд</p>
+            <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-foreground">Бүх хэрэгтэй зүйл нэг дор</h2>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {features.map((f) => (
-              <div
-                key={f.title}
-                className={`${f.wide ? "sm:col-span-2 lg:col-span-2" : ""} bg-white dark:bg-neutral-900/30 border border-neutral-200 dark:border-neutral-800 rounded-2xl p-5 sm:p-6 hover:border-emerald-500/30 transition-all`}
-              >
-                <div className="w-8 h-8 bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg flex items-center justify-center text-emerald-500 mb-4">
-                  {f.icon}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {features.map((f, i) => {
+              const tone = popTones[(i + 1) % popTones.length];
+              return (
+                <div
+                  key={f.title}
+                  className={`${f.wide ? "sm:col-span-2 lg:col-span-2" : ""} card-pop lift p-5 sm:p-6 animate-pop-in`}
+                  style={{ animationDelay: `${i * 70}ms` }}
+                >
+                  <div className={`size-12 rounded-2xl flex items-center justify-center mb-4 [&_svg]:size-6 ${tone.tile} ${tone.ink} ${tone.shadow}`}>
+                    {f.icon}
+                  </div>
+                  <h3 className="text-base font-extrabold text-foreground mb-2">{f.title}</h3>
+                  <p className="text-sm font-medium text-muted-foreground leading-relaxed">{f.desc}</p>
                 </div>
-                <h3 className="text-sm font-bold text-neutral-900 dark:text-white mb-2">{f.title}</h3>
-                <p className="text-xs text-neutral-500 dark:text-neutral-400 leading-relaxed font-light">{f.desc}</p>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </section>
 
         {/* STEPS */}
-        <section className="py-12 sm:py-16 border-t border-neutral-200 dark:border-neutral-900">
+        <section className="py-12 sm:py-16 border-t-2 border-dashed border-border">
           <div className="text-center mb-8 sm:mb-10">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-emerald-500 mb-2">Хэрхэн ажилладаг</p>
-            <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-neutral-900 dark:text-white">3 алхамд бэлэн</h2>
+            <p className="text-xs font-extrabold uppercase tracking-widest text-primary mb-2">Хэрхэн ажилладаг</p>
+            <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-foreground">3 алхамд бэлэн</h2>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            {steps.map((s) => (
-              <div key={s.num} className="relative bg-white dark:bg-[#050b06] border border-neutral-200 dark:border-neutral-800/60 rounded-2xl p-5 sm:p-6 overflow-hidden hover:border-emerald-500/25 transition-all">
-                <span className="absolute top-3 right-4 text-4xl font-black text-neutral-100 dark:text-neutral-800 select-none">{s.num}</span>
-                <div className="w-8 h-8 bg-emerald-500/10 rounded-lg flex items-center justify-center text-emerald-500 mb-5">
-                  {s.icon}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            {steps.map((s, i) => {
+              const tone = popTones[(i * 2 + 2) % popTones.length];
+              return (
+                <div
+                  key={s.num}
+                  className="relative card-pop lift p-5 sm:p-6 overflow-hidden animate-pop-in"
+                  style={{ animationDelay: `${i * 90}ms` }}
+                >
+                  <span className={`absolute top-3 right-4 text-5xl font-black select-none opacity-30 ${tone.ink}`}>{s.num}</span>
+                  <div className={`size-12 rounded-2xl flex items-center justify-center mb-5 [&_svg]:size-6 ${tone.tile} ${tone.ink} ${tone.shadow}`}>
+                    {s.icon}
+                  </div>
+                  <h3 className="text-base font-extrabold text-foreground mb-2">{s.title}</h3>
+                  <p className="text-sm font-medium text-muted-foreground leading-relaxed">{s.desc}</p>
                 </div>
-                <h3 className="text-sm font-bold text-neutral-900 dark:text-white mb-2">{s.title}</h3>
-                <p className="text-xs text-neutral-500 dark:text-neutral-400 leading-relaxed font-light">{s.desc}</p>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </section>
 
         {/* FOOTER */}
-        <footer className="py-6 sm:py-8 border-t border-neutral-200 dark:border-neutral-900 flex flex-col sm:flex-row items-center justify-between gap-3">
+        <footer className="py-6 sm:py-8 border-t-2 border-dashed border-border flex flex-col sm:flex-row items-center justify-between gap-3">
           <div className="flex items-center">
             <Image
               src="/image/logoLogin.png"
@@ -247,7 +290,7 @@ export default function ExmoLanding() {
               className="h-6 w-auto"
             />
           </div>
-          <span className="text-xs text-neutral-400 text-center">© 2026 EXMO. Бүх эрх хуулиар хамгаалагдсан.</span>
+          <span className="text-xs font-semibold text-muted-foreground text-center">© 2026 EXMO. Бүх эрх хуулиар хамгаалагдсан.</span>
         </footer>
 
       </div>
@@ -255,17 +298,17 @@ export default function ExmoLanding() {
       {/* Login Dialog */}
       <Dialog open={modal === "login"} onOpenChange={(o) => { if (!o) setModal(null); }}>
         <DialogContent
-          className="p-0 border-0 bg-transparent shadow-none max-w-sm w-full [&>button:last-child]:hidden outline-none ring-0 focus:outline-none"
+          className={authDialogClass}
           onInteractOutside={(e) => e.preventDefault()}
         >
           <DialogTitle className="sr-only">{modalTitles.login}</DialogTitle>
           <DialogDescription className="sr-only">Нэвтрэх нэр болон нууц үгээ оруулж нэвтэрнэ үү.</DialogDescription>
           <LoginForm onClose={() => setModal(null)} />
-          <div className="flex justify-between px-6 pb-4 text-xs text-neutral-500 dark:text-neutral-400">
-            <button type="button" onClick={() => setModal("forgot")} className="hover:text-emerald-500 transition-colors">
+          <div className={`${authDialogLinksClass} justify-between`}>
+            <button type="button" onClick={() => setModal("forgot")} className="hover:text-primary transition-colors">
               Нууц үг мартсан?
             </button>
-            <button type="button" onClick={() => setModal("sign")} className="hover:text-emerald-500 transition-colors">
+            <button type="button" onClick={() => setModal("sign")} className="hover:text-primary transition-colors">
               Бүртгүүлэх
             </button>
           </div>
@@ -275,14 +318,14 @@ export default function ExmoLanding() {
       {/* Sign Dialog */}
       <Dialog open={modal === "sign"} onOpenChange={(o) => { if (!o) setModal(null); }}>
         <DialogContent
-          className="p-0 border-0 bg-transparent shadow-none max-w-md w-full h-[95vh] sm:h-[85vh] md:h-auto overflow-y-auto [&>button:last-child]:hidden outline-none ring-0 focus:outline-none"
+          className={`${authDialogClass} md:max-w-4xl`}
           onInteractOutside={(e) => e.preventDefault()}
         >
           <DialogTitle className="sr-only">{modalTitles.sign}</DialogTitle>
           <DialogDescription className="sr-only">Шинэ бүртгэл үүсгэхийн тулд мэдээллээ оруулна уу.</DialogDescription>
           <SignForm onClose={() => setModal(null)} />
-          <div className="flex justify-center px-6 pb-4 text-xs text-neutral-500 dark:text-neutral-400">
-            <button type="button" onClick={() => setModal("login")} className="hover:text-emerald-500 transition-colors">
+          <div className={`${authDialogLinksClass} justify-center`}>
+            <button type="button" onClick={() => setModal("login")} className="hover:text-primary transition-colors">
               Бүртгэлтэй юу? Нэвтрэх
             </button>
           </div>
@@ -292,14 +335,14 @@ export default function ExmoLanding() {
       {/* Forgot Dialog */}
       <Dialog open={modal === "forgot"} onOpenChange={(o) => { if (!o) setModal(null); }}>
         <DialogContent
-          className="p-0 border-0 bg-transparent shadow-none max-w-sm w-full [&>button:last-child]:hidden outline-none ring-0 focus:outline-none"
+          className={authDialogClass}
           onInteractOutside={(e) => e.preventDefault()}
         >
           <DialogTitle className="sr-only">{modalTitles.forgot}</DialogTitle>
           <DialogDescription className="sr-only">Бүртгэлтэй утасны дугаараа оруулж нууц үгээ сэргээнэ үү.</DialogDescription>
           <ForgotForm onClose={() => setModal(null)} />
-          <div className="flex justify-center px-6 pb-4 text-xs text-neutral-500 dark:text-neutral-400">
-            <button type="button" onClick={() => setModal("login")} className="hover:text-emerald-500 transition-colors">
+          <div className={`${authDialogLinksClass} justify-center`}>
+            <button type="button" onClick={() => setModal("login")} className="hover:text-primary transition-colors">
               ← Нэвтрэх хуудас руу буцах
             </button>
           </div>

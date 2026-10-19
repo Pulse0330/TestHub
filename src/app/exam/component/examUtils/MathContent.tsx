@@ -77,7 +77,7 @@ function MathContent({ html }: MathContentProps) {
 		<div
 			ref={mathRef}
 			dangerouslySetInnerHTML={{ __html: cleanHtml(html) }}
-			className="math-content text-gray-900 dark:text-gray-100"
+			className="math-content text-inherit"
 			style={{
 				width: "100%",
 				maxWidth: "100%",

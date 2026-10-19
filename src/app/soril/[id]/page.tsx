@@ -7,15 +7,25 @@ import {
 	CheckCircle2,
 	ChevronLeft,
 	ChevronRight,
+	ClipboardCheck,
 	Clock,
+	CloudCheck,
 	LayoutGrid,
 	List,
 	Loader2,
 	Menu,
 	Save,
+	Send,
 } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+	type PointerEvent as ReactPointerEvent,
+	useCallback,
+	useEffect,
+	useMemo,
+	useRef,
+	useState,
+} from "react";
 import { ExamHeader } from "@/app/exam/component/examUtils/examInfo";
 import MathContent from "@/app/exam/component/examUtils/MathContent";
 import { SourceBlock } from "@/app/exam/component/examUtils/sourceCard";
@@ -30,6 +40,21 @@ import StyledBackButton from "@/components/backButton";
 import FixedScrollButton from "@/components/FixedScrollButton";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import {
+	Dialog,
+	DialogContent,
+	DialogDescription,
+	DialogFooter,
+	DialogHeader,
+	DialogTitle,
+} from "@/components/ui/dialog";
+import {
+	Sheet,
+	SheetContent,
+	SheetDescription,
+	SheetHeader,
+	SheetTitle,
+} from "@/components/ui/sheet";
 import { deleteExamAnswer, getExamById, saveExamAnswer } from "@/lib/api";
 import { useAuthStore } from "@/stores/useAuthStore";
 import type { AnswerValue } from "@/types/exam/exam";
@@ -71,7 +96,7 @@ export default function SorilPage() {
 	const pendingAnswers = useRef<Map<number, PendingAnswer>>(new Map());
 	const saveTimer = useRef<NodeJS.Timeout | null>(null);
 	const lastSavedAnswers = useRef<Map<number, AnswerValue>>(new Map());
-	const [viewMode, setViewMode] = useState<"scroll" | "card">("scroll");
+	const [viewMode, setViewMode] = useState<"scroll" | "card">("card");
 	const [elapsedExamTime, setElapsedExamTime] = useState(0);
 	const isSavingRef = useRef(false);
 	const router = useRouter();
@@ -822,12 +847,15 @@ export default function SorilPage() {
 			const isBookmarked = bookmarkedQuestions.has(questionId);
 			const isTypingNow = typingQuestions.has(questionId);
 
-			if (isTypingNow) return "border-2 border-blue-400 shadow-lg";
+			if (isTypingNow)
+				return "border-2 border-pop-sky shadow-[0_4px_0_0_var(--pop-sky)]";
 			if (isAnswered && isBookmarked)
-				return "border-2 border-amber-500 shadow-sm";
-			if (isAnswered) return "border-2 border-blue-600 shadow-sm";
-			if (isBookmarked) return "border-2 border-amber-400 shadow-sm";
-			return "border border-gray-200";
+				return "border-2 border-pop-sun shadow-[0_4px_0_0_var(--pop-sun)]";
+			if (isAnswered)
+				return "border-2 border-primary shadow-[0_4px_0_0_var(--primary)]";
+			if (isBookmarked)
+				return "border-2 border-pop-sun/70 shadow-[0_4px_0_0_color-mix(in_oklch,var(--pop-sun)_70%,transparent)]";
+			return "border-2 border-border";
 		},
 		[selectedAnswers, bookmarkedQuestions, typingQuestions],
 	);
@@ -953,12 +981,156 @@ export default function SorilPage() {
 		[selectedAnswers, handleAnswerChange, examData, userId],
 	);
 
+	// ============================================
+	// FOCUS MODE UX: review, navigator, keyboard, swipe
+	// ============================================
+	const [isReviewOpen, setIsReviewOpen] = useState(false);
+
+	const answeredQuestionIds = useMemo(() => {
+		const set = new Set<number>();
+		for (const q of allQuestions) {
+			const answer = selectedAnswers[q.question_id];
+			let isAnswered = false;
+			if (Array.isArray(answer)) {
+				isAnswered = answer.length > 0;
+			} else if (typeof answer === "string") {
+				isAnswered = answer.trim() !== "";
+			} else if (typeof answer === "number") {
+				isAnswered = !Number.isNaN(answer) && answer !== 0;
+			} else if (typeof answer === "object" && answer !== null) {
+				isAnswered = Object.keys(answer).length > 0;
+			}
+			if (isAnswered) set.add(q.question_id);
+		}
+		return set;
+	}, [allQuestions, selectedAnswers]);
+
+	const jumpToQuestion = useCallback(
+		(index: number) => {
+			setShowMobileMinimapOverlay(false);
+			setIsReviewOpen(false);
+			setCurrentQuestionIndex(index);
+			if (viewMode === "scroll") {
+				setTimeout(() => {
+					document
+						.getElementById(`question-${index}`)
+						?.scrollIntoView({ behavior: "smooth", block: "start" });
+				}, 80);
+			} else {
+				window.scrollTo({ top: 0, behavior: "smooth" });
+			}
+		},
+		[viewMode],
+	);
+
+	const openReview = useCallback(() => {
+		setShowMobileMinimapOverlay(false);
+		setIsReviewOpen(true);
+	}, []);
+
+	// Шалгах самбараас → одоо байгаа дуусгах (баталгаажуулах) урсгал
+	const finishFromReview = useCallback(() => {
+		setIsReviewOpen(false);
+		setTimeout(() => finishDialogRef.current?.openConfirm(), 150);
+	}, []);
+
+	// ← → товчлуур
+	useEffect(() => {
+		if (viewMode !== "card") return;
+		const onKeyDown = (e: KeyboardEvent) => {
+			if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
+			if (e.defaultPrevented || e.altKey || e.ctrlKey || e.metaKey || e.shiftKey)
+				return;
+			if (isReviewOpen || showMobileMinimapOverlay) return;
+			if (document.querySelector('[role="dialog"], [role="alertdialog"]'))
+				return;
+			const target = e.target as HTMLElement | null;
+			if (
+				target?.closest(
+					'input, textarea, select, [contenteditable=""], [contenteditable="true"], [role="radiogroup"], [role="radio"], [role="slider"], [role="listbox"], [role="menu"], [role="tablist"]',
+				)
+			)
+				return;
+			e.preventDefault();
+			if (e.key === "ArrowLeft") goToPreviousQuestion();
+			else goToNextQuestion();
+		};
+		window.addEventListener("keydown", onKeyDown);
+		return () => window.removeEventListener("keydown", onKeyDown);
+	}, [
+		viewMode,
+		isReviewOpen,
+		showMobileMinimapOverlay,
+		goToPreviousQuestion,
+		goToNextQuestion,
+	]);
+
+	// Утсан дээр хэвтээ swipe (pointer events)
+	const SWIPE_THRESHOLD = 64;
+	const swipeStart = useRef<{
+		x: number;
+		y: number;
+		t: number;
+		id: number;
+	} | null>(null);
+	const currentQueTypeId = allQuestions[currentQuestionIndex]?.que_type_id;
+	// Чирэх төрлийн асуултууд (эрэмбэлэх, холбох) дээр swipe идэвхгүй
+	const isSwipeEnabled =
+		viewMode === "card" && currentQueTypeId !== 5 && currentQueTypeId !== 6;
+
+	const handleSwipePointerDown = useCallback(
+		(e: ReactPointerEvent<HTMLDivElement>) => {
+			if (!isSwipeEnabled || e.pointerType === "mouse" || !e.isPrimary) return;
+			const target = e.target as HTMLElement;
+			if (
+				target.closest(
+					'input, textarea, select, [contenteditable="true"], [draggable="true"], [role="slider"], [data-no-swipe], audio, video, canvas',
+				)
+			) {
+				swipeStart.current = null;
+				return;
+			}
+			swipeStart.current = {
+				x: e.clientX,
+				y: e.clientY,
+				t: Date.now(),
+				id: e.pointerId,
+			};
+		},
+		[isSwipeEnabled],
+	);
+
+	const handleSwipePointerUp = useCallback(
+		(e: ReactPointerEvent<HTMLDivElement>) => {
+			const start = swipeStart.current;
+			swipeStart.current = null;
+			if (!start || start.id !== e.pointerId) return;
+			const dx = e.clientX - start.x;
+			const dy = e.clientY - start.y;
+			if (Date.now() - start.t > 800) return;
+			if (Math.abs(dx) < SWIPE_THRESHOLD) return;
+			if (Math.abs(dx) < Math.abs(dy) * 1.5) return;
+			if (window.getSelection()?.toString()) return;
+			if (dx < 0) goToNextQuestion();
+			else goToPreviousQuestion();
+		},
+		[goToNextQuestion, goToPreviousQuestion],
+	);
+
+	const handleSwipePointerCancel = useCallback(() => {
+		swipeStart.current = null;
+	}, []);
+
 	if (isLoading) {
 		return (
-			<div className="flex justify-center items-center h-screen">
-				<div className="text-center p-8">
-					<Loader2 className="w-12 h-12 animate-spin mx-auto mb-4 text-blue-600" />
-					<p className="text-lg font-medium">Шалгалт ачааллаж байна...</p>
+			<div className="flex justify-center items-center min-h-screen bg-page-gradient px-4">
+				<div className="card-pop animate-pop-in text-center p-8 sm:p-10 max-w-sm w-full">
+					<div className="mx-auto mb-5 flex size-16 items-center justify-center rounded-2xl bg-pop-violet-soft text-pop-violet-ink shadow-[0_4px_0_0_color-mix(in_oklch,var(--pop-violet)_35%,transparent)]">
+						<Loader2 className="size-8 animate-spin" strokeWidth={2.5} />
+					</div>
+					<p className="text-lg font-extrabold text-foreground">
+						Шалгалт ачааллаж байна...
+					</p>
 				</div>
 			</div>
 		);
@@ -966,15 +1138,20 @@ export default function SorilPage() {
 
 	if (error || !examData) {
 		return (
-			<div className="flex justify-center items-center h-screen">
-				<div className="text-center p-8 bg-red-50 rounded-xl border border-red-200 max-w-md">
-					<p className="text-xl font-medium text-red-600 mb-2">Алдаа гарлаа</p>
-					<p className="text-sm text-red-500">
+			<div className="flex justify-center items-center min-h-screen bg-page-gradient px-4">
+				<div className="card-pop animate-pop-in text-center p-8 max-w-md w-full">
+					<div className="mx-auto mb-4 flex size-16 items-center justify-center rounded-full bg-destructive/10 text-4xl">
+						😵
+					</div>
+					<p className="text-xl font-black text-destructive mb-2">
+						Алдаа гарлаа
+					</p>
+					<p className="text-sm font-semibold text-muted-foreground">
 						{error?.message || "Шалгалт олдсонгүй"}
 					</p>
 					<Button
 						onClick={() => window.location.reload()}
-						className="mt-4"
+						className="mt-6"
 						variant="outline"
 					>
 						Дахин оролдох
@@ -986,246 +1163,196 @@ export default function SorilPage() {
 
 	if (allQuestions.length === 0) {
 		return (
-			<div className="flex justify-center items-center h-screen">
-				<div className="text-center p-8 bg-yellow-50 rounded-xl border border-yellow-200">
-					<p className="text-xl font-medium">Энэ шалгалтад асуулт байхгүй</p>
+			<div className="flex justify-center items-center min-h-screen bg-page-gradient px-4">
+				<div className="card-pop animate-pop-in text-center p-8 max-w-md w-full">
+					<div className="mx-auto mb-4 flex size-16 items-center justify-center rounded-full bg-pop-sun-soft text-4xl">
+						📭
+					</div>
+					<p className="text-xl font-black text-foreground">
+						Энэ шалгалтад асуулт байхгүй
+					</p>
 				</div>
 			</div>
 		);
 	}
 
 	const currentQuestion = allQuestions[currentQuestionIndex];
+	const isLastQuestion = currentQuestionIndex === totalCount - 1;
+	const examInfo = examData?.ExamInfo?.[0];
+	const pendingCount = pendingAnswers.current.size;
+	const unansweredList = allQuestions
+		.map((q, index) => ({ q, index }))
+		.filter(({ q }) => !answeredQuestionIds.has(q.question_id));
+	const answeredList = allQuestions
+		.map((q, index) => ({ q, index }))
+		.filter(({ q }) => answeredQuestionIds.has(q.question_id));
+
+	const savePill = isSaving ? (
+		<span
+			aria-live="polite"
+			className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-full bg-pop-sky-soft px-3 text-xs font-extrabold text-pop-sky-ink"
+		>
+			<Loader2 className="size-3.5 animate-spin" strokeWidth={2.75} />
+			<span className="hidden sm:inline">Хадгалж байна...</span>
+		</span>
+	) : pendingCount > 0 && !isTimeUp ? (
+		<button
+			type="button"
+			onClick={handleManualSave}
+			aria-live="polite"
+			className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-full bg-pop-sun-soft px-3 text-xs font-extrabold text-pop-sun-ink shadow-[0_2px_0_0_color-mix(in_oklch,var(--pop-sun)_45%,transparent)] transition-all hover:brightness-105 active:translate-y-0.5 active:shadow-none"
+		>
+			<Save className="size-3.5" strokeWidth={2.75} />
+			<span className="hidden sm:inline">Хадгалах</span>
+			<span className="tabular-nums">({pendingCount})</span>
+		</button>
+	) : (
+		<span
+			aria-live="polite"
+			className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-full bg-pop-mint-soft px-3 text-xs font-extrabold text-pop-mint-ink"
+		>
+			<CloudCheck className="size-3.5" strokeWidth={2.75} />
+			<span className="hidden sm:inline">Хадгалсан</span>
+		</span>
+	);
+
+	const viewToggle = (
+		<div className="hidden shrink-0 gap-1 rounded-full border-2 border-border bg-muted p-1 md:flex">
+			<button
+				type="button"
+				onClick={() => {
+					setViewMode("card");
+					window.scrollTo({ top: 0, behavior: "smooth" });
+				}}
+				aria-pressed={viewMode === "card"}
+				className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-sm font-bold transition-colors ${
+					viewMode === "card"
+						? "bg-primary text-primary-foreground shadow-[0_2px_0_0_var(--primary-shade)]"
+						: "text-muted-foreground hover:bg-accent hover:text-foreground"
+				}`}
+			>
+				<LayoutGrid className="w-4 h-4" />
+				Карт
+			</button>
+			<button
+				type="button"
+				onClick={() => setViewMode("scroll")}
+				aria-pressed={viewMode === "scroll"}
+				className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-sm font-bold transition-colors ${
+					viewMode === "scroll"
+						? "bg-primary text-primary-foreground shadow-[0_2px_0_0_var(--primary-shade)]"
+						: "text-muted-foreground hover:bg-accent hover:text-foreground"
+				}`}
+			>
+				<List className="w-4 h-4" />
+				Жагсаалт
+			</button>
+		</div>
+	);
+
+	const renderQuestionCard = (
+		q: (typeof allQuestions)[0],
+		index: number,
+		focus: boolean,
+	) => (
+		<Card
+			className={`gap-0 py-0 transition-colors ${focus ? "animate-pop-in" : ""} ${getCardBorderClass(q.question_id)}`}
+		>
+			<CardContent className={focus ? "p-5 sm:p-7" : "p-5 sm:p-6"}>
+				<div className="flex items-center justify-between gap-2 mb-4">
+					<span className="inline-flex items-center rounded-full bg-pop-violet-soft px-3 py-1 text-xs font-extrabold uppercase tracking-wide text-pop-violet-ink">
+						Асуулт {index + 1}
+					</span>
+					<div className="flex items-center gap-2 shrink-0">
+						{typingQuestions.has(q.question_id) && (
+							<div className="flex items-center gap-1 px-2.5 py-1.5 bg-pop-sky-soft rounded-full">
+								<div className="flex gap-0.5">
+									<span
+										className="w-1.5 h-1.5 bg-pop-sky rounded-full animate-bounce"
+										style={{ animationDelay: "0ms" }}
+									/>
+									<span
+										className="w-1.5 h-1.5 bg-pop-sky rounded-full animate-bounce"
+										style={{ animationDelay: "150ms" }}
+									/>
+									<span
+										className="w-1.5 h-1.5 bg-pop-sky rounded-full animate-bounce"
+										style={{ animationDelay: "300ms" }}
+									/>
+								</div>
+							</div>
+						)}
+						<Button
+							variant="ghost"
+							size="icon-sm"
+							onClick={() => toggleBookmark(q.question_id)}
+							className="rounded-xl"
+							title={
+								bookmarkedQuestions.has(q.question_id)
+									? "Тэмдэглэгээ хасах"
+									: "Тэмдэглэх"
+							}
+						>
+							{bookmarkedQuestions.has(q.question_id) ? (
+								<BookmarkCheck className="w-5 h-5 text-pop-sun fill-pop-sun" />
+							) : (
+								<Bookmark className="w-5 h-5 text-muted-foreground" />
+							)}
+						</Button>
+					</div>
+				</div>
+				<div
+					className={`font-bold text-foreground leading-relaxed prose prose-sm max-w-none dark:prose-invert ${
+						focus ? "text-lg sm:text-xl mb-6" : "text-lg mb-5"
+					}`}
+				>
+					<MathContent html={q.question_name} />
+				</div>
+				{renderQuestion(q)}
+			</CardContent>
+		</Card>
+	);
 
 	return (
-		<div className="min-h-screen">
+		<div className="min-h-screen bg-page-gradient">
 			{saveError && (
-				<div className="fixed top-4 right-4 z-50 bg-red-500 text-white px-6 py-3 rounded-lg shadow-lg">
+				<div className="fixed top-4 right-4 z-50 bg-destructive text-white font-bold px-5 py-3 rounded-2xl shadow-[0_4px_0_0_color-mix(in_oklch,var(--destructive)_70%,black)] animate-pop-in">
 					{saveError}
 				</div>
 			)}
 
-			{/* Desktop Layout */}
-			<div className="hidden lg:block">
-				{examData?.ExamInfo?.[0] && (
-					<ExamHeader examInfo={examData.ExamInfo[0]} />
-				)}
-				<div className=" fixed flex flex-1 top-6 pl-4">
-					<StyledBackButton
-						showConfirm={true}
-						confirmMessage="Та гарахдаа итгэлтэй байна уу?"
-					/>
-				</div>
-
-				<div className="grid grid-cols-6 gap-6 max-w-[1800px] mx-auto p-6 xl:p-8">
-					<aside className="col-span-1">
-						<div className="sticky top-6 space-y-4">
-							{/* Горим сэлгэгч */}
-							<div className="flex justify-end">
-								<div className="flex border border-border rounded-lg overflow-hidden">
-									<button
-										type="button"
-										onClick={() => setViewMode("scroll")}
-										className={`flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium transition-colors ${
-											viewMode === "scroll"
-												? "bg-primary text-primary-foreground"
-												: "bg-background text-muted-foreground hover:bg-accent"
-										}`}
-									>
-										<List className="w-4 h-4" />
-										Жагсаалт
-									</button>
-									<button
-										type="button"
-										onClick={() => {
-											setViewMode("card");
-											window.scrollTo({ top: 0, behavior: "smooth" });
-										}}
-										className={`flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium transition-colors ${
-											viewMode === "card"
-												? "bg-primary text-primary-foreground"
-												: "bg-background text-muted-foreground hover:bg-accent"
-										}`}
-									>
-										<LayoutGrid className="w-4 h-4" />
-										Карт
-									</button>
-								</div>
-							</div>
-							<ExamMinimap
-								totalCount={totalCount}
-								answeredCount={answeredCount}
-								currentQuestionIndex={currentQuestionIndex}
-								selectedAnswers={selectedAnswers}
-								questions={allQuestions}
-								onQuestionClick={goToQuestion}
-								bookmarkedQuestions={bookmarkedQuestions}
+			{/* ── Sticky top bar ── */}
+			<header className="sticky top-0 z-30 bg-page-gradient px-3 pt-2 pb-2 sm:px-6 sm:pt-3">
+				<div className="card-pop mx-auto max-w-[1400px] space-y-2.5 p-2.5 sm:p-3">
+					<div className="flex items-center gap-2 sm:gap-3">
+						<div className="hidden shrink-0 lg:block">
+							<StyledBackButton
+								showConfirm={true}
+								confirmMessage="Та гарахдаа итгэлтэй байна уу?"
 							/>
-
-							{examData?.ExamInfo?.[0] && !isTimeUp && (
-								<div className="pt-6 flex justify-center">
-									<FinishExamResultDialog
-										ref={finishDialogRef}
-										examId={examData.ExamInfo[0].id}
-										examType={examData.ExamInfo[0].exam_type}
-										startEid={examData.ExamInfo[0].start_eid}
-										elapsedSeconds={elapsedExamTime}
-										answeredCount={answeredCount}
-										totalCount={totalCount}
-									/>
-								</div>
-							)}
 						</div>
-					</aside>
+						<button
+							type="button"
+							onClick={() => router.back()}
+							aria-label="Буцах"
+							className="group flex size-10 shrink-0 items-center justify-center rounded-xl border-2 border-border bg-card shadow-[0_3px_0_0_var(--border)] transition-all active:translate-y-0.5 active:shadow-none cursor-pointer lg:hidden"
+						>
+							<ArrowLeft className="w-5 h-5 text-muted-foreground group-hover:-translate-x-0.5 transition-transform" />
+						</button>
 
-					<main className="col-span-4 space-y-5">
-						{viewMode === "scroll" ? (
-							// Жагсаалт горим — одоогийн код ямаршгүй
-							allQuestions.map((q, index) => (
-								<div key={q.question_id} id={`question-${index}`}>
-									<Card className={getCardBorderClass(q.question_id)}>
-										<CardContent className="p-6">
-											<div className="flex gap-4">
-												<div className="shrink-0 w-12 h-12 rounded-lg flex items-center justify-center font-semibold">
-													{index + 1}
-												</div>
-												<div className="flex-1 min-w-0">
-													<div className="flex items-start justify-between gap-2 mb-4">
-														<div className="font-semibold text-lg flex-1 leading-relaxed prose prose-sm max-w-none">
-															<MathContent html={q.question_name} />
-														</div>
-														<div className="flex items-center gap-2 shrink-0">
-															<Button
-																variant="ghost"
-																size="icon"
-																onClick={() => toggleBookmark(q.question_id)}
-																className="hover:bg-gray-100"
-																title={
-																	bookmarkedQuestions.has(q.question_id)
-																		? "Тэмдэглэгээ хасах"
-																		: "Тэмдэглэх"
-																}
-															>
-																{bookmarkedQuestions.has(q.question_id) ? (
-																	<BookmarkCheck className="w-5 h-5 text-yellow-500 fill-yellow-500" />
-																) : (
-																	<Bookmark className="w-5 h-5 text-gray-400" />
-																)}
-															</Button>
-														</div>
-													</div>
-													{renderQuestion(q)}
-												</div>
-											</div>
-										</CardContent>
-									</Card>
-								</div>
-							))
-						) : (
-							// Карт горим — нэг нэгээр
-							<div className="space-y-4">
-								<Card
-									className={getCardBorderClass(currentQuestion.question_id)}
-								>
-									<CardContent className="p-6">
-										<div className="flex gap-4">
-											<div className="shrink-0 w-12 h-12 rounded-lg flex items-center justify-center font-semibold">
-												{currentQuestionIndex + 1}
-											</div>
-											<div className="flex-1 min-w-0">
-												<div className="flex items-start justify-between gap-2 mb-4">
-													<div className="font-semibold text-lg flex-1 leading-relaxed prose prose-sm max-w-none">
-														<MathContent html={currentQuestion.question_name} />
-													</div>
-													<div className="flex items-center gap-2 shrink-0">
-														<Button
-															variant="ghost"
-															size="icon"
-															onClick={() =>
-																toggleBookmark(currentQuestion.question_id)
-															}
-															className="hover:bg-gray-100"
-															title={
-																bookmarkedQuestions.has(
-																	currentQuestion.question_id,
-																)
-																	? "Тэмдэглэгээ хасах"
-																	: "Тэмдэглэх"
-															}
-														>
-															{bookmarkedQuestions.has(
-																currentQuestion.question_id,
-															) ? (
-																<BookmarkCheck className="w-5 h-5 text-yellow-500 fill-yellow-500" />
-															) : (
-																<Bookmark className="w-5 h-5 text-gray-400" />
-															)}
-														</Button>
-													</div>
-												</div>
-												{renderQuestion(currentQuestion)}
-											</div>
-										</div>
-									</CardContent>
-								</Card>
-
-								<div className="sticky bottom-4 flex items-center justify-between bg-background/95 backdrop-blur border border-border rounded-xl p-3 shadow-lg">
-									<Button
-										variant="outline"
-										onClick={goToPreviousQuestion}
-										disabled={currentQuestionIndex === 0}
-									>
-										<ChevronLeft className="w-4 h-4 mr-1" />
-										Өмнөх
-									</Button>
-									<span className="text-sm text-muted-foreground font-medium">
-										{currentQuestionIndex + 1} / {totalCount}
-									</span>
-									<Button
-										variant="outline"
-										onClick={goToNextQuestion}
-										disabled={currentQuestionIndex === totalCount - 1}
-									>
-										Дараах
-										<ChevronRight className="w-4 h-4 ml-1" />
-									</Button>
-								</div>
+						{examInfo && (
+							<div className="hidden min-w-0 flex-1 lg:block">
+								<ExamHeader examInfo={examInfo} />
 							</div>
 						)}
-					</main>
-					<aside className="col-span-1">
-						<div className="sticky top-6 space-y-4">
-							{examData?.ExamInfo?.[0]?.starteddate && (
-								<ExamTimer onElapsedChange={handleElapsedTimeChange} />
-							)}
-						</div>
-					</aside>
-				</div>
-			</div>
 
-			{/* Mobile Layout */}
-			<div className="lg:hidden min-h-screen flex flex-col">
-				{examData?.ExamInfo?.[0] && (
-					<ExamHeader examInfo={examData.ExamInfo[0]} />
-				)}
-				<div className="sticky top-0 z-20 bg-white dark:bg-slate-900 shadow-sm border-b border-slate-200 dark:border-slate-700">
-					<button
-						type="button"
-						onClick={() => router.back()}
-						className="group flex items-center gap-3 pl-2 pr-5 py-6 duration-300 cursor-pointer bg-transparent border-none"
-					>
-						<div className="flex items-center justify-center w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 group-hover:bg-slate-200 dark:group-hover:bg-slate-700 transition-colors duration-300">
-							<ArrowLeft className="w-5 h-5 text-slate-600 dark:text-slate-400 group-hover:-translate-x-0.5 transition-all duration-300" />
-						</div>
-					</button>
-					<div className="px-3 py-2">
-						{examData?.ExamInfo?.[0] && (
-							<div className="flex items-center justify-between mb-2">
-								{/* ✅ НЭМЭХ: Timer icon болон elapsed time */}
-								<div className="flex items-center gap-2">
-									<div className="w-7 h-7 rounded-md bg-blue-100 dark:bg-blue-900/40 flex items-center justify-center shrink-0">
-										<Clock className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-									</div>
-									<span className="text-lg font-bold text-blue-600 dark:text-blue-400 font-mono">
+						<div className="flex min-w-0 flex-1 items-center gap-2 lg:flex-none">
+							{examInfo?.starteddate ? (
+								<ExamTimer onElapsedChange={handleElapsedTimeChange} compact />
+							) : (
+								<span className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-full bg-pop-sky-soft px-3 text-pop-sky-ink">
+									<Clock className="w-4 h-4 shrink-0" strokeWidth={2.5} />
+									<span className="text-sm font-black tabular-nums">
 										{(() => {
 											const h = Math.floor(elapsedExamTime / 3600);
 											const m = Math.floor((elapsedExamTime % 3600) / 60);
@@ -1235,191 +1362,368 @@ export default function SorilPage() {
 											return `${m}:${s.toString().padStart(2, "0")}`;
 										})()}
 									</span>
-								</div>
+								</span>
+							)}
+							{savePill}
+						</div>
 
-								<Button
-									onClick={() => setShowMobileMinimapOverlay(true)}
-									className="flex items-center gap-2 px-3 py-1.5 bg-blue-50 dark:bg-blue-900/40 rounded-lg border border-blue-200 dark:border-blue-700 hover:bg-blue-100 dark:hover:bg-blue-900/60 transition"
-								>
-									<Menu className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-									<span className="text-xs font-semibold text-blue-600 dark:text-blue-400">
-										Асуулт
-									</span>
-								</Button>
-							</div>
-						)}
+						{viewToggle}
 
-						{/* Progress bar */}
-						<div className="flex items-center gap-2">
-							<div className="flex-1 h-1.5 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
-								<div
-									className="h-full bg-linear-to-r from-green-500 to-emerald-600 transition-all"
-									style={{ width: `${(answeredCount / totalCount) * 100}%` }}
+						<Button
+							variant="outline"
+							size="sm"
+							onClick={() => setShowMobileMinimapOverlay(true)}
+							className="h-10 shrink-0 text-primary xl:hidden"
+							aria-label="Асуултууд"
+						>
+							<Menu className="w-4 h-4" strokeWidth={2.75} />
+							<span className="hidden text-xs font-extrabold sm:inline">
+								Асуултууд
+							</span>
+						</Button>
+
+						{examInfo && !isTimeUp && (
+							<div className="hidden shrink-0 sm:block">
+								<FinishExamResultDialog
+									ref={finishDialogRef}
+									examId={examInfo.id}
+									examType={examInfo.exam_type}
+									startEid={examInfo.start_eid}
+									elapsedSeconds={elapsedExamTime}
+									answeredCount={answeredCount}
+									totalCount={totalCount}
+									onRequestFinish={openReview}
+									triggerClassName="h-10 px-4 text-sm"
 								/>
 							</div>
-							<div className="flex items-center gap-1 text-[11px] font-semibold text-slate-600 dark:text-slate-400 whitespace-nowrap">
-								<CheckCircle2 className="w-3 h-3 text-green-600 dark:text-green-400" />
-								{answeredCount}/{totalCount}
-							</div>
+						)}
+						<Button
+							variant="success"
+							size="icon"
+							onClick={openReview}
+							className="size-10 shrink-0 sm:hidden"
+							aria-label="Шалгах"
+						>
+							<ClipboardCheck className="size-5" strokeWidth={2.5} />
+						</Button>
+					</div>
+
+					{/* Segmented progress */}
+					<div className="flex items-center gap-3 px-0.5">
+						<span className="shrink-0 text-sm font-black text-foreground tabular-nums">
+							Асуулт {currentQuestionIndex + 1}
+							<span className="text-muted-foreground"> / {totalCount}</span>
+						</span>
+						<div
+							className="flex h-2.5 min-w-0 flex-1 gap-[2px]"
+							role="progressbar"
+							aria-valuemin={0}
+							aria-valuemax={totalCount}
+							aria-valuenow={answeredCount}
+							aria-label="Хариулсан асуулт"
+						>
+							{allQuestions.map((q, idx) => {
+								const answered = answeredQuestionIds.has(q.question_id);
+								const isCurrent = idx === currentQuestionIndex;
+								const marked = bookmarkedQuestions.has(q.question_id);
+								return (
+									<span
+										key={q.question_id}
+										className={`h-full min-w-0 flex-1 rounded-full transition-all duration-300 first:rounded-l-full last:rounded-r-full ${
+											isCurrent
+												? "bg-pop-sky scale-y-[1.35] shadow-[0_0_0_1.5px_var(--card)]"
+												: answered
+													? marked
+														? "bg-pop-sun"
+														: "bg-primary"
+													: marked
+														? "bg-pop-sun/45"
+														: "bg-muted"
+										}`}
+									/>
+								);
+							})}
 						</div>
+						<span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-pop-mint-soft px-2.5 py-0.5 text-xs font-extrabold text-pop-mint-ink tabular-nums">
+							<CheckCircle2 className="size-3.5" strokeWidth={2.5} />
+							{answeredCount}/{totalCount}
+						</span>
 					</div>
 				</div>
+			</header>
 
-				<div className="flex-1 overflow-y-auto px-3 py-3">
-					{currentQuestion && (
-						<Card
-							className={`${getCardBorderClass(currentQuestion.question_id)} shadow-sm`}
-						>
-							<CardContent className="p-4">
-								<div className="flex items-start gap-3 mb-4">
-									<div className="shrink-0 w-9 h-9 rounded-lg bg-linear-to-br from-blue-500 to-indigo-600 flex items-center justify-center font-bold text-white shadow-md">
-										{currentQuestionIndex + 1}
-									</div>
-									<div className="flex-1 min-w-0">
-										<div className="">
-											<MathContent html={currentQuestion.question_name} />
-										</div>
-									</div>
-									<div className="flex items-center gap-2 shrink-0">
-										{typingQuestions.has(currentQuestion.question_id) && (
-											<div className="flex items-center gap-1 px-2 py-1 bg-blue-100 dark:bg-blue-900/40 rounded-md">
-												<div className="flex gap-0.5">
-													<span
-														className="w-1.5 h-1.5 bg-blue-600 dark:bg-blue-400 rounded-full animate-bounce"
-														style={{ animationDelay: "0ms" }}
-													/>
-													<span
-														className="w-1.5 h-1.5 bg-blue-600 dark:bg-blue-400 rounded-full animate-bounce"
-														style={{ animationDelay: "150ms" }}
-													/>
-													<span
-														className="w-1.5 h-1.5 bg-blue-600 dark:bg-blue-400 rounded-full animate-bounce"
-														style={{ animationDelay: "300ms" }}
-													/>
-												</div>
-											</div>
-										)}
-										<Button
-											variant="ghost"
-											size="icon"
-											onClick={() =>
-												toggleBookmark(currentQuestion.question_id)
-											}
-											className="shrink-0 h-9 w-9"
-										>
-											{bookmarkedQuestions.has(currentQuestion.question_id) ? (
-												<BookmarkCheck className="w-5 h-5 text-yellow-500 fill-yellow-500" />
-											) : (
-												<Bookmark className="w-5 h-5 text-slate-400" />
-											)}
-										</Button>
-									</div>
-								</div>
-								<div className="mt-4">{renderQuestion(currentQuestion)}</div>
-							</CardContent>
-						</Card>
+			<div className="mx-auto max-w-[1400px] px-3 pt-3 pb-32 sm:px-6 xl:grid xl:grid-cols-[minmax(0,1fr)_17rem] xl:gap-8">
+				<main className="mx-auto w-full min-w-0 max-w-3xl">
+					{examInfo && (
+						<div className="mb-3 px-1 lg:hidden">
+							<ExamHeader examInfo={examInfo} />
+						</div>
 					)}
-				</div>
 
-				<div className="sticky bottom-0 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-700 shadow-lg">
-					<div className="px-3 py-2 space-y-2">
-						<div className="flex gap-2">
+					{viewMode === "card" ? (
+						currentQuestion && (
+							<div
+								onPointerDown={handleSwipePointerDown}
+								onPointerUp={handleSwipePointerUp}
+								onPointerCancel={handleSwipePointerCancel}
+								style={isSwipeEnabled ? { touchAction: "pan-y" } : undefined}
+							>
+								<div key={currentQuestion.question_id}>
+									{renderQuestionCard(currentQuestion, currentQuestionIndex, true)}
+								</div>
+								<p className="mt-3 text-center text-xs font-bold text-muted-foreground">
+									<span className="hidden lg:inline">
+										← → товчоор асуулт солино
+									</span>
+									<span className="lg:hidden">
+										Хажуу тийш шударч асуулт солино
+									</span>
+								</p>
+							</div>
+						)
+					) : (
+						<div className="space-y-5">
+							{allQuestions.map((q, index) => (
+								<div
+									key={q.question_id}
+									id={`question-${index}`}
+									className="scroll-mt-40"
+								>
+									{renderQuestionCard(q, index, false)}
+								</div>
+							))}
+						</div>
+					)}
+				</main>
+
+				{/* xl: slim navigator rail */}
+				<aside className="hidden xl:block">
+					<div className="sticky top-36 space-y-3">
+						<ExamMinimap
+							totalCount={totalCount}
+							answeredCount={answeredCount}
+							currentQuestionIndex={currentQuestionIndex}
+							selectedAnswers={selectedAnswers}
+							questions={allQuestions}
+							onQuestionClick={jumpToQuestion}
+							bookmarkedQuestions={bookmarkedQuestions}
+						/>
+						<Button variant="outline" className="w-full" onClick={openReview}>
+							<ClipboardCheck className="size-4" strokeWidth={2.5} />
+							Шалгах
+						</Button>
+					</div>
+				</aside>
+			</div>
+
+			{/* ── Sticky bottom action bar ── */}
+			<div className="fixed inset-x-0 bottom-0 z-30 border-t-2 border-border bg-card">
+				<div className="mx-auto flex max-w-3xl gap-3 px-3 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+					{viewMode === "card" ? (
+						<>
 							<Button
 								onClick={goToPreviousQuestion}
 								disabled={currentQuestionIndex === 0}
 								variant="outline"
-								className="flex-1 h-10 font-semibold text-sm"
+								size="lg"
+								className="h-12 flex-1 text-base"
 							>
-								<ChevronLeft className="w-4 h-4 mr-1" />
+								<ChevronLeft className="size-5" strokeWidth={2.75} />
 								Өмнөх
 							</Button>
-							<Button
-								onClick={goToNextQuestion}
-								disabled={currentQuestionIndex === totalCount - 1}
-								variant="outline"
-								className="flex-1 h-10 font-semibold text-sm"
-							>
-								Дараах
-								<ChevronRight className="w-4 h-4 ml-1" />
-							</Button>
-						</div>
-
-						<div className="flex gap-2">
-							{pendingAnswers.current.size > 0 && !isTimeUp && (
+							{isLastQuestion ? (
 								<Button
-									onClick={handleManualSave}
-									disabled={isSaving}
-									variant="default"
-									className="flex-1 h-10 bg-green-600 hover:bg-green-700 text-sm font-semibold"
+									onClick={openReview}
+									variant="success"
+									size="lg"
+									className="h-12 flex-1 text-base"
 								>
-									{isSaving ? (
-										<>
-											<Loader2 className="w-4 h-4 mr-2 animate-spin" />
-											Хадгалж байна
-										</>
-									) : (
-										<>
-											<Save className="w-4 h-4 mr-2" />
-											Хадгалах ({pendingAnswers.current.size})
-										</>
-									)}
+									<ClipboardCheck className="size-5" strokeWidth={2.5} />
+									Шалгах
+								</Button>
+							) : (
+								<Button
+									onClick={goToNextQuestion}
+									size="lg"
+									className="h-12 flex-1 text-base"
+								>
+									Дараах
+									<ChevronRight className="size-5" strokeWidth={2.75} />
 								</Button>
 							)}
-							{examData?.ExamInfo?.[0] && !isTimeUp && (
-								<FinishExamResultDialog
-									ref={finishDialogRef}
-									examId={examData.ExamInfo[0].id}
-									examType={examData.ExamInfo[0].exam_type}
-									startEid={examData.ExamInfo[0].start_eid}
-									elapsedSeconds={elapsedExamTime}
-									answeredCount={answeredCount}
-									totalCount={totalCount}
-								/>
-							)}
-						</div>
-					</div>
+						</>
+					) : (
+						<Button
+							onClick={openReview}
+							variant="success"
+							size="lg"
+							className="h-12 flex-1 text-base"
+						>
+							<ClipboardCheck className="size-5" strokeWidth={2.5} />
+							Шалгах
+						</Button>
+					)}
 				</div>
+			</div>
 
-				{showMobileMinimapOverlay && (
+			{/* ── Navigator sheet ── */}
+			<Sheet
+				open={showMobileMinimapOverlay}
+				onOpenChange={setShowMobileMinimapOverlay}
+			>
+				<SheetContent
+					side="right"
+					className="w-[88vw] gap-0 overflow-y-auto bg-background p-4 sm:max-w-md"
+				>
+					<SheetHeader className="p-0 pr-8 pb-3">
+						<SheetTitle className="text-lg font-black">☰ Асуултууд</SheetTitle>
+						<SheetDescription className="font-semibold">
+							{answeredCount}/{totalCount} хариулсан
+						</SheetDescription>
+					</SheetHeader>
 					<ExamMinimap
 						totalCount={totalCount}
 						answeredCount={answeredCount}
 						currentQuestionIndex={currentQuestionIndex}
 						selectedAnswers={selectedAnswers}
 						questions={allQuestions}
-						onQuestionClick={goToQuestion}
+						onQuestionClick={jumpToQuestion}
 						bookmarkedQuestions={bookmarkedQuestions}
-						isMobileOverlay={true}
-						onClose={() => setShowMobileMinimapOverlay(false)}
 					/>
-				)}
-			</div>
-
-			{/* Save button - Desktop */}
-			{pendingAnswers.current.size > 0 && !isTimeUp && (
-				<div className="fixed bottom-6 right-6 z-50 lg:block hidden">
 					<Button
-						onClick={handleManualSave}
-						disabled={isSaving}
-						className="shadow-lg"
+						variant="success"
 						size="lg"
+						className="mt-4 w-full"
+						onClick={openReview}
 					>
-						{isSaving ? (
-							<>
-								<Loader2 className="w-4 h-4 mr-2 animate-spin" />
-								Хадгалж байна...
-							</>
-						) : (
-							<>
-								<Save className="w-4 h-4 mr-2" />
-								Хадгалах ({pendingAnswers.current.size})
-							</>
-						)}
+						<ClipboardCheck className="size-5" strokeWidth={2.5} />
+						Шалгах
 					</Button>
-				</div>
-			)}
+				</SheetContent>
+			</Sheet>
 
-			<FixedScrollButton />
+			{/* ── Review before finish ── */}
+			<Dialog open={isReviewOpen} onOpenChange={setIsReviewOpen}>
+				<DialogContent className="w-full sm:max-w-[560px] max-h-[90vh] overflow-y-auto p-4 sm:p-6">
+					<DialogHeader className="text-center sm:text-center items-center space-y-2">
+						<div className="mx-auto flex size-14 items-center justify-center rounded-2xl bg-pop-mint-soft text-pop-mint-ink shadow-[0_4px_0_0_color-mix(in_oklch,var(--pop-mint)_35%,transparent)]">
+							<ClipboardCheck className="size-7" strokeWidth={2.5} />
+						</div>
+						<DialogTitle className="text-2xl font-black">
+							Хариултаа шалгах
+						</DialogTitle>
+						<DialogDescription className="font-semibold">
+							Асуулт дээр дарж буцаж засварлах боломжтой.
+						</DialogDescription>
+					</DialogHeader>
+
+					<div className="grid grid-cols-3 gap-2 py-2">
+						<div className="rounded-2xl bg-pop-mint-soft p-3 text-center">
+							<div className="text-2xl font-black text-pop-mint-ink tabular-nums">
+								{answeredCount}
+							</div>
+							<div className="text-[10px] font-bold uppercase tracking-wide text-pop-mint-ink sm:text-xs">
+								Хариулсан
+							</div>
+						</div>
+						<div className="rounded-2xl bg-pop-coral-soft p-3 text-center">
+							<div className="text-2xl font-black text-pop-coral-ink tabular-nums">
+								{totalCount - answeredCount}
+							</div>
+							<div className="text-[10px] font-bold uppercase tracking-wide text-pop-coral-ink sm:text-xs">
+								Хариулаагүй
+							</div>
+						</div>
+						<div className="rounded-2xl bg-pop-sun-soft p-3 text-center">
+							<div className="text-2xl font-black text-pop-sun-ink tabular-nums">
+								{bookmarkedQuestions.size}
+							</div>
+							<div className="text-[10px] font-bold uppercase tracking-wide text-pop-sun-ink sm:text-xs">
+								Тэмдэглэсэн
+							</div>
+						</div>
+					</div>
+
+					<section className="space-y-2">
+						<h3 className="flex items-center gap-2 text-sm font-extrabold text-foreground">
+							<span className="size-2.5 rounded-full bg-pop-coral" />
+							Хариулаагүй ({unansweredList.length})
+						</h3>
+						{unansweredList.length === 0 ? (
+							<p className="rounded-2xl bg-pop-mint-soft px-4 py-3 text-sm font-bold text-pop-mint-ink">
+								🎉 Бүх асуултад хариулсан байна!
+							</p>
+						) : (
+							<div className="flex flex-wrap gap-2">
+								{unansweredList.map(({ q, index }) => (
+									<button
+										key={q.question_id}
+										type="button"
+										onClick={() => jumpToQuestion(index)}
+										className="relative inline-flex h-9 min-w-11 items-center justify-center rounded-full border-2 border-pop-coral/50 bg-pop-coral-soft px-3 text-sm font-black text-pop-coral-ink tabular-nums transition-all hover:-translate-y-0.5 active:translate-y-0"
+									>
+										{index + 1}
+										{bookmarkedQuestions.has(q.question_id) && (
+											<Bookmark className="absolute -top-1.5 -right-1 size-3.5 fill-pop-sun text-pop-sun" />
+										)}
+									</button>
+								))}
+							</div>
+						)}
+					</section>
+
+					<section className="space-y-2 pt-3">
+						<h3 className="flex items-center gap-2 text-sm font-extrabold text-foreground">
+							<span className="size-2.5 rounded-full bg-primary" />
+							Хариулсан ({answeredList.length})
+						</h3>
+						{answeredList.length === 0 ? (
+							<p className="text-sm font-semibold text-muted-foreground">—</p>
+						) : (
+							<div className="flex flex-wrap gap-2">
+								{answeredList.map(({ q, index }) => (
+									<button
+										key={q.question_id}
+										type="button"
+										onClick={() => jumpToQuestion(index)}
+										className="relative inline-flex h-9 min-w-11 items-center justify-center rounded-full border-2 border-primary/40 bg-primary/10 px-3 text-sm font-black text-primary tabular-nums transition-all hover:-translate-y-0.5 active:translate-y-0"
+									>
+										{index + 1}
+										{bookmarkedQuestions.has(q.question_id) && (
+											<Bookmark className="absolute -top-1.5 -right-1 size-3.5 fill-pop-sun text-pop-sun" />
+										)}
+									</button>
+								))}
+							</div>
+						)}
+					</section>
+
+					<DialogFooter className="mt-2 flex flex-col gap-3 border-t-2 border-border pt-4 sm:flex-row">
+						<Button
+							variant="outline"
+							onClick={() => setIsReviewOpen(false)}
+							className="h-12 flex-1"
+						>
+							<ChevronLeft className="size-4" />
+							Буцах
+						</Button>
+						{examInfo && !isTimeUp && (
+							<Button
+								variant="success"
+								onClick={finishFromReview}
+								className="h-12 flex-1"
+							>
+								<Send className="size-4" />
+								Сорил дуусгах
+							</Button>
+						)}
+					</DialogFooter>
+				</DialogContent>
+			</Dialog>
+
+			<div className="[&_button]:bottom-24">
+				<FixedScrollButton />
+			</div>
 		</div>
 	);
 }

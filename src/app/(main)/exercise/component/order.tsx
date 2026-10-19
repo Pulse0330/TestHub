@@ -10,7 +10,7 @@ import {
 	type DropResult,
 } from "@hello-pangea/dnd";
 import parse from "html-react-parser";
-import { CheckCircle2, XCircle } from "lucide-react";
+import { CheckCircle2, GripVertical, XCircle } from "lucide-react";
 import type React from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { buttonVariants } from "@/components/ui/button";
@@ -95,22 +95,42 @@ const DragAndDrop: React.FC<DragAndDropProps> = ({
 											{...providedDraggable.dragHandleProps}
 											className={cn(
 												buttonVariants({ variant: "outline", size: "default" }),
-												"w-full mb-2 justify-start transition-colors duration-200 select-none",
-												disabled ? "cursor-default" : "cursor-move",
-												snapshot.isDragging && "bg-accent ring-2 ring-ring/50",
+												"w-full mb-2.5 h-auto min-h-14 whitespace-normal justify-start rounded-2xl border-2 p-3 sm:p-4 font-bold transition-colors duration-200 select-none",
+												disabled
+													? "cursor-default"
+													: "cursor-grab hover:border-pop-mint hover:bg-pop-mint-soft/40",
+												snapshot.isDragging &&
+													"cursor-grabbing border-primary bg-primary/10 text-primary shadow-[0_6px_0_0_var(--primary)] ring-4 ring-primary/20",
 												isCorrect &&
-													"border-green-500 bg-green-50 dark:bg-green-900/20 text-green-800 dark:text-green-300",
+													"border-success bg-success/10 text-foreground shadow-[0_4px_0_0_var(--success)]",
 												showCorrect &&
 													!isCorrect &&
-													"border-red-400 bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300",
+													"border-destructive bg-destructive/10 text-foreground shadow-[0_4px_0_0_var(--destructive)]",
 											)}
 											style={{ ...providedDraggable.draggableProps.style }}
 										>
 											<div className="flex items-center gap-3 w-full">
-												<span className="shrink-0 w-6 h-6 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-xs font-bold">
+												{!disabled && (
+													<GripVertical
+														className="size-5 shrink-0 text-muted-foreground"
+														aria-hidden="true"
+													/>
+												)}
+												<span
+													className={cn(
+														"shrink-0 size-8 rounded-xl border-2 flex items-center justify-center text-sm font-black",
+														snapshot.isDragging
+															? "border-primary bg-primary text-primary-foreground"
+															: isCorrect
+																? "border-success bg-success text-primary-foreground"
+																: showCorrect
+																	? "border-destructive bg-destructive text-primary-foreground"
+																	: "border-border bg-muted text-muted-foreground",
+													)}
+												>
 													{index + 1}
 												</span>
-												<div className="flex-1 text-sm text-gray-900 dark:text-gray-100">
+												<div className="flex-1 min-w-0 text-sm sm:text-base">
 													{item.answer_name_html
 														? parse(item.answer_name_html)
 														: ""}
@@ -118,9 +138,15 @@ const DragAndDrop: React.FC<DragAndDropProps> = ({
 												{showCorrect && (
 													<span className="shrink-0">
 														{isCorrect ? (
-															<CheckCircle2 className="w-5 h-5 text-green-600 dark:text-green-400" />
+															<CheckCircle2
+																className="size-6 text-success"
+																strokeWidth={2.75}
+															/>
 														) : (
-															<XCircle className="w-5 h-5 text-red-600 dark:text-red-400" />
+															<XCircle
+																className="size-6 text-destructive"
+																strokeWidth={2.75}
+															/>
 														)}
 													</span>
 												)}
@@ -234,23 +260,23 @@ const DragAndDropWrapper: React.FC<DragAndDropWrapperProps> = ({
 	return (
 		<div className="space-y-4">
 			{mode === "review" && reviewStats && (
-				<div className="bg-blue-50 dark:bg-blue-950/30 border-l-4 border-blue-500 dark:border-blue-400 p-4 rounded-lg">
-					<div className="flex items-center justify-between mb-2">
-						<h4 className="font-bold text-blue-900 dark:text-blue-300 text-sm sm:text-base">
+				<div className="bg-pop-sky-soft border-2 border-pop-sky/40 p-4 rounded-2xl">
+					<div className="flex flex-wrap items-center justify-between gap-2 mb-2">
+						<h4 className="font-extrabold text-pop-sky-ink text-sm sm:text-base">
 							Дарааллын үр дүн
 						</h4>
-						<div className="flex items-center gap-3 text-sm">
-							<span className="flex items-center gap-1 text-green-600 dark:text-green-400 font-semibold">
-								<CheckCircle2 className="w-4 h-4" />
+						<div className="flex items-center gap-2 text-sm">
+							<span className="flex items-center gap-1 rounded-full bg-success/15 px-2.5 py-0.5 text-success font-extrabold">
+								<CheckCircle2 className="size-4" strokeWidth={2.75} />
 								{reviewStats.correct}
 							</span>
-							<span className="flex items-center gap-1 text-red-600 dark:text-red-400 font-semibold">
-								<XCircle className="w-4 h-4" />
+							<span className="flex items-center gap-1 rounded-full bg-destructive/15 px-2.5 py-0.5 text-destructive font-extrabold">
+								<XCircle className="size-4" strokeWidth={2.75} />
 								{reviewStats.wrong}
 							</span>
 						</div>
 					</div>
-					<p className="text-xs text-blue-800 dark:text-blue-300">
+					<p className="text-xs font-semibold text-pop-sky-ink">
 						{reviewStats.total > 0
 							? `Нийт ${reviewStats.total} элементээс ${reviewStats.correct} зөв байрлуулсан`
 							: "Хариулаагүй"}
@@ -258,8 +284,9 @@ const DragAndDropWrapper: React.FC<DragAndDropWrapperProps> = ({
 				</div>
 			)}
 
-			<div className="p-4 border rounded-lg shadow-sm space-y-3 bg-white dark:bg-gray-800">
-				<h3 className="font-semibold text-base sm:text-lg text-gray-900 dark:text-gray-100">
+			<div className="p-3 sm:p-4 border-2 border-border rounded-2xl space-y-3 bg-muted/50">
+				<h3 className="flex items-center gap-2 font-extrabold text-sm sm:text-base text-foreground">
+					<span aria-hidden="true">🔢</span>
 					{mode === "exam"
 						? "Зөв дараалалд оруулна уу:"
 						: "Таны өгсөн дараалал:"}
@@ -274,13 +301,13 @@ const DragAndDropWrapper: React.FC<DragAndDropWrapperProps> = ({
 				/>
 
 				{mode === "review" && (
-					<div className="mt-4 space-y-2 text-sm bg-gray-50 dark:bg-gray-900 p-3 rounded-lg">
-						<div className="flex items-center gap-2 text-green-700 dark:text-green-400">
-							<CheckCircle2 className="w-4 h-4 flex-shrink-0" />
+					<div className="mt-4 space-y-2 text-sm font-semibold bg-card border-2 border-border p-3 rounded-xl">
+						<div className="flex items-center gap-2 text-success">
+							<CheckCircle2 className="size-4 shrink-0" strokeWidth={2.75} />
 							<span>Зөв байрлалд байгаа хариулт</span>
 						</div>
-						<div className="flex items-center gap-2 text-red-700 dark:text-red-400">
-							<XCircle className="w-4 h-4 flex-shrink-0" />
+						<div className="flex items-center gap-2 text-destructive">
+							<XCircle className="size-4 shrink-0" strokeWidth={2.75} />
 							<span>Буруу байрлалд байгаа хариулт</span>
 						</div>
 					</div>
@@ -288,9 +315,9 @@ const DragAndDropWrapper: React.FC<DragAndDropWrapperProps> = ({
 			</div>
 
 			{mode === "review" && correctOrderedAnswers.length > 0 && (
-				<div className="p-4 border-2 border-green-500 dark:border-green-600 rounded-lg bg-green-50 dark:bg-green-950/20 space-y-3">
-					<h3 className="font-semibold text-base sm:text-lg text-green-900 dark:text-green-300 flex items-center gap-2">
-						<CheckCircle2 className="w-5 h-5" />
+				<div className="p-4 border-2 border-success rounded-2xl bg-success/10 space-y-3 animate-pop-in">
+					<h3 className="font-extrabold text-base sm:text-lg text-success flex items-center gap-2">
+						<CheckCircle2 className="size-5" strokeWidth={2.75} />
 						Зөв дараалал:
 					</h3>
 
@@ -298,22 +325,25 @@ const DragAndDropWrapper: React.FC<DragAndDropWrapperProps> = ({
 						{correctOrderedAnswers.map((answer, index) => (
 							<div
 								key={answer.answer_id}
-								className="flex items-center gap-3 p-3 bg-white dark:bg-gray-800 rounded-lg border border-green-300 dark:border-green-700 transition-all hover:shadow-md"
+								className="flex items-center gap-3 p-3 bg-card rounded-2xl border-2 border-success/50 shadow-[0_3px_0_0_color-mix(in_oklch,var(--success)_40%,transparent)]"
 							>
-								<span className="flex-shrink-0 w-8 h-8 rounded-full bg-green-600 dark:bg-green-700 text-white flex items-center justify-center font-bold text-sm shadow-sm">
+								<span className="shrink-0 size-8 rounded-xl bg-success text-primary-foreground flex items-center justify-center font-black text-sm">
 									{index + 1}
 								</span>
-								<div className="flex-1 text-sm text-gray-900 dark:text-gray-100">
+								<div className="flex-1 min-w-0 text-sm sm:text-base font-bold text-foreground">
 									{answer.answer_name_html
 										? parse(answer.answer_name_html)
 										: ""}
 								</div>
-								<CheckCircle2 className="w-5 h-5 text-green-600 dark:text-green-400 flex-shrink-0" />
+								<CheckCircle2
+									className="size-5 text-success shrink-0"
+									strokeWidth={2.75}
+								/>
 							</div>
 						))}
 					</div>
 
-					<div className="text-xs text-green-800 dark:text-green-300 bg-green-100 dark:bg-green-900/30 p-2 rounded">
+					<div className="text-xs font-semibold text-foreground/80 bg-card/70 p-2.5 rounded-xl">
 						💡 Энэ бол зөв дараалал юм. Таны хариултыг дээрх хэсэгтэй харьцуулна
 						уу.
 					</div>

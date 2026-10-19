@@ -128,18 +128,18 @@ export default function RegisteredStudentsPage() {
 	};
 
 	return (
-		<div className="py-6 max-w-7xl mx-auto px-4 flex flex-col gap-6">
+		<div className="mx-auto flex max-w-7xl flex-col gap-6 py-6">
 			{/* --- Header Section --- */}
-			<header className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 border-b pb-6">
-				<div className="flex items-center gap-3">
+			<header className="flex flex-wrap items-end justify-between gap-4">
+				<div className="flex items-center gap-4">
+					<div className="flex size-14 shrink-0 items-center justify-center rounded-2xl bg-pop-pink-soft text-pop-pink-ink shadow-[0_4px_0_0_color-mix(in_oklch,var(--pop-pink)_35%,transparent)]">
+						<Users className="size-7" strokeWidth={2.5} />
+					</div>
 					<div>
-						<h1 className="text-2xl font-bold tracking-tight flex items-center gap-3">
-							<div className="bg-primary/10 p-2 rounded-lg text-primary">
-								<Users />
-							</div>
+						<h1 className="text-2xl font-black tracking-tight md:text-3xl">
 							Бүртгүүлсэн суралцагчид
 						</h1>
-						<p className="text-sm text-muted-foreground font-medium mt-0.5">
+						<p className="mt-1 text-sm font-semibold text-muted-foreground">
 							Шалгалт өгөхөөр бүртгэгдсэн нийт суралцагчдын жагсаалт. |{" "}
 							{students.length} сурагч байна.
 						</p>
@@ -148,20 +148,20 @@ export default function RegisteredStudentsPage() {
 			</header>
 
 			{/* --- Filters Section --- */}
-			<div className="flex flex-col md:flex-row gap-3 justify-between">
-				<div className="relative flex-1 group max-w-md">
-					<Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
+			<div className="flex flex-col justify-between gap-3 md:flex-row">
+				<div className="group relative max-w-md flex-1">
+					<Search className="absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-muted-foreground transition-colors group-focus-within:text-primary" strokeWidth={2.5} />
 					<Input
 						placeholder="Нэр, регистр, шалгуулагчийн дугаараар хайх..."
-						className="pl-9  bg-card border-border shadow-sm rounded-xl focus-visible:ring-primary/20"
+						className="h-11 rounded-xl bg-card pl-10 font-semibold"
 						value={searchQuery}
 						onChange={(e) => setSearchQuery(e.target.value)}
 					/>
 				</div>
 				<Select value={selectedGroupId} onValueChange={setSelectedGroupId}>
-					<SelectTrigger className="w-40 h-11 bg-card border-border shadow-sm rounded-xl">
+					<SelectTrigger className="h-11 w-full rounded-xl bg-card font-bold md:w-48">
 						<div className="flex items-center gap-2">
-							<Filter size={15} className="text-muted-foreground" />
+							<Filter size={15} className="text-pop-pink-ink" strokeWidth={2.5} />
 							<SelectValue placeholder="Анги сонгох" />
 						</div>
 					</SelectTrigger>
@@ -177,16 +177,16 @@ export default function RegisteredStudentsPage() {
 			</div>
 
 			{/* --- Main Table Area --- */}
-			<div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden flex flex-col">
+			<div className="card-pop flex flex-col overflow-hidden">
 				<ScrollArea className="h-full">
 					<Table>
-						<TableHeader className="bg-muted/50 sticky top-0 z-20 backdrop-blur-md border-b">
-							<TableRow className="hover:bg-transparent">
+						<TableHeader className="sticky top-0 z-20 bg-muted">
+							<TableRow className="border-b-2 border-border hover:bg-transparent">
 								<TableHead className="w-12 text-center"></TableHead>
-								<TableHead className="font-bold text-[11px] uppercase tracking-wider text-muted-foreground h-11">
+								<TableHead className="h-12 text-xs font-extrabold tracking-wide text-muted-foreground uppercase">
 									Анги / Групп
 								</TableHead>
-								<TableHead className="font-bold text-[11px] uppercase tracking-wider text-muted-foreground h-11 text-center">
+								<TableHead className="h-12 text-xs font-extrabold tracking-wide text-muted-foreground uppercase text-center">
 									Сурагчдын тоо
 								</TableHead>
 							</TableRow>
@@ -197,8 +197,8 @@ export default function RegisteredStudentsPage() {
 								<TableRow>
 									<TableCell colSpan={4} className="h-64 text-center">
 										<div className="flex flex-col items-center justify-center gap-3">
-											<Loader2 className="h-8 w-8 animate-spin text-primary" />
-											<p className="text-xs font-medium text-muted-foreground tracking-wide">
+											<Loader2 className="size-8 animate-spin text-primary" />
+											<p className="text-sm font-bold text-muted-foreground">
 												Дата ачаалж байна...
 											</p>
 										</div>
@@ -208,10 +208,10 @@ export default function RegisteredStudentsPage() {
 								<TableRow>
 									<TableCell colSpan={3} className="h-64 text-center">
 										<div className="flex flex-col items-center justify-center gap-4 py-10">
-											<div className="rounded-full bg-primary/5 p-6 ring-8 ring-primary/2">
-												<Users className="h-10 w-10 text-muted-foreground/40" />
+											<div className="flex size-20 items-center justify-center rounded-full bg-pop-pink-soft text-4xl">
+												🔍
 											</div>
-											<h3 className="text-lg font-bold tracking-tight">
+											<h3 className="text-lg font-black tracking-tight">
 												Илэрц олдсонгүй
 											</h3>
 										</div>
@@ -222,36 +222,41 @@ export default function RegisteredStudentsPage() {
 									<React.Fragment key={groupId}>
 										{/* Group Row */}
 										<TableRow
-											className={`group cursor-pointer transition-all border-b border-border/40 ${
+											className={`group cursor-pointer border-b-2 border-border/60 transition-all ${
 												expandedGroups[groupId]
-													? "bg-primary/3"
-													: "hover:bg-muted/40"
+													? "bg-primary/5 hover:bg-primary/10"
+													: "hover:bg-accent/50"
 											}`}
 											onClick={() => toggleGroup(groupId)}
 										>
 											<TableCell className="py-4">
 												<div className="flex justify-center">
-													{expandedGroups[groupId] ? (
-														<ChevronDown size={18} className="text-primary" />
-													) : (
-														<ChevronRight
-															size={18}
-															className="text-muted-foreground"
-														/>
-													)}
+													<span
+														className={`flex size-7 items-center justify-center rounded-lg ${
+															expandedGroups[groupId]
+																? "bg-primary text-primary-foreground"
+																: "bg-muted text-muted-foreground"
+														}`}
+													>
+														{expandedGroups[groupId] ? (
+															<ChevronDown size={16} strokeWidth={3} />
+														) : (
+															<ChevronRight size={16} strokeWidth={3} />
+														)}
+													</span>
 												</div>
 											</TableCell>
 											<TableCell className="py-4">
 												<div className="flex items-center gap-3">
-													<span className="font-black text-sm text-foreground uppercase tracking-tight">
+													<span className="text-sm font-black tracking-tight text-foreground uppercase">
 														{group.name}
 													</span>
 												</div>
 											</TableCell>
 											<TableCell className="text-center py-4">
 												<Badge
-													variant="secondary"
-													className="font-bold bg-background border border-border/60 text-xs px-3"
+													variant="pink"
+													className="rounded-full px-3 text-xs font-bold"
 												>
 													{group.students.length} суралцагч
 												</Badge>
@@ -260,26 +265,26 @@ export default function RegisteredStudentsPage() {
 
 										{/* Nested Students Table */}
 										{expandedGroups[groupId] && (
-											<TableRow className="bg-muted/5 hover:bg-transparent">
+											<TableRow className="bg-primary/5 hover:bg-primary/5">
 												<TableCell colSpan={3} className="p-0 border-none">
-													<div className="px-6 py-4 border-l-4 border-primary/20 bg-background/40 ml-4 my-2 rounded-r-2xl animate-in fade-in slide-in-from-top-2 duration-300">
-														<div className="rounded-xl border border-border/80 bg-card overflow-hidden shadow-sm">
+													<div className="mx-3 my-2 rounded-2xl border-l-4 border-primary/40 bg-card/60 px-3 py-4 animate-in fade-in slide-in-from-top-2 duration-300 md:px-6">
+														<div className="overflow-hidden rounded-2xl border-2 border-border bg-card">
 															<Table>
-																<TableHeader className="bg-muted/30">
-																	<TableRow className="h-9 hover:bg-transparent border-b">
-																		<TableHead className="text-[9px] font-black uppercase text-muted-foreground pl-4 w-12">
+																<TableHeader className="bg-muted">
+																	<TableRow className="h-10 border-b-2 border-border hover:bg-transparent">
+																		<TableHead className="text-[10px] font-extrabold tracking-wide text-muted-foreground uppercase pl-4 w-12">
 																			#
 																		</TableHead>
-																		<TableHead className="text-[9px] font-black uppercase text-muted-foreground px-4">
+																		<TableHead className="text-[10px] font-extrabold tracking-wide text-muted-foreground uppercase px-4">
 																			Овог нэр / Регистр
 																		</TableHead>
-																		<TableHead className="text-[9px] font-black uppercase text-muted-foreground px-4">
+																		<TableHead className="text-[10px] font-extrabold tracking-wide text-muted-foreground uppercase px-4">
 																			Шалгуулагч №
 																		</TableHead>
-																		<TableHead className="text-[9px] font-black uppercase text-muted-foreground px-4">
+																		<TableHead className="text-[10px] font-extrabold tracking-wide text-muted-foreground uppercase px-4">
 																			Нэвтрэх нууц үг
 																		</TableHead>
-																		<TableHead className="text-[9px] font-black uppercase text-muted-foreground text-right pr-4">
+																		<TableHead className="text-[10px] font-extrabold tracking-wide text-muted-foreground uppercase text-right pr-4">
 																			Үйлдэл
 																		</TableHead>
 																	</TableRow>
@@ -288,27 +293,27 @@ export default function RegisteredStudentsPage() {
 																	{group.students.map((student, idx) => (
 																		<TableRow
 																			key={student.examinee_number}
-																			className="h-12 hover:bg-primary/[0.02] border-b border-border/40 last:border-0"
+																			className="h-12 border-b border-border/60 last:border-0 hover:bg-accent/50"
 																		>
-																			<TableCell className="pl-4 font-mono text-[10px] text-muted-foreground">
+																			<TableCell className="pl-4 font-mono text-[11px] font-bold text-muted-foreground">
 																				{idx + 1}
 																			</TableCell>
 																			<TableCell>
 																				<div className="flex flex-col">
-																					<span className="text-[13px] font-bold text-foreground leading-none mb-1">
+																					<span className="mb-1 text-[13px] leading-none font-extrabold text-foreground">
 																						{student.last_name}{" "}
 																						{student.first_name}
 																					</span>
-																					<span className="text-[10px] font-mono text-muted-foreground uppercase tracking-tighter">
+																					<span className="font-mono text-[10px] font-semibold tracking-tighter text-muted-foreground uppercase">
 																						{student.register_number}
 																					</span>
 																				</div>
 																			</TableCell>
 																			<TableCell>
-																				<div className="inline-flex items-center gap-1.5 px-2 py-1 rounded-lg bg-muted/50 border border-border/40 group/num cursor-default">
+																				<div className="group/num inline-flex cursor-default items-center gap-1.5 rounded-full bg-pop-sky-soft px-2.5 py-1 text-pop-sky-ink">
 																					<Hash
 																						size={10}
-																						className="text-primary/60"
+																						strokeWidth={3}
 																					/>
 																					<span className="text-[11px] font-black font-mono">
 																						{student.examinee_number}
@@ -321,11 +326,11 @@ export default function RegisteredStudentsPage() {
 																						{visiblePasswords[
 																							student.examinee_number
 																						] ? (
-																							<span className="text-primary font-bold">
+																							<span className="font-bold text-primary">
 																								{student.passwordauto}
 																							</span>
 																						) : (
-																							<span className="text-muted-foreground/30">
+																							<span className="text-muted-foreground/50">
 																								••••••••
 																							</span>
 																						)}
@@ -333,7 +338,7 @@ export default function RegisteredStudentsPage() {
 																					<Button
 																						variant="ghost"
 																						size="icon"
-																						className="h-7 w-7 rounded-md hover:bg-primary/10 hover:text-primary transition-colors"
+																						className="size-7 rounded-lg transition-colors hover:bg-primary/10 hover:text-primary"
 																						onClick={(e) => {
 																							e.stopPropagation();
 																							setVisiblePasswords((prev) => ({
@@ -361,7 +366,7 @@ export default function RegisteredStudentsPage() {
 																						<Button
 																							variant="ghost"
 																							size="icon"
-																							className="h-8 w-8 rounded-lg"
+																							className="size-8 rounded-xl"
 																						>
 																							<MoreVertical
 																								size={14}
@@ -371,7 +376,7 @@ export default function RegisteredStudentsPage() {
 																					</DropdownMenuTrigger>
 																					<DropdownMenuContent
 																						align="end"
-																						className="rounded-xl w-48"
+																						className="w-48 rounded-2xl p-1.5"
 																					>
 																						<DropdownMenuItem
 																							onClick={() =>
@@ -380,9 +385,11 @@ export default function RegisteredStudentsPage() {
 																									"Шалгуулагчийн дугаар",
 																								)
 																							}
-																							className="text-xs cursor-pointer"
+																							className="cursor-pointer gap-2 rounded-xl text-xs font-bold"
 																						>
-																							<ClipboardCopy className="mr-2 h-3.5 w-3.5" />{" "}
+																							<span className="flex size-6 items-center justify-center rounded-lg bg-pop-sky-soft text-pop-sky-ink">
+																							<ClipboardCopy className="size-3.5" />
+																						</span>{" "}
 																							Дугаар хуулах
 																						</DropdownMenuItem>
 																						<DropdownMenuItem
@@ -392,9 +399,11 @@ export default function RegisteredStudentsPage() {
 																									"Нууц үг",
 																								)
 																							}
-																							className="text-xs cursor-pointer"
+																							className="cursor-pointer gap-2 rounded-xl text-xs font-bold"
 																						>
-																							<Copy className="mr-2 h-3.5 w-3.5" />{" "}
+																							<span className="flex size-6 items-center justify-center rounded-lg bg-pop-violet-soft text-pop-violet-ink">
+																							<Copy className="size-3.5" />
+																						</span>{" "}
 																							Нууц үг хуулах
 																						</DropdownMenuItem>
 																					</DropdownMenuContent>

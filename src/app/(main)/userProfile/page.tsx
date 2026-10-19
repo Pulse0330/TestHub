@@ -24,24 +24,19 @@ export default function UserProfilePage() {
 	if (!userId) {
 		return (
 			<div className="flex items-center justify-center min-h-[70vh] px-4">
-				<div className="text-center space-y-6 max-w-md">
-					<div className="relative">
-						<div className="absolute inset-0 flex items-center justify-center">
-							<div className="w-24 h-24 bg-primary/20 dark:bg-primary/10 rounded-full blur-2xl" />
-						</div>
-						<div className="relative bg-card border border-border rounded-full w-20 h-20 mx-auto flex items-center justify-center shadow-lg">
-							<User className="w-10 h-10 text-muted-foreground" />
-						</div>
+				<div className="card-pop w-full max-w-md space-y-6 p-8 text-center animate-pop-in">
+					<div className="mx-auto flex size-20 items-center justify-center rounded-full bg-pop-violet-soft text-pop-violet-ink">
+						<User className="size-10" strokeWidth={2.5} />
 					</div>
 					<div className="space-y-2">
-						<h3 className="text-xl font-semibold text-foreground">
+						<h3 className="text-xl font-black text-foreground">
 							Нэвтрээгүй байна
 						</h3>
-						<p className="text-sm text-muted-foreground">
+						<p className="text-sm font-semibold text-muted-foreground">
 							Профайл үзэхийн тулд системд нэвтэрнэ үү
 						</p>
 					</div>
-					<Button className="mt-4" size="lg">
+					<Button className="mt-2 w-full" size="lg">
 						Нэвтрэх
 					</Button>
 				</div>
@@ -52,24 +47,19 @@ export default function UserProfilePage() {
 	if (isLoading) {
 		return (
 			<div className="flex flex-col items-center justify-center min-h-[70vh] space-y-6 px-4">
-				<div className="relative">
-					<div className="absolute inset-0 flex items-center justify-center">
-						<div className="w-32 h-32 bg-primary/20 dark:bg-primary/10 rounded-full blur-2xl animate-pulse" />
-					</div>
-					<div className="relative">
-						<UseAnimations
-							animation={loading2}
-							size={56}
-							strokeColor="hsl(var(--primary))"
-							loop
-						/>
-					</div>
+				<div className="flex size-24 items-center justify-center rounded-3xl bg-pop-violet-soft shadow-[0_4px_0_0_color-mix(in_oklch,var(--pop-violet)_30%,transparent)]">
+					<UseAnimations
+						animation={loading2}
+						size={56}
+						strokeColor="var(--primary)"
+						loop
+					/>
 				</div>
-				<div className="text-center space-y-2">
-					<p className="text-base font-medium text-foreground">
+				<div className="text-center space-y-1">
+					<p className="text-base font-black text-foreground">
 						Профайл уншиж байна
 					</p>
-					<p className="text-sm text-muted-foreground">Түр хүлээнэ үү...</p>
+					<p className="text-sm font-semibold text-muted-foreground">Түр хүлээнэ үү...</p>
 				</div>
 			</div>
 		);
@@ -79,21 +69,16 @@ export default function UserProfilePage() {
 		return (
 			<div className="flex items-center justify-center min-h-[70vh] px-4">
 				<div className="max-w-lg w-full">
-					<div className="bg-destructive/5 border border-destructive/20 rounded-xl p-8 space-y-6">
+					<div className="card-pop space-y-6 p-8 animate-pop-in">
 						<div className="flex flex-col items-center text-center space-y-4">
-							<div className="relative">
-								<div className="absolute inset-0 flex items-center justify-center">
-									<div className="w-20 h-20 bg-destructive/10 rounded-full blur-xl" />
-								</div>
-								<div className="relative bg-destructive/10 rounded-full p-4">
-									<AlertCircle className="w-8 h-8 text-destructive" />
-								</div>
+							<div className="flex size-20 items-center justify-center rounded-full bg-destructive/10 text-destructive">
+								<AlertCircle className="size-10" strokeWidth={2.5} />
 							</div>
 							<div className="space-y-2">
-								<h3 className="text-lg font-semibold text-destructive">
+								<h3 className="text-xl font-black text-foreground">
 									Алдаа гарлаа
 								</h3>
-								<p className="text-sm text-muted-foreground max-w-md">
+								<p className="text-sm font-semibold text-muted-foreground max-w-md">
 									{error instanceof Error
 										? error.message
 										: "Тодорхойгүй алдаа гарлаа. Дахин оролдоно уу."}
@@ -106,7 +91,7 @@ export default function UserProfilePage() {
 								variant="outline"
 								className="gap-2"
 							>
-								<RefreshCw className="w-4 h-4" />
+								<RefreshCw className="size-4" strokeWidth={2.5} />
 								Дахин оролдох
 							</Button>
 						</div>
@@ -123,21 +108,16 @@ export default function UserProfilePage() {
 		return (
 			<div className="flex items-center justify-center min-h-[70vh] px-4">
 				<div className="max-w-lg w-full">
-					<div className="bg-destructive/5 border border-destructive/20 rounded-xl p-8 space-y-6">
+					<div className="card-pop space-y-6 p-8 animate-pop-in">
 						<div className="flex flex-col items-center text-center space-y-4">
-							<div className="relative">
-								<div className="absolute inset-0 flex items-center justify-center">
-									<div className="w-20 h-20 bg-destructive/10 rounded-full blur-xl" />
-								</div>
-								<div className="relative bg-destructive/10 rounded-full p-4">
-									<AlertCircle className="w-8 h-8 text-destructive" />
-								</div>
+							<div className="flex size-20 items-center justify-center rounded-full bg-destructive/10 text-destructive">
+								<AlertCircle className="size-10" strokeWidth={2.5} />
 							</div>
 							<div className="space-y-2">
-								<h3 className="text-lg font-semibold text-destructive">
+								<h3 className="text-xl font-black text-foreground">
 									Профайл татахад алдаа гарлаа
 								</h3>
-								<p className="text-sm text-muted-foreground">
+								<p className="text-sm font-semibold text-muted-foreground">
 									Таны профайл мэдээлэл олдсонгүй
 								</p>
 							</div>
@@ -148,7 +128,7 @@ export default function UserProfilePage() {
 								variant="outline"
 								className="gap-2"
 							>
-								<RefreshCw className="w-4 h-4" />
+								<RefreshCw className="size-4" strokeWidth={2.5} />
 								Дахин оролдох
 							</Button>
 						</div>

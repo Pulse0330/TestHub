@@ -103,16 +103,18 @@ export default function QPayDialog({
 
 	return (
 		<Dialog open={open} onOpenChange={onOpenChange}>
-			<DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+			<DialogContent className="max-h-[90vh] max-w-lg overflow-y-auto rounded-3xl border-2">
 				<DialogHeader>
-					<DialogTitle className="text-2xl font-bold flex items-center gap-2">
-						<QrCode className="w-6 h-6 text-primary" />
+					<DialogTitle className="flex items-center gap-3 text-2xl font-black">
+						<span className="flex size-11 items-center justify-center rounded-2xl bg-pop-sky-soft text-pop-sky-ink shadow-[0_3px_0_0_color-mix(in_oklch,var(--pop-sky)_35%,transparent)]">
+							<QrCode className="size-6" strokeWidth={2.5} />
+						</span>
 						QPay Төлбөр
 						{paymentStatus === "success" && (
-							<CheckCircle2 className="w-6 h-6 text-green-500 ml-2" />
+							<CheckCircle2 className="ml-1 size-6 text-success" />
 						)}
 					</DialogTitle>
-					<DialogDescription>
+					<DialogDescription className="font-semibold">
 						{paymentStatus === "success"
 							? "Төлбөр амжилттай төлөгдлөө!"
 							: "Доорх QR кодыг банкны аппликейшнээр уншуулан төлбөр төлнө үү"}
@@ -120,7 +122,7 @@ export default function QPayDialog({
 				</DialogHeader>
 
 				{qpayData ? (
-					<div className="space-y-6 py-4">
+					<div className="space-y-5 py-2">
 						{/* Төлбөр амжилттай төлөгдсөн мэдэгдэл */}
 						<AnimatePresence>
 							{paymentStatus === "success" && (
@@ -128,17 +130,17 @@ export default function QPayDialog({
 									initial={{ scale: 0.9, opacity: 0 }}
 									animate={{ scale: 1, opacity: 1 }}
 									exit={{ scale: 0.9, opacity: 0 }}
-									className="p-6 bg-green-50 dark:bg-green-950/20 rounded-2xl border-2 border-green-200 dark:border-green-800"
+									className="rounded-2xl border-2 border-success/40 bg-success/10 p-5"
 								>
 									<div className="flex items-center gap-4">
-										<div className="w-12 h-12 rounded-full bg-green-500 flex items-center justify-center shrink-0">
-											<CheckCircle2 className="w-7 h-7 text-white" />
+										<div className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-success">
+											<CheckCircle2 className="size-7 text-white" />
 										</div>
 										<div>
-											<h3 className="text-lg font-bold text-green-800 dark:text-green-200">
+											<h3 className="text-lg font-extrabold text-success">
 												Төлбөр амжилттай!
 											</h3>
-											<p className="text-sm text-green-600 dark:text-green-300">
+											<p className="text-sm font-semibold text-foreground/80">
 												Таны төлбөр амжилттай төлөгдлөө. Та шалгалт өгөх
 												боломжтой боллоо.
 											</p>
@@ -155,17 +157,17 @@ export default function QPayDialog({
 									initial={{ scale: 0.9, opacity: 0 }}
 									animate={{ scale: 1, opacity: 1 }}
 									exit={{ scale: 0.9, opacity: 0 }}
-									className="p-6 bg-orange-50 dark:bg-orange-950/20 rounded-2xl border-2 border-orange-200 dark:border-orange-800"
+									className="rounded-2xl border-2 border-pop-sun/50 bg-pop-sun-soft p-5"
 								>
 									<div className="flex items-center gap-4">
-										<div className="w-12 h-12 rounded-full bg-orange-500 flex items-center justify-center shrink-0">
-											<XCircle className="w-7 h-7 text-white" />
+										<div className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-warning">
+											<XCircle className="size-7 text-foreground" />
 										</div>
 										<div>
-											<h3 className="text-lg font-bold text-orange-800 dark:text-orange-200">
+											<h3 className="text-lg font-extrabold text-pop-sun-ink">
 												Төлбөр төлөгдөөгүй байна
 											</h3>
-											<p className="text-sm text-orange-600 dark:text-orange-300">
+											<p className="text-sm font-semibold text-foreground/80">
 												QR кодоор төлбөр төлсний дараа "Төлбөр шалгах" товчийг
 												дарна уу.
 											</p>
@@ -182,17 +184,17 @@ export default function QPayDialog({
 									initial={{ scale: 0.9, opacity: 0 }}
 									animate={{ scale: 1, opacity: 1 }}
 									exit={{ scale: 0.9, opacity: 0 }}
-									className="p-6 bg-red-50 dark:bg-red-950/20 rounded-2xl border-2 border-red-200 dark:border-red-800"
+									className="rounded-2xl border-2 border-destructive/40 bg-destructive/10 p-5"
 								>
 									<div className="flex items-center gap-4">
-										<div className="w-12 h-12 rounded-full bg-red-500 flex items-center justify-center shrink-0">
-											<AlertCircle className="w-7 h-7 text-white" />
+										<div className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-destructive">
+											<AlertCircle className="size-7 text-white" />
 										</div>
 										<div>
-											<h3 className="text-lg font-bold text-red-800 dark:text-red-200">
+											<h3 className="text-lg font-extrabold text-destructive">
 												Алдаа гарлаа
 											</h3>
-											<p className="text-sm text-red-600 dark:text-red-300">
+											<p className="text-sm font-semibold text-foreground/80">
 												{error}
 											</p>
 										</div>
@@ -202,23 +204,23 @@ export default function QPayDialog({
 						</AnimatePresence>
 
 						{/* QR Code Section */}
-						<div className="flex flex-col items-center justify-center p-6 bg-slate-50 dark:bg-slate-900 rounded-2xl">
-							<p className="text-sm text-slate-600 dark:text-slate-400 mb-4 font-medium">
+						<div className="flex flex-col items-center justify-center rounded-3xl border-2 border-dashed border-pop-sky/50 bg-pop-sky-soft p-6">
+							<p className="mb-4 text-xs font-extrabold uppercase tracking-wide text-pop-sky-ink">
 								QR код уншуулах
 							</p>
-							<div className="bg-white p-4 rounded-xl shadow-lg">
+							<div className="rounded-2xl border-2 border-border bg-[oklch(1_0_0)] p-4 shadow-[0_4px_0_0_var(--border)]">
 								{qpayData.qr_image ? (
 									<Image
 										src={`data:image/png;base64,${qpayData.qr_image}`}
 										alt="QPay QR Code"
 										width={256}
 										height={256}
-										className="w-64 h-64"
+										className="size-56 sm:size-64"
 										unoptimized
 									/>
 								) : (
-									<div className="w-64 h-64 flex items-center justify-center bg-gray-100 dark:bg-gray-800 rounded-lg">
-										<p className="text-sm text-gray-500">QR код байхгүй</p>
+									<div className="flex size-56 items-center justify-center rounded-xl bg-muted sm:size-64">
+										<p className="text-sm font-bold text-muted-foreground">QR код байхгүй</p>
 									</div>
 								)}
 							</div>
@@ -227,23 +229,23 @@ export default function QPayDialog({
 						</div>
 
 						{/* Payment Check Button */}
-						<div className="p-4">
+						<div>
 							{userId && (
 								<Button
 									onClick={checkPaymentStatus}
 									disabled={isChecking || paymentStatus === "success"}
-									variant="outline"
+									variant={paymentStatus === "success" ? "success" : "default"}
 									size="lg"
 									className="w-full"
 								>
 									{isChecking ? (
 										<>
-											<Loader2 className="w-4 h-4 mr-2 animate-spin" />
+											<Loader2 className="size-4 animate-spin" />
 											Шалгаж байна...
 										</>
 									) : paymentStatus === "success" ? (
 										<>
-											<CheckCircle2 className="w-4 h-4 mr-2" />
+											<CheckCircle2 className="size-4" />
 											Төлбөр төлөгдсөн
 										</>
 									) : (
@@ -268,7 +270,7 @@ export default function QPayDialog({
                       rel="noopener noreferrer"
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
-                      className="flex flex-col items-center gap-2 p-4 rounded-xl border-2 border-slate-200 dark:border-slate-700 hover:border-primary transition-colors bg-white dark:bg-slate-800 shadow-sm hover:shadow-md"
+                      className="flex flex-col items-center gap-2 rounded-2xl border-2 border-border bg-card p-4 shadow-[0_3px_0_0_var(--border)] transition-colors hover:border-primary"
                     >
                       <Image
                         src={bank.logo}
@@ -288,8 +290,8 @@ export default function QPayDialog({
 					</div>
 				) : (
 					<div className="flex flex-col items-center justify-center py-12">
-						<Loader2 className="w-12 h-12 animate-spin text-gray-400 mb-4" />
-						<p className="text-gray-600 dark:text-gray-400">Уншиж байна...</p>
+						<Loader2 className="mb-4 size-12 animate-spin text-pop-sky" />
+						<p className="font-bold text-muted-foreground">Уншиж байна...</p>
 					</div>
 				)}
 			</DialogContent>

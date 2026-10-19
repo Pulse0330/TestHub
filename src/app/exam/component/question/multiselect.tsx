@@ -106,17 +106,20 @@ export default function MultiSelectQuestion({
 				<DialogTrigger asChild>
 					<Button
 						type="button"
-						className="relative mb-4 w-full cursor-pointer hover:opacity-90 transition-opacity border rounded-md overflow-hidden group"
+						variant="ghost"
+						className="group relative mb-4 h-auto w-full cursor-pointer overflow-hidden rounded-2xl border-2 border-border bg-muted p-0 transition-opacity hover:opacity-90"
 					>
 						<Image
 							src={imageUrl}
 							alt={questionText || "Question"}
 							width={800}
 							height={300}
-							className="w-full h-auto object-contain bg-gray-50 max-h-[300px]"
+							className="h-auto max-h-[300px] w-full bg-muted object-contain"
 						/>
-						<div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">
-							<ZoomIn className="w-8 h-8 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+						<div className="absolute inset-0 flex items-center justify-center bg-foreground/0 transition-colors group-hover:bg-foreground/10">
+							<span className="flex size-12 items-center justify-center rounded-2xl bg-card text-foreground opacity-0 shadow-[0_4px_0_0_var(--border)] transition-opacity group-hover:opacity-100">
+								<ZoomIn className="size-6" />
+							</span>
 						</div>
 					</Button>
 				</DialogTrigger>
@@ -150,8 +153,9 @@ export default function MultiSelectQuestion({
 					<DialogTrigger asChild>
 						<Button
 							type="button"
+							variant="ghost"
 							data-dialog-trigger
-							className="cursor-pointer hover:opacity-90 transition-opacity rounded overflow-hidden border w-full"
+							className="h-auto w-full cursor-pointer overflow-hidden rounded-xl border-2 border-border bg-card p-0 transition-opacity hover:opacity-90"
 							onClick={(e) => e.stopPropagation()}
 						>
 							<Image
@@ -178,7 +182,7 @@ export default function MultiSelectQuestion({
 								/>
 							</div>
 							{option.answer_name_html && (
-								<p className="text-center text-lg font-medium">
+								<p className="text-center text-lg font-bold">
 									{parse(option.answer_name_html)}
 								</p>
 							)}
@@ -189,7 +193,7 @@ export default function MultiSelectQuestion({
 		}
 
 		return (
-			<span className="text-sm sm:text-base leading-relaxed whitespace-pre-wrap">
+			<span className="whitespace-pre-wrap text-sm leading-relaxed sm:text-base">
 				{option.answer_name_html ? parse(option.answer_name_html) : ""}
 			</span>
 		);
@@ -199,9 +203,11 @@ export default function MultiSelectQuestion({
 		<div className="space-y-4">
 			{renderQuestionContent()}
 
-			<div className="space-y-3">
-				<p>Олон хариулт сонгох боломжтой</p>
-				{answers.map((option) => {
+			<div className="space-y-2.5 sm:space-y-3">
+				<p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
+					Олон хариулт сонгох боломжтой
+				</p>
+				{answers.map((option, idx) => {
 					const selected = isSelected(option.answer_id);
 					const hasImage = isValidImageUrl(option.answer_img);
 
@@ -211,24 +217,30 @@ export default function MultiSelectQuestion({
 							onClick={(e) => handleToggle(option.answer_id, e)}
 							variant="outline"
 							disabled={isReviewMode}
-							className={`flex items-center gap-3 w-full justify-start text-left p-3 border rounded-md transition-colors ${
-								hasImage ? "h-auto min-h-[100px]" : "min-h-[50px]"
-							} ${selected ? "border-primary bg-primary/10" : "border-border"} ${
-								isReviewMode ? "cursor-default opacity-70" : ""
-							}`}
+							className={`flex h-auto w-full items-center justify-start gap-3 whitespace-normal rounded-2xl border-2 p-3.5 text-left font-bold transition-all sm:p-4 ${
+								hasImage ? "min-h-[100px]" : "min-h-[56px]"
+							} ${
+								selected
+									? "border-primary bg-primary/10 text-primary shadow-[0_4px_0_0_var(--primary)] hover:bg-primary/15 hover:text-primary"
+									: "border-border bg-card text-foreground hover:-translate-y-0.5 hover:border-primary/40 hover:bg-accent/40"
+							} ${isReviewMode ? "cursor-default opacity-70" : ""}`}
 						>
 							<span
-								className={`w-4 h-4 rounded border flex items-center justify-center shrink-0 ${
-									hasImage ? "self-start mt-2" : ""
-								} ${selected ? "border-primary bg-primary" : "border-border bg-background"}`}
+								className={`flex size-8 shrink-0 items-center justify-center rounded-xl border-2 text-sm font-black transition-all ${
+									hasImage ? "self-start" : ""
+								} ${
+									selected
+										? "border-primary bg-primary text-primary-foreground"
+										: "border-border bg-muted text-muted-foreground"
+								}`}
 							>
-								{selected && (
+								{selected ? (
 									<svg
-										className="w-3 h-3 text-primary-foreground"
+										className="size-4 text-primary-foreground"
 										fill="none"
 										strokeLinecap="round"
 										strokeLinejoin="round"
-										strokeWidth="2"
+										strokeWidth="3"
 										viewBox="0 0 24 24"
 										stroke="currentColor"
 										aria-hidden="true"
@@ -236,17 +248,19 @@ export default function MultiSelectQuestion({
 										<title>Checkmark</title>
 										<path d="M5 13l4 4L19 7" />
 									</svg>
+								) : (
+									String.fromCharCode(65 + idx)
 								)}
 							</span>
 
-							<div className="flex-1">{renderOptionContent(option)}</div>
+							<div className="min-w-0 flex-1">{renderOptionContent(option)}</div>
 						</Button>
 					);
 				})}
 			</div>
 
 			{selectedAnswers.length > 0 && (
-				<div className="text-sm text-muted-foreground">
+				<div className="inline-flex items-center rounded-full bg-primary/10 px-3 py-1 text-xs font-bold text-primary">
 					{selectedAnswers.length} сонголт сонгосон
 				</div>
 			)}

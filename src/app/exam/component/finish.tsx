@@ -81,10 +81,17 @@ interface FinishExamResultDialogProps {
 	examTime: number;
 	answeredCount: number;
 	totalCount: number;
+	/**
+	 * When true, the component renders no inline trigger button; open the
+	 * confirmation dialog through the ref (`openConfirm`) instead.
+	 */
+	hideTrigger?: boolean;
 }
 
 export interface FinishExamDialogHandle {
 	triggerFinish: () => void;
+	/** Opens the manual "finish exam?" confirmation dialog. */
+	openConfirm: () => void;
 }
 
 const FinishExamResultDialog = forwardRef<
@@ -92,7 +99,15 @@ const FinishExamResultDialog = forwardRef<
 	FinishExamResultDialogProps
 >(
 	(
-		{ examId, examType, startEid, examTime, answeredCount, totalCount },
+		{
+			examId,
+			examType,
+			startEid,
+			examTime,
+			answeredCount,
+			totalCount,
+			hideTrigger = false,
+		},
 		ref,
 	) => {
 		const { userId } = useAuthStore();
@@ -211,6 +226,9 @@ const FinishExamResultDialog = forwardRef<
 					handleFinish();
 				}, 500); // 500ms хүлээх (UX-ийн хувьд)
 			},
+			openConfirm: () => {
+				setOpen(true);
+			},
 		}));
 
 		const progressPercentage =
@@ -235,26 +253,36 @@ const FinishExamResultDialog = forwardRef<
 		if (isAutoSubmitting && finishMutation.isPending) {
 			return (
 				<Dialog open={true} onOpenChange={() => {}}>
+					{!hideTrigger && (
 					<DialogTrigger asChild>
-						<Button className="w-full sm:w-auto px-4 sm:px-6 py-3 sm:py-4 font-bold text-base sm:text-lg shadow-lg hover:shadow-xl transition-all flex justify-center items-center gap-2">
+						<Button
+							variant="success"
+							size="lg"
+							className="flex w-full flex-1 items-center justify-center gap-2"
+						>
 							<span className="hidden sm:inline">
 								{isDadlaga ? "Шалгалт дуусгах" : "Шалгалт дуусгах"}
 							</span>
 							<span className="sm:hidden">Дуусгах</span>
-							<Send className="w-4 h-4 sm:w-5 sm:h-5" />
+							<Send className="size-4 sm:size-5" />
 						</Button>
 					</DialogTrigger>
+					)}
+					{!hideTrigger && (
 					<Button
 						variant="outline"
 						onClick={() => router.push("/Lists/examList")}
-						className="w-full sm:w-auto font-semibold border-red-300 text-red-600 hover:bg-red-50 dark:border-red-700 dark:text-red-400 dark:hover:bg-red-950/20"
+						className="w-full border-destructive/40 text-destructive hover:bg-destructive/10 hover:text-destructive"
 					>
 						Шалгалтаас гарах
 					</Button>
-					<DialogContent className="w-[95vw] max-w-[450px] sm:max-w-[550px] border-t-4 border-t-red-500 p-4 sm:p-6">
-						<div className="flex flex-col justify-center items-center py-8 space-y-4">
-							<Loader2 className="w-12 h-12 sm:w-16 sm:h-16 animate-spin text-red-600" />
-							<p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 font-medium text-center">
+					)}
+					<DialogContent className="w-[95vw] max-w-[450px] p-5 sm:max-w-[520px] sm:p-6">
+						<div className="flex flex-col items-center justify-center space-y-4 py-8">
+							<div className="flex size-20 items-center justify-center rounded-3xl bg-destructive/10">
+								<Loader2 className="size-10 animate-spin text-destructive" />
+							</div>
+							<p className="text-center text-sm font-bold text-muted-foreground sm:text-base">
 								⏰ Цаг дууслаа. Автоматаар дуусгаж байна...
 							</p>
 						</div>
@@ -267,17 +295,26 @@ const FinishExamResultDialog = forwardRef<
 		if (finishedTestId && !isDadlaga && isLoadingResults) {
 			return (
 				<Dialog open={open} onOpenChange={setOpen}>
+					{!hideTrigger && (
 					<DialogTrigger asChild>
-						<Button className="w-full sm:w-auto px-4 sm:px-6 py-3 sm:py-4 font-bold text-base sm:text-lg shadow-lg hover:shadow-xl transition-all flex justify-center items-center gap-2">
+						<Button
+							variant="success"
+							size="lg"
+							className="flex w-full flex-1 items-center justify-center gap-2"
+						>
 							<span className="hidden sm:inline">Шалгалт дуусгах</span>
 							<span className="sm:hidden">Дуусгах</span>
-							<Send className="w-4 h-4 sm:w-5 sm:h-5" />
+							<Send className="size-4 sm:size-5" />
 						</Button>
 					</DialogTrigger>
-					<DialogContent className="w-[95vw] max-w-[450px] sm:max-w-[550px] border-t-4 border-t-blue-500 p-4 sm:p-6">
-						<div className="flex flex-col justify-center items-center py-8 space-y-4">
-							<Loader2 className="w-12 h-12 sm:w-16 sm:h-16 animate-spin text-blue-600" />
-							<p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 font-medium">
+					)}
+					<DialogContent className="w-[95vw] max-w-[450px] p-5 sm:max-w-[520px] sm:p-6">
+						<div className="flex flex-col items-center justify-center space-y-4 py-8">
+							<div className="flex size-20 animate-float items-center justify-center rounded-3xl bg-primary/10 text-4xl">
+								🧮
+							</div>
+							<Loader2 className="size-6 animate-spin text-primary" />
+							<p className="text-sm font-bold text-muted-foreground sm:text-base">
 								Үр дүн тооцоолж байна...
 							</p>
 						</div>
@@ -288,7 +325,7 @@ const FinishExamResultDialog = forwardRef<
 		<Button
 			variant="outline"
 			onClick={() => router.push("/Lists/examList")}
-			className="w-full sm:w-auto font-semibold border-red-300 text-red-600 hover:bg-red-50 dark:border-red-700 dark:text-red-400 dark:hover:bg-red-950/20"
+			className="w-full border-destructive/40 text-destructive hover:bg-destructive/10 hover:text-destructive"
 		>
 			Шалгалтаас гарах
 		</Button>;
@@ -296,10 +333,12 @@ const FinishExamResultDialog = forwardRef<
 		if (finishedTestId && !isDadlaga && !isLoadingResults && !resultInfo) {
 			return (
 				<Dialog open={true} onOpenChange={handleCloseResults}>
-					<DialogContent className="w-[95vw] max-w-[400px] sm:max-w-[450px] p-4 sm:p-6">
-						<DialogHeader className="text-center space-y-3">
-							<XCircle className="w-12 h-12 sm:w-14 sm:h-14 mx-auto text-red-500" />
-							<DialogTitle className="text-lg sm:text-xl">
+					<DialogContent className="w-[95vw] max-w-[400px] p-5 sm:max-w-[450px] sm:p-6">
+						<DialogHeader className="space-y-3 text-center sm:text-center">
+							<div className="mx-auto flex size-16 items-center justify-center rounded-3xl bg-destructive/10">
+								<XCircle className="size-8 text-destructive" strokeWidth={2.5} />
+							</div>
+							<DialogTitle className="text-lg font-black sm:text-xl">
 								Үр дүн олдсонгүй
 							</DialogTitle>
 							<DialogDescription className="text-sm">
@@ -309,7 +348,8 @@ const FinishExamResultDialog = forwardRef<
 						<DialogFooter className="mt-4">
 							<Button
 								onClick={handleCloseResults}
-								className="w-full h-11 font-semibold"
+								size="lg"
+								className="w-full"
 							>
 								Хаах
 							</Button>
@@ -327,37 +367,52 @@ const FinishExamResultDialog = forwardRef<
 			return (
 				<Dialog open={true} onOpenChange={handleCloseResults}>
 					<DialogContent
-						className={`w-[95vw] max-w-[500px] sm:max-w-[600px] border-t-4 shadow-2xl ${
-							isPassed ? "border-t-green-500" : "border-t-red-500"
-						} p-4 sm:p-6 max-h-[90vh] overflow-y-auto`}
+						className={`max-h-[90vh] w-[95vw] max-w-[500px] overflow-y-auto p-5 sm:max-w-[560px] sm:p-7 ${
+							isPassed ? "border-success/50" : "border-border"
+						}`}
 					>
-						<DialogHeader className="text-center space-y-3 sm:space-y-4">
-							<div className="relative inline-block mx-auto">
+						<DialogHeader className="space-y-3 text-center sm:space-y-4 sm:text-center">
+							<div className="relative mx-auto inline-flex items-center justify-center">
+								<span
+									aria-hidden="true"
+									className="absolute -top-3 -left-7 animate-float text-2xl"
+								>
+									🎉
+								</span>
+								<span
+									aria-hidden="true"
+									className="absolute -top-2 -right-7 animate-float text-2xl"
+									style={{ animationDelay: "0.4s" }}
+								>
+									✨
+								</span>
 								<div
-									className={`absolute inset-0 blur-xl sm:blur-2xl opacity-30 rounded-full ${
+									className={`flex size-20 items-center justify-center rounded-3xl sm:size-24 ${
 										isExcellent
-											? "bg-yellow-400"
+											? "bg-pop-sun-soft shadow-[0_5px_0_0_color-mix(in_oklch,var(--pop-sun)_55%,transparent)]"
 											: isPassed
-												? "bg-green-400"
-												: "bg-gray-400"
+												? "bg-pop-mint-soft shadow-[0_5px_0_0_color-mix(in_oklch,var(--pop-mint)_45%,transparent)]"
+												: "bg-muted shadow-[0_5px_0_0_var(--border)]"
 									}`}
-								/>
-								<Trophy
-									className={`relative w-16 h-16 sm:w-20 sm:h-20 ${
-										isExcellent
-											? "text-yellow-500 animate-bounce"
-											: isPassed
-												? "text-green-500"
-												: "text-gray-400"
-									}`}
-								/>
+								>
+									<Trophy
+										className={`size-10 sm:size-12 ${
+											isExcellent
+												? "animate-bounce text-pop-sun-ink"
+												: isPassed
+													? "text-pop-mint-ink"
+													: "text-muted-foreground"
+										}`}
+										strokeWidth={2.25}
+									/>
+								</div>
 							</div>
 
 							<div>
-								<DialogTitle className="text-2xl sm:text-3xl md:text-4xl font-extrabold bg-linear-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent px-2">
+								<DialogTitle className="text-gradient px-2 text-2xl font-black sm:text-3xl md:text-4xl">
 									Шалгалтын үр дүн
 								</DialogTitle>
-								<DialogDescription className="text-base sm:text-lg md:text-xl font-semibold mt-2 px-2">
+								<DialogDescription className="mt-2 px-2 text-base font-bold text-foreground sm:text-lg">
 									{isExcellent
 										? "🌟 Гайхалтай!"
 										: isPassed
@@ -367,94 +422,97 @@ const FinishExamResultDialog = forwardRef<
 							</div>
 						</DialogHeader>
 
-						<div className="space-y-3 sm:space-y-4 py-4 sm:py-6">
+						<div className="space-y-3 py-2 sm:space-y-4 sm:py-4">
 							{/* Main Score Card */}
 							<div
-								className={`relative overflow-hidden rounded-xl sm:rounded-2xl p-4 sm:p-6 ${
+								className={`relative overflow-hidden rounded-3xl border-2 p-5 text-center sm:p-6 ${
 									isPassed
-										? "bg-linear-to-br from-green-50 to-emerald-50 dark:from-green-950/30 dark:to-emerald-950/30 border-2 border-green-300 dark:border-green-700"
-										: "bg-linear-to-br from-red-50 to-orange-50 dark:from-red-950/30 dark:to-orange-950/30 border-2 border-red-300 dark:border-red-700"
+										? "border-success/40 bg-pop-mint-soft"
+										: "border-destructive/30 bg-pop-coral-soft"
 								}`}
 							>
-								<div className="flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4">
-									<div className="flex items-center gap-3">
-										<Award
-											className={`w-8 h-8 sm:w-10 sm:h-10 ${
-												isPassed
-													? "text-green-600 dark:text-green-400"
-													: "text-red-600 dark:text-red-400"
-											}`}
-										/>
-										<div className="text-center sm:text-left">
-											<p className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-												Нийт оноо
-											</p>
-											<p className="text-xs text-gray-600 dark:text-gray-400">
-												{resultInfo.point} / {resultInfo.ttl_point} оноо
-											</p>
-										</div>
-									</div>
-									<div className="text-4xl sm:text-5xl font-black">
-										{formattedPercentage}%
+								<div
+									className={`text-6xl font-black leading-none tracking-tight tabular-nums sm:text-7xl ${
+										isPassed ? "text-pop-mint-ink" : "text-pop-coral-ink"
+									}`}
+								>
+									{formattedPercentage}%
+								</div>
+								<div className="mt-4 flex items-center justify-center gap-2.5">
+									<span
+										className={`flex size-9 items-center justify-center rounded-xl bg-card ${
+											isPassed ? "text-pop-mint-ink" : "text-pop-coral-ink"
+										}`}
+									>
+										<Award className="size-5" strokeWidth={2.5} />
+									</span>
+									<div className="text-left">
+										<p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
+											Нийт оноо
+										</p>
+										<p className="text-sm font-extrabold text-foreground">
+											{resultInfo.point} / {resultInfo.ttl_point} оноо
+										</p>
 									</div>
 								</div>
 							</div>
 
 							{/* Stats Grid */}
 							<div className="grid grid-cols-3 gap-2 sm:gap-3">
-								<div className="bg-linear-to-br from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 p-3 sm:p-4 rounded-lg sm:rounded-xl border-2 border-blue-200 dark:border-blue-800 text-center">
-									<Target className="w-5 h-5 sm:w-6 sm:h-6 mx-auto mb-1 sm:mb-2 text-blue-600 dark:text-blue-400" />
-									<p className="text-[10px] sm:text-xs text-gray-600 dark:text-gray-400 font-medium mb-1">
+								<div className="rounded-2xl bg-pop-sky-soft p-3 text-center sm:p-4">
+									<Target className="mx-auto mb-1 size-5 text-pop-sky-ink sm:mb-2 sm:size-6" />
+									<p className="mb-1 text-[10px] font-bold uppercase tracking-wide text-pop-sky-ink sm:text-xs">
 										Нийт
 									</p>
-									<p className="text-xl sm:text-2xl font-bold text-blue-600 dark:text-blue-400">
+									<p className="text-2xl font-black text-pop-sky-ink">
 										{resultInfo.test_ttl}
 									</p>
 								</div>
 
-								<div className="bg-linear-to-br from-green-50 to-emerald-50 dark:from-green-950/30 dark:to-emerald-950/30 p-3 sm:p-4 rounded-lg sm:rounded-xl border-2 border-green-200 dark:border-green-800 text-center">
-									<CheckCircle className="w-5 h-5 sm:w-6 sm:h-6 mx-auto mb-1 sm:mb-2 text-green-600 dark:text-green-400" />
-									<p className="text-[10px] sm:text-xs text-gray-600 dark:text-gray-400 font-medium mb-1">
+								<div className="rounded-2xl bg-pop-mint-soft p-3 text-center sm:p-4">
+									<CheckCircle className="mx-auto mb-1 size-5 text-pop-mint-ink sm:mb-2 sm:size-6" />
+									<p className="mb-1 text-[10px] font-bold uppercase tracking-wide text-pop-mint-ink sm:text-xs">
 										Зөв
 									</p>
-									<p className="text-xl sm:text-2xl font-bold text-green-600 dark:text-green-400">
+									<p className="text-2xl font-black text-pop-mint-ink">
 										{resultInfo.correct_ttl}
 									</p>
 								</div>
 
-								<div className="bg-linear-to-br from-red-50 to-orange-50 dark:from-red-950/30 dark:to-orange-950/30 p-3 sm:p-4 rounded-lg sm:rounded-xl border-2 border-red-200 dark:border-red-800 text-center">
-									<XCircle className="w-5 h-5 sm:w-6 sm:h-6 mx-auto mb-1 sm:mb-2 text-red-600 dark:text-red-400" />
-									<p className="text-[10px] sm:text-xs text-gray-600 dark:text-gray-400 font-medium mb-1">
+								<div className="rounded-2xl bg-pop-coral-soft p-3 text-center sm:p-4">
+									<XCircle className="mx-auto mb-1 size-5 text-pop-coral-ink sm:mb-2 sm:size-6" />
+									<p className="mb-1 text-[10px] font-bold uppercase tracking-wide text-pop-coral-ink sm:text-xs">
 										Буруу
 									</p>
-									<p className="text-xl sm:text-2xl font-bold text-red-600 dark:text-red-400">
+									<p className="text-2xl font-black text-pop-coral-ink">
 										{resultInfo.wrong_ttl}
 									</p>
 								</div>
 							</div>
 
 							{/* Additional Info */}
-							<div className="flex flex-col sm:flex-row justify-between gap-3 sm:gap-4 p-3 sm:p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg sm:rounded-xl border border-gray-200 dark:border-gray-700 text-xs sm:text-sm">
-								<div className="flex items-center justify-center sm:justify-start gap-2">
-									<Clock className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600 dark:text-gray-400 shrink-0" />
-									<span className="text-gray-700 dark:text-gray-300">
+							<div className="flex flex-col justify-between gap-2 text-xs sm:flex-row sm:gap-3 sm:text-sm">
+								<div className="flex items-center justify-center gap-2 rounded-full bg-muted px-3 py-1.5 font-bold sm:justify-start">
+									<Clock className="size-4 shrink-0 text-muted-foreground" />
+									<span className="text-foreground">
 										{resultInfo.test_time}
 									</span>
 								</div>
-								<div className="flex items-center justify-center sm:justify-start gap-2">
-									<Zap className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600 dark:text-gray-400 shrink-0" />
-									<span className="text-gray-700 dark:text-gray-300 text-center sm:text-left">
+								<div className="flex items-center justify-center gap-2 rounded-full bg-pop-violet-soft px-3 py-1.5 font-bold sm:justify-start">
+									<Zap className="size-4 shrink-0 text-pop-violet-ink" />
+									<span className="text-center text-pop-violet-ink sm:text-left">
 										{resultInfo.unelgee}
 									</span>
 								</div>
 							</div>
 						</div>
 
-						<DialogFooter className="flex flex-col sm:flex-row gap-2 sm:gap-3 pt-4 border-t">
+						<DialogFooter className="flex flex-col gap-2 pt-2 sm:flex-row sm:gap-3">
 							<Button
-								variant="outline"
+								variant="default"
+								size="lg"
 								onClick={() => router.push("/Lists/examList")}
-								className="w-full font-semibold h-11 sm:h-12"
+								className="w-full"
 							>
 								Гарах
 							</Button>
@@ -467,28 +525,31 @@ const FinishExamResultDialog = forwardRef<
 		// Confirmation Dialog (Manual Submit)
 		return (
 			<Dialog open={open} onOpenChange={setOpen}>
+				{!hideTrigger && (
 				<DialogTrigger asChild>
 					<Button
-						variant="outline"
-						className="w-full sm:w-auto px-4 sm:px-6 py-3 sm:py-4 font-bold text-base sm:text-lg shadow-lg hover:shadow-xl transition-all flex justify-center items-center gap-2 border-green-500 text-green-600 hover:bg-green-50 dark:border-green-500 dark:text-green-400 dark:hover:bg-green-950/20"
+						variant="success"
+						size="lg"
+						className="flex w-full flex-1 items-center justify-center gap-2"
 					>
 						<span className="hidden sm:inline">
 							{isDadlaga ? "Шалгалт дуусгах" : "Шалгалт дуусгах"}
 						</span>
 						<span className="sm:hidden">Дуусгах</span>
-						<Send className="w-4 h-4 sm:w-5 sm:h-5" />
+						<Send className="size-4 sm:size-5" />
 					</Button>
 				</DialogTrigger>
+				)}
 
-				<DialogContent className="w-[95vw] max-w-[500px] sm:max-w-[600px] border-t-4 border-t-blue-500 p-4 sm:p-6 max-h-[90vh] overflow-y-auto">
-					<DialogHeader className="text-center space-y-2 sm:space-y-3">
-						<div className="mx-auto w-14 h-14 sm:w-16 sm:h-16 bg-linear-to-br from-blue-100 to-indigo-100 dark:from-blue-950 dark:to-indigo-950 rounded-full flex items-center justify-center">
-							<Flag className="w-7 h-7 sm:w-8 sm:h-8 text-blue-600 dark:text-blue-400" />
+				<DialogContent className="max-h-[90vh] w-[95vw] max-w-[500px] overflow-y-auto p-5 sm:max-w-[560px] sm:p-6">
+					<DialogHeader className="space-y-2 text-center sm:space-y-3 sm:text-center">
+						<div className="mx-auto flex size-16 items-center justify-center rounded-3xl bg-pop-mint-soft text-pop-mint-ink shadow-[0_4px_0_0_color-mix(in_oklch,var(--pop-mint)_40%,transparent)]">
+							<Flag className="size-8" strokeWidth={2.5} />
 						</div>
-						<DialogTitle className="text-xl sm:text-2xl font-bold px-2">
+						<DialogTitle className="px-2 text-xl font-black sm:text-2xl">
 							{isDadlaga ? "Шалгалт дуусгах уу?" : "Шалгалт дуусгах уу?"}
 						</DialogTitle>
-						<DialogDescription className="text-sm px-2">
+						<DialogDescription className="px-2 text-sm font-semibold">
 							{isDadlaga
 								? "Дуусгасны дараа шалгалтын үр дүн харах хуудас руу шилжих болно."
 								: "Дуусгасны дараа хариултуудыг өөрчлөх боломжгүй болно."}
@@ -496,42 +557,44 @@ const FinishExamResultDialog = forwardRef<
 					</DialogHeader>
 
 					<div className="space-y-3 sm:space-y-4 py-3 sm:py-4">
-						<div className="bg-linear-to-br from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20 rounded-xl p-3 sm:p-4 border-2 border-blue-200 dark:border-blue-800 shadow-inner">
-							<div className="flex items-center justify-between mb-3 sm:mb-4">
-								<span className="text-xs sm:text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
-									<Target className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" />
+						<div className="rounded-3xl border-2 border-border bg-muted/40 p-4">
+							<div className="mb-3 flex items-center justify-between sm:mb-4">
+								<span className="flex items-center gap-2 text-xs font-bold text-muted-foreground sm:text-sm">
+									<span className="flex size-8 items-center justify-center rounded-xl bg-pop-sky-soft text-pop-sky-ink">
+										<Target className="size-4" strokeWidth={2.5} />
+									</span>
 									<span className="hidden sm:inline">Нийт асуулт</span>
 									<span className="sm:hidden">Нийт</span>
 								</span>
-								<span className="text-2xl sm:text-3xl font-black text-blue-600 dark:text-blue-400">
+								<span className="text-2xl font-black text-foreground sm:text-3xl">
 									{totalCount}
 								</span>
 							</div>
 
 							<div className="grid grid-cols-2 gap-2 sm:gap-3 mb-3 sm:mb-4">
-								<div className="flex items-center gap-2 sm:gap-3 bg-white/70 dark:bg-gray-800/70 p-3 sm:p-4 rounded-lg shadow-sm border border-green-200 dark:border-green-800">
-									<div className="bg-green-100 dark:bg-green-900/50 rounded-full p-1.5 sm:p-2 shrink-0">
-										<CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-green-600 dark:text-green-400" />
+								<div className="flex items-center gap-2 rounded-2xl bg-pop-mint-soft p-3 sm:gap-3 sm:p-4">
+									<div className="shrink-0 rounded-xl bg-card p-1.5 sm:p-2">
+										<CheckCircle className="size-4 text-pop-mint-ink sm:size-5" />
 									</div>
 									<div className="min-w-0">
-										<p className="text-[10px] sm:text-xs text-gray-600 dark:text-gray-400 font-medium truncate">
+										<p className="truncate text-[10px] font-bold uppercase tracking-wide text-pop-mint-ink sm:text-xs">
 											Хариулсан
 										</p>
-										<p className="text-xl sm:text-2xl font-bold text-green-600 dark:text-green-400">
+										<p className="text-2xl font-black text-pop-mint-ink">
 											{answeredCount}
 										</p>
 									</div>
 								</div>
 
-								<div className="flex items-center gap-2 sm:gap-3 bg-white/70 dark:bg-gray-800/70 p-3 sm:p-4 rounded-lg shadow-sm border border-red-200 dark:border-red-800">
-									<div className="bg-red-100 dark:bg-red-900/50 rounded-full p-1.5 sm:p-2 shrink-0">
-										<XCircle className="w-4 h-4 sm:w-5 sm:h-5 text-red-600 dark:text-red-400" />
+								<div className="flex items-center gap-2 rounded-2xl bg-pop-coral-soft p-3 sm:gap-3 sm:p-4">
+									<div className="shrink-0 rounded-xl bg-card p-1.5 sm:p-2">
+										<XCircle className="size-4 text-pop-coral-ink sm:size-5" />
 									</div>
 									<div className="min-w-0">
-										<p className="text-[10px] sm:text-xs text-gray-600 dark:text-gray-400 font-medium truncate">
+										<p className="truncate text-[10px] font-bold uppercase tracking-wide text-pop-coral-ink sm:text-xs">
 											Хариулаагүй
 										</p>
-										<p className="text-xl sm:text-2xl font-bold text-red-600 dark:text-red-400">
+										<p className="text-2xl font-black text-pop-coral-ink">
 											{unansweredCount}
 										</p>
 									</div>
@@ -541,21 +604,21 @@ const FinishExamResultDialog = forwardRef<
 							<div className="space-y-2">
 								<Progress
 									value={progressPercentage}
-									className="h-2 sm:h-3 shadow-inner"
+									className="h-3"
 								/>
 							</div>
 						</div>
 
 						{unansweredCount > 0 && (
-							<div className="bg-amber-50 dark:bg-amber-950/20 border-2 border-amber-300 dark:border-amber-700 rounded-lg p-3 sm:p-4 flex items-start gap-2 sm:gap-3">
-								<div className="bg-amber-100 dark:bg-amber-900/50 rounded-full p-1 sm:p-1.5 shrink-0">
-									<XCircle className="w-4 h-4 sm:w-5 sm:h-5 text-amber-600 dark:text-amber-400" />
+							<div className="flex items-start gap-3 rounded-2xl border-2 border-warning/60 bg-pop-sun-soft p-3 sm:p-4">
+								<div className="shrink-0 rounded-xl bg-warning p-1.5">
+									<XCircle className="size-4 text-[color-mix(in_oklch,var(--warning)_22%,black)] sm:size-5" />
 								</div>
-								<div className="flex-1 min-w-0">
-									<p className="font-semibold text-amber-900 dark:text-amber-100 text-xs sm:text-sm mb-1">
+								<div className="min-w-0 flex-1">
+									<p className="mb-1 text-xs font-extrabold text-pop-sun-ink sm:text-sm">
 										Анхааруулга
 									</p>
-									<p className="text-[11px] sm:text-xs text-amber-700 dark:text-amber-300">
+									<p className="text-[11px] font-semibold text-pop-sun-ink sm:text-xs">
 										Танд {unansweredCount} хариулаагүй асуулт байна. Дуусгахаас
 										өмнө шалгана уу.
 									</p>
@@ -564,20 +627,22 @@ const FinishExamResultDialog = forwardRef<
 						)}
 					</div>
 
-					<DialogFooter className="flex flex-col sm:flex-row gap-2 sm:gap-3 pt-3 sm:pt-4 border-t">
+					<DialogFooter className="flex flex-col gap-2 pt-1 sm:flex-row sm:gap-3">
 						<Button
 							onClick={handleFinish}
 							disabled={finishMutation.isPending}
-							className="w-full font-semibold h-11 sm:h-12 bg-linear-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 shadow-lg hover:shadow-xl transition-all order-1 sm:order-2"
+							variant="success"
+							size="lg"
+							className="order-1 w-full sm:order-2"
 						>
 							{finishMutation.isPending ? (
 								<>
-									<Loader2 className="mr-2 h-4 w-4 sm:h-5 sm:w-5 animate-spin" />
+									<Loader2 className="size-4 animate-spin sm:size-5" />
 									<span className="text-sm sm:text-base">Дуусгаж байна...</span>
 								</>
 							) : (
 								<>
-									<Send className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
+									<Send className="size-4 sm:size-5" />
 									<span className="text-sm sm:text-base">Тийм, дуусгах</span>
 								</>
 							)}

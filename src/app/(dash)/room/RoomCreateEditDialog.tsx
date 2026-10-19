@@ -134,22 +134,27 @@ export function RoomCreateEditDialog({
 			<DialogContent className="sm:max-w-md">
 				<form onSubmit={form.handleSubmit((data) => mutation.mutate(data))}>
 					<DialogHeader>
-						<DialogTitle>{isEdit ? "Өрөө засах" : "Өрөө бүртгэх"}</DialogTitle>
-						<DialogDescription>Мэдээллээ бүрэн оруулна уу.</DialogDescription>
+						<DialogTitle className="flex items-center gap-3 text-xl font-black">
+							<span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-pop-sun-soft text-pop-sun-ink">
+								<DoorOpen className="size-5" strokeWidth={2.5} />
+							</span>
+							{isEdit ? "Өрөө засах" : "Өрөө бүртгэх"}
+						</DialogTitle>
+						<DialogDescription className="font-semibold">Мэдээллээ бүрэн оруулна уу.</DialogDescription>
 					</DialogHeader>
 
-					<FieldGroup className="mt-4 gap-3">
+					<FieldGroup className="mt-5 gap-4">
 						<Controller
 							name="branchname"
 							control={form.control}
 							render={({ field, fieldState }) => (
 								<Field data-invalid={fieldState.invalid}>
-									<FieldLabel>Хичээлийн байр </FieldLabel>
-									<div className="relative ">
-										<MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+									<FieldLabel className="font-bold">Хичээлийн байр </FieldLabel>
+									<div className="relative">
+										<MapPin className="absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-pop-pink-ink" strokeWidth={2.5} />
 										<Input
 											{...field}
-											className="pl-9"
+											className="h-11 rounded-xl pl-10"
 											placeholder="Хичээлийн байр "
 										/>
 									</div>
@@ -165,12 +170,12 @@ export function RoomCreateEditDialog({
 							control={form.control}
 							render={({ field, fieldState }) => (
 								<Field data-invalid={fieldState.invalid}>
-									<FieldLabel>Шалгалт авах өрөөний нэр</FieldLabel>
-									<div className="relative ">
-										<Building className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+									<FieldLabel className="font-bold">Шалгалт авах өрөөний нэр</FieldLabel>
+									<div className="relative">
+										<Building className="absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-pop-violet-ink" strokeWidth={2.5} />
 										<Input
 											{...field}
-											className="pl-9"
+											className="h-11 rounded-xl pl-10"
 											aria-invalid={fieldState.invalid}
 											placeholder="Шалгалт авах өрөөний нэр"
 										/>
@@ -188,12 +193,12 @@ export function RoomCreateEditDialog({
 							control={form.control}
 							render={({ field, fieldState }) => (
 								<Field data-invalid={fieldState.invalid}>
-									<FieldLabel>Өрөөний дугаар </FieldLabel>
-									<div className="relative ">
-										<DoorOpen className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+									<FieldLabel className="font-bold">Өрөөний дугаар </FieldLabel>
+									<div className="relative">
+										<DoorOpen className="absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-pop-sun-ink" strokeWidth={2.5} />
 										<Input
 											{...field}
-											className="pl-9"
+											className="h-11 rounded-xl pl-10"
 											type="num"
 											aria-invalid={fieldState.invalid}
 											placeholder="Өрөөний дугаар"
@@ -213,12 +218,12 @@ export function RoomCreateEditDialog({
 							control={form.control}
 							render={({ field, fieldState }) => (
 								<Field data-invalid={fieldState.invalid}>
-									<FieldLabel>Компьютер / Төхөөрөмжийн тоо</FieldLabel>
-									<div className="relative ">
-										<Monitor className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+									<FieldLabel className="font-bold">Компьютер / Төхөөрөмжийн тоо</FieldLabel>
+									<div className="relative">
+										<Monitor className="absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-pop-sky-ink" strokeWidth={2.5} />
 										<Input
 											{...field}
-											className="pl-9"
+											className="h-11 rounded-xl pl-10"
 											type="number"
 											aria-invalid={fieldState.invalid}
 											placeholder="Компьютер / Төхөөрөмжийн тоо"
@@ -254,12 +259,12 @@ export function RoomCreateEditDialog({
 							control={form.control}
 							render={({ field, fieldState }) => (
 								<Field data-invalid={fieldState.invalid}>
-									<FieldLabel>Тайлбар</FieldLabel>
-									<div className="relative ">
-										<AlignLeft className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
+									<FieldLabel className="font-bold">Тайлбар</FieldLabel>
+									<div className="relative">
+										<AlignLeft className="absolute top-3 left-3.5 size-4 text-pop-violet-ink" strokeWidth={2.5} />
 										<Textarea
 											{...field}
-											className="pl-9 min-h-20 resize-none"
+											className="min-h-20 resize-none rounded-xl pl-10"
 											placeholder="Өрөөний дэлгэрэнгүй..."
 										/>
 									</div>
@@ -273,13 +278,13 @@ export function RoomCreateEditDialog({
 
 					<DialogFooter className="mt-6">
 						<DialogClose asChild>
-							<Button type="button" variant="ghost">
+							<Button type="button" variant="outline">
 								Цуцлах
 							</Button>
 						</DialogClose>
 						<Button type="submit" disabled={mutation.isPending}>
 							{mutation.isPending ? (
-								<Loader2 className="h-4 w-4 animate-spin" />
+								<Loader2 className="size-4 animate-spin" />
 							) : (
 								"Хадгалах"
 							)}

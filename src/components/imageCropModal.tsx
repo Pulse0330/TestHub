@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, RotateCcw, X, ZoomIn, ZoomOut } from "lucide-react";
+import { Check, Crop, RotateCcw, X, ZoomIn, ZoomOut } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -316,21 +316,28 @@ export function ImageCropModal({
 
 	return (
 		<Dialog open={open} onOpenChange={(v) => !v && onCancel()}>
-			<DialogContent className="sm:max-w-md rounded-2xl p-0 overflow-hidden gap-0">
-				<DialogHeader className="px-5 pt-4 pb-3">
-					<DialogTitle className="text-sm font-bold">
-						Зургийг тааруулах{" "}
-						<span className="text-muted-foreground font-normal">(3×4)</span>
-					</DialogTitle>
-					<p className="text-[11px] text-muted-foreground mt-0.5">
-						Зургийг чирж байрлуулах, scroll / товчлуур ашиглан томруулна уу
-					</p>
+			<DialogContent className="sm:max-w-md rounded-3xl border-2 p-0 overflow-hidden gap-0">
+				<DialogHeader className="px-5 pt-5 pb-4">
+					<div className="flex items-center gap-3 text-left">
+						<span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-pop-violet-soft text-pop-violet-ink shadow-[0_3px_0_0_color-mix(in_oklch,var(--pop-violet)_30%,transparent)]">
+							<Crop className="size-5" strokeWidth={2.5} />
+						</span>
+						<div className="min-w-0">
+							<DialogTitle className="text-base font-black">
+								Зургийг тааруулах{" "}
+								<span className="ml-1 inline-flex items-center rounded-full bg-pop-sky-soft px-2 py-0.5 align-middle text-[11px] font-extrabold text-pop-sky-ink">(3×4)</span>
+							</DialogTitle>
+							<p className="mt-0.5 text-xs font-semibold text-muted-foreground">
+								Зургийг чирж байрлуулах, scroll / товчлуур ашиглан томруулна уу
+							</p>
+						</div>
+					</div>
 				</DialogHeader>
 
 				<div className="px-5">
 					<div
 						ref={containerRef}
-						className="relative mx-auto overflow-hidden rounded-xl border border-border select-none"
+						className="relative mx-auto overflow-hidden rounded-2xl border-2 border-border bg-muted shadow-[0_4px_0_0_var(--border)] select-none"
 						style={{ width: canvasSize.w, height: canvasSize.h }}
 					>
 						<canvas
@@ -350,7 +357,7 @@ export function ImageCropModal({
 							}}
 						/>
 						{!imgLoaded && (
-							<div className="absolute inset-0 flex items-center justify-center bg-muted/50">
+							<div className="absolute inset-0 flex items-center justify-center bg-muted">
 								<svg
 									className="animate-spin w-8 h-8 text-primary"
 									viewBox="0 0 24 24"
@@ -377,17 +384,17 @@ export function ImageCropModal({
 				</div>
 
 				{/* Zoom controls */}
-				<div className="flex items-center justify-center gap-2 px-5 pt-3">
+				<div className="mx-5 mt-4 flex items-center justify-center gap-2 rounded-2xl bg-muted p-2">
 					<Button
 						type="button"
 						variant="outline"
-						size="sm"
+						size="icon-sm"
 						onClick={zoomOut}
-						className="h-8 w-8 p-0"
+						className="size-9"
 					>
-						<ZoomOut size={14} />
+						<ZoomOut className="size-4" strokeWidth={2.5} />
 					</Button>
-					<div className="flex-1 relative h-1.5 bg-muted rounded-full overflow-hidden max-w-[140px]">
+					<div className="flex-1 relative h-2.5 bg-card border-2 border-border rounded-full overflow-hidden max-w-[160px]">
 						<div
 							className="absolute left-0 top-0 h-full bg-primary rounded-full transition-all"
 							style={{
@@ -398,40 +405,40 @@ export function ImageCropModal({
 					<Button
 						type="button"
 						variant="outline"
-						size="sm"
+						size="icon-sm"
 						onClick={zoomIn}
-						className="h-8 w-8 p-0"
+						className="size-9"
 					>
-						<ZoomIn size={14} />
+						<ZoomIn className="size-4" strokeWidth={2.5} />
 					</Button>
 					<Button
 						type="button"
 						variant="ghost"
-						size="sm"
+						size="icon-sm"
 						onClick={resetPosition}
-						className="h-8 w-8 p-0 text-muted-foreground"
+						className="size-9 text-muted-foreground hover:text-primary"
 					>
-						<RotateCcw size={13} />
+						<RotateCcw className="size-4" strokeWidth={2.5} />
 					</Button>
 				</div>
 
 				{/* Actions */}
-				<div className="flex gap-2 px-5 py-4">
+				<div className="flex gap-3 px-5 pt-4 pb-5">
 					<Button
 						type="button"
 						variant="outline"
-						className="flex-1 h-9 text-xs gap-1.5"
+						className="flex-1"
 						onClick={onCancel}
 					>
-						<X size={13} /> Цуцлах
+						<X className="size-4" strokeWidth={2.5} /> Цуцлах
 					</Button>
 					<Button
 						type="button"
-						className="flex-1 h-9 text-xs gap-1.5"
+						className="flex-1"
 						onClick={handleConfirm}
 						disabled={!imgLoaded}
 					>
-						<Check size={13} /> Хадгалах
+						<Check className="size-4" strokeWidth={2.75} /> Хадгалах
 					</Button>
 				</div>
 			</DialogContent>

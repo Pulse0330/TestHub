@@ -136,87 +136,87 @@ const ExamTimer = memo(function ExamTimer({
 	const config = useMemo(() => {
 		if (status === "ended" || isDanger) {
 			return {
-				border: "border-red-300 dark:border-red-700",
-				bg: "bg-white dark:bg-slate-900",
+				border: "border-destructive shadow-[0_4px_0_0_color-mix(in_oklch,var(--destructive)_45%,transparent)]",
+				bg: "bg-destructive/10",
 				icon: AlertCircle,
-				iconColor: "text-red-600 dark:text-red-400",
-				timerColor: "text-red-600 dark:text-red-400",
+				iconColor: "bg-destructive text-white",
+				timerColor: "text-destructive",
 			};
 		}
 		if (isWarning) {
 			return {
-				border: "border-yellow-300 dark:border-yellow-700",
-				bg: "bg-white dark:bg-slate-900",
+				border: "border-warning shadow-[0_4px_0_0_color-mix(in_oklch,var(--warning)_55%,transparent)]",
+				bg: "bg-pop-sun-soft",
 				icon: Clock,
-				iconColor: "text-yellow-600 dark:text-yellow-400",
-				timerColor: "text-yellow-600 dark:text-yellow-400",
+				iconColor: "bg-warning text-[color-mix(in_oklch,var(--warning)_22%,black)]",
+				timerColor: "text-pop-sun-ink",
 			};
 		}
 		return {
-			border: "border-green-200 dark:border-green-700",
-			bg: "bg-white dark:bg-slate-900",
+			border: "border-border shadow-[0_4px_0_0_var(--border)]",
+			bg: "bg-card",
 			icon: PlayCircle,
-			iconColor: "text-green-600 dark:text-green-400",
-			timerColor: "text-green-600 dark:text-green-400",
+			iconColor: "bg-primary/10 text-primary",
+			timerColor: "text-foreground",
 		};
 	}, [status, isDanger, isWarning]);
 
 	if (isLoading || currentTimeMs === null) {
 		return (
-			<div className="w-full max-w-2xl mx-auto">
-				<div className="bg-white dark:bg-slate-900 rounded-lg sm:rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-4 sm:p-6 md:p-8">
-					<div className="flex items-center justify-center gap-2 sm:gap-3 text-slate-600 dark:text-slate-400">
-						<Clock className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 animate-spin" />
-						<span className="text-sm sm:text-base md:text-lg">
-							Ачааллаж байна...
-						</span>
-					</div>
+			<div className="w-full">
+				<div className="inline-flex w-full items-center justify-center gap-2 rounded-2xl border-2 border-border bg-card px-4 py-2.5 text-muted-foreground shadow-[0_4px_0_0_var(--border)]">
+					<Clock className="size-5 animate-spin" />
+					<span className="text-sm font-bold">Ачааллаж байна...</span>
 				</div>
 			</div>
 		);
 	}
 
+	const StatusIcon = config.icon;
+
 	return (
-		<div className="w-full max-w-2xl mx-auto">
+		<div className="w-full">
 			<div
-				className={`rounded-lg sm:rounded-xl lg:rounded-2xl shadow-lg border-2 ${config.border} ${config.bg} w-full overflow-hidden transition-all duration-300 relative`}
+				className={`relative flex w-full items-center gap-3 overflow-visible rounded-2xl border-2 px-3 py-2 transition-all duration-300 ${config.border} ${config.bg}`}
 			>
 				{!isOnline && (
-					<div className="absolute top-1.5 right-1.5 sm:top-2 sm:right-2 md:top-3 md:right-3 z-10">
-						<div className="bg-amber-500 text-white text-[9px] sm:text-[10px] md:text-xs px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full font-bold flex items-center gap-1 shadow-md">
-							<div className="w-1 h-1 sm:w-1.5 sm:h-1.5 bg-white rounded-full animate-pulse" />
+					<div className="absolute -top-2.5 -right-2 z-10">
+						<div className="flex items-center gap-1 rounded-full bg-warning px-2 py-0.5 text-[10px] font-black text-[color-mix(in_oklch,var(--warning)_22%,black)] shadow-[0_2px_0_0_color-mix(in_oklch,var(--warning)_60%,black)]">
+							<div className="size-1.5 animate-pulse rounded-full bg-current" />
 							<span className="hidden xs:inline">Offline</span>
 							<span className="xs:hidden">OFF</span>
 						</div>
 					</div>
 				)}
 
-				<div className="p-4">
-					<div className="text-center">
-						<div
-							className={`font-mono font-black ${config.timerColor} tracking-tight`}
-						>
-							{formattedTime}
-						</div>
-					</div>
+				<span
+					className={`flex size-9 shrink-0 items-center justify-center rounded-xl ${config.iconColor}`}
+				>
+					<StatusIcon className="size-5" strokeWidth={2.5} />
+				</span>
 
-					{status === "ongoing" && isDanger && (
-						<div className="mt-4 sm:mt-6 md:mt-8 bg-red-100 dark:bg-red-900/40 border-2 border-red-300 dark:border-red-700 rounded-lg sm:rounded-xl p-3 sm:p-4 md:p-6 animate-pulse shadow-lg">
-							<p className="text-center font-black text-red-700 dark:text-red-300 text-sm sm:text-base md:text-lg lg:text-xl">
-								⚠️ Цаг дуусч байна! Шалгалтаа дүүргээрэй!
-							</p>
-						</div>
-					)}
-
-					{status === "ended" && (
-						<div className="mt-4 sm:mt-6 md:mt-8 bg-red-100 dark:bg-red-900/40 border-2 border-red-300 dark:border-red-700 rounded-lg sm:rounded-xl p-3 sm:p-4 md:p-6 shadow-lg">
-							<p className="text-center font-black text-red-700 dark:text-red-300 text-sm sm:text-base md:text-lg lg:text-xl">
-								🛑 Шалгалтын цаг дууслаа. Автоматаар дуусгаж байна...
-							</p>
-						</div>
-					)}
+				<div
+					className={`font-black text-2xl leading-none tracking-tight tabular-nums ${config.timerColor}`}
+				>
+					{formattedTime}
 				</div>
 			</div>
+
+			{status === "ongoing" && isDanger && (
+				<div className="mt-2 animate-pulse rounded-2xl border-2 border-destructive/40 bg-destructive/10 px-3 py-2">
+					<p className="text-center text-xs font-black text-destructive sm:text-sm">
+						⚠️ Цаг дуусч байна! Шалгалтаа дүүргээрэй!
+					</p>
+				</div>
+			)}
+
+			{status === "ended" && (
+				<div className="mt-2 rounded-2xl border-2 border-destructive/40 bg-destructive/10 px-3 py-2">
+					<p className="text-center text-xs font-black text-destructive sm:text-sm">
+						🛑 Шалгалтын цаг дууслаа. Автоматаар дуусгаж байна...
+					</p>
+				</div>
+			)}
 		</div>
 	);
 });

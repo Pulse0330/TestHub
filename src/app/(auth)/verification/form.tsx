@@ -1,18 +1,22 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Loader2 } from "lucide-react";
+import {
+	IdCard,
+	KeyRound,
+	Loader2,
+	Lock,
+	Mail,
+	Phone,
+	Save,
+	User,
+	Users,
+} from "lucide-react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 
+import { AUTH_INPUT_ICON_CLASS, AuthShell } from "@/app/(auth)/login/form";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import {
-	Card,
-	CardContent,
-	CardDescription,
-	CardHeader,
-	CardTitle,
-} from "@/components/ui/card";
 import {
 	Form,
 	FormControl,
@@ -113,49 +117,56 @@ export default function RegistrationForm() {
 	};
 
 	return (
-		<Card className="w-full max-w-md bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl border border-gray-200/50 dark:border-gray-700/50 shadow-xl">
-			<CardHeader className="space-y-1">
-				<div className="flex items-center gap-2">
-					<CardTitle className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-						EXMO
-					</CardTitle>
-					<span className="text-2xl">✌️</span>
+		<AuthShell>
+			<div className="px-6 pt-6 pb-2 sm:px-8 sm:pt-8">
+				<div className="flex items-center gap-3">
+					<div className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-pop-pink-soft text-2xl shadow-[0_4px_0_0_color-mix(in_oklch,var(--pop-pink)_35%,transparent)]">
+						<span aria-hidden="true">✌️</span>
+					</div>
+					<div className="min-w-0">
+						<h2 className="text-gradient text-2xl font-black tracking-tight">
+							EXMO
+						</h2>
+						<p className="text-sm font-semibold text-muted-foreground">
+							Та хувийн мэдээллээ бүртгүүлж баталгаажуулна уу
+						</p>
+					</div>
 				</div>
-				<CardDescription className="font-medium">
-					Та хувийн мэдээллээ бүртгүүлж баталгаажуулна уу
-				</CardDescription>
-			</CardHeader>
+			</div>
 
 			<Form {...form}>
-				<CardContent className="space-y-4">
+				<div className="space-y-4 px-6 pt-5 pb-6 sm:px-8 sm:pb-8">
 					{/* Амжилт/Алдааны мэдэгдэл */}
 					{successMessage && (
-						<Alert className="bg-green-50 dark:bg-green-950 border-green-200 dark:border-green-800">
-							<AlertDescription className="text-green-800 dark:text-green-200">
+						<Alert className="animate-pop-in rounded-2xl border-2 border-success/30 bg-success/10">
+							<AlertDescription className="font-bold text-success">
 								{successMessage}
 							</AlertDescription>
 						</Alert>
 					)}
 
 					{errorMessage && (
-						<Alert className="bg-red-50 dark:bg-red-950 border-red-200 dark:border-red-800">
-							<AlertDescription className="text-red-800 dark:text-red-200">
+						<Alert className="animate-pop-in rounded-2xl border-2 border-destructive/30 bg-destructive/10">
+							<AlertDescription className="font-bold text-destructive">
 								{errorMessage}
 							</AlertDescription>
 						</Alert>
 					)}
 
 					{/* Овог, Нэр */}
-					<div className="grid grid-cols-2 gap-3">
+					<div className="grid grid-cols-1 gap-3 min-[400px]:grid-cols-2">
 						<FormField
 							control={form.control}
 							name="lastname"
 							render={({ field }) => (
 								<FormItem>
-									<FormLabel>Овог</FormLabel>
-									<FormControl>
-										<Input placeholder="ads" {...field} disabled={isPending} />
-									</FormControl>
+									<FormLabel className="text-sm font-bold text-foreground">Овог</FormLabel>
+									<div className="relative">
+										<FormControl>
+											<Input className="peer pl-11" placeholder="ads" {...field} disabled={isPending} />
+										</FormControl>
+										<Users className={AUTH_INPUT_ICON_CLASS} strokeWidth={2.5} />
+									</div>
 									<FormMessage />
 								</FormItem>
 							)}
@@ -166,10 +177,13 @@ export default function RegistrationForm() {
 							name="firstname"
 							render={({ field }) => (
 								<FormItem>
-									<FormLabel>Нэр</FormLabel>
-									<FormControl>
-										<Input placeholder="Нэр" {...field} disabled={isPending} />
-									</FormControl>
+									<FormLabel className="text-sm font-bold text-foreground">Нэр</FormLabel>
+									<div className="relative">
+										<FormControl>
+											<Input className="peer pl-11" placeholder="Нэр" {...field} disabled={isPending} />
+										</FormControl>
+										<User className={AUTH_INPUT_ICON_CLASS} strokeWidth={2.5} />
+									</div>
 									<FormMessage />
 								</FormItem>
 							)}
@@ -177,21 +191,25 @@ export default function RegistrationForm() {
 					</div>
 
 					{/* И-мэйл, Утасны дугаар */}
-					<div className="grid grid-cols-2 gap-3">
+					<div className="grid grid-cols-1 gap-3 min-[400px]:grid-cols-2">
 						<FormField
 							control={form.control}
 							name="email"
 							render={({ field }) => (
 								<FormItem>
-									<FormLabel>И-мэйл</FormLabel>
-									<FormControl>
-										<Input
-											placeholder="sadadasdw@medle.mn"
-											type="email"
-											{...field}
-											disabled={isPending}
-										/>
-									</FormControl>
+									<FormLabel className="text-sm font-bold text-foreground">И-мэйл</FormLabel>
+									<div className="relative">
+										<FormControl>
+											<Input
+												className="peer pl-11"
+												placeholder="sadadasdw@medle.mn"
+												type="email"
+												{...field}
+												disabled={isPending}
+											/>
+										</FormControl>
+										<Mail className={AUTH_INPUT_ICON_CLASS} strokeWidth={2.5} />
+									</div>
 									<FormMessage />
 								</FormItem>
 							)}
@@ -202,16 +220,20 @@ export default function RegistrationForm() {
 							name="phone"
 							render={({ field }) => (
 								<FormItem>
-									<FormLabel>Утасны дугаар</FormLabel>
-									<FormControl>
-										<Input
-											placeholder="88683329"
-											type="tel"
-											maxLength={8}
-											{...field}
-											disabled={isPending}
-										/>
-									</FormControl>
+									<FormLabel className="text-sm font-bold text-foreground">Утасны дугаар</FormLabel>
+									<div className="relative">
+										<FormControl>
+											<Input
+												className="peer pl-11"
+												placeholder="88683329"
+												type="tel"
+												maxLength={8}
+												{...field}
+												disabled={isPending}
+											/>
+										</FormControl>
+										<Phone className={AUTH_INPUT_ICON_CLASS} strokeWidth={2.5} />
+									</div>
 									<FormMessage />
 								</FormItem>
 							)}
@@ -224,12 +246,15 @@ export default function RegistrationForm() {
 						name="regnumber"
 						render={({ field }) => (
 							<FormItem>
-								<FormLabel>РД</FormLabel>
-								<FormControl>
-									<Input placeholder="РД" {...field} disabled={isPending} />
-								</FormControl>
+								<FormLabel className="text-sm font-bold text-foreground">РД</FormLabel>
+								<div className="relative">
+									<FormControl>
+										<Input className="peer pl-11" placeholder="РД" {...field} disabled={isPending} />
+									</FormControl>
+									<IdCard className={AUTH_INPUT_ICON_CLASS} strokeWidth={2.5} />
+								</div>
 								<FormMessage />
-								<p className="text-xs text-muted-foreground mt-1">
+								<p className="mt-1 text-xs font-semibold text-muted-foreground">
 									Өөрийн ашигладаг и-мэйл хаяг, утасны дугаараа оруулна уу.
 								</p>
 							</FormItem>
@@ -237,16 +262,16 @@ export default function RegistrationForm() {
 					/>
 
 					{/* Аймаг/Нийслэл, Сум/Дүүрэг */}
-					<div className="grid grid-cols-2 gap-3">
+					<div className="grid grid-cols-1 gap-3 min-[400px]:grid-cols-2">
 						<FormField
 							control={form.control}
 							name="aimag"
 							render={({ field }) => (
 								<FormItem>
-									<FormLabel>Аймаг / Нийслэл</FormLabel>
+									<FormLabel className="text-sm font-bold text-foreground">Аймаг / Нийслэл</FormLabel>
 									<Select onValueChange={field.onChange} value={field.value}>
 										<FormControl>
-											<SelectTrigger disabled={isPending}>
+											<SelectTrigger disabled={isPending} className="w-full">
 												<SelectValue placeholder="Хөвсгөл аймаг" />
 											</SelectTrigger>
 										</FormControl>
@@ -267,10 +292,10 @@ export default function RegistrationForm() {
 							name="sum"
 							render={({ field }) => (
 								<FormItem>
-									<FormLabel>Сум / Дүүрэг</FormLabel>
+									<FormLabel className="text-sm font-bold text-foreground">Сум / Дүүрэг</FormLabel>
 									<Select onValueChange={field.onChange} value={field.value}>
 										<FormControl>
-											<SelectTrigger disabled={isPending}>
+											<SelectTrigger disabled={isPending} className="w-full">
 												<SelectValue placeholder="Ханх сум" />
 											</SelectTrigger>
 										</FormControl>
@@ -287,16 +312,16 @@ export default function RegistrationForm() {
 					</div>
 
 					{/* Сургууль, Анги */}
-					<div className="grid grid-cols-2 gap-3">
+					<div className="grid grid-cols-1 gap-3 min-[400px]:grid-cols-2">
 						<FormField
 							control={form.control}
 							name="school"
 							render={({ field }) => (
 								<FormItem>
-									<FormLabel>Сургууль</FormLabel>
+									<FormLabel className="text-sm font-bold text-foreground">Сургууль</FormLabel>
 									<Select onValueChange={field.onChange} value={field.value}>
 										<FormControl>
-											<SelectTrigger disabled={isPending}>
+											<SelectTrigger disabled={isPending} className="w-full">
 												<SelectValue placeholder="Сонгоно уу" />
 											</SelectTrigger>
 										</FormControl>
@@ -316,10 +341,10 @@ export default function RegistrationForm() {
 							name="angi"
 							render={({ field }) => (
 								<FormItem>
-									<FormLabel>Анги</FormLabel>
+									<FormLabel className="text-sm font-bold text-foreground">Анги</FormLabel>
 									<Select onValueChange={field.onChange} value={field.value}>
 										<FormControl>
-											<SelectTrigger disabled={isPending}>
+											<SelectTrigger disabled={isPending} className="w-full">
 												<SelectValue placeholder="Бүлэг" />
 											</SelectTrigger>
 										</FormControl>
@@ -337,21 +362,25 @@ export default function RegistrationForm() {
 					</div>
 
 					{/* Нууц үг, Нууц үг давтах */}
-					<div className="grid grid-cols-2 gap-3">
+					<div className="grid grid-cols-1 gap-3 min-[400px]:grid-cols-2">
 						<FormField
 							control={form.control}
 							name="password"
 							render={({ field }) => (
 								<FormItem>
-									<FormLabel>Нууц үг</FormLabel>
-									<FormControl>
-										<Input
-											placeholder="Нууц үг"
-											type="password"
-											{...field}
-											disabled={isPending}
-										/>
-									</FormControl>
+									<FormLabel className="text-sm font-bold text-foreground">Нууц үг</FormLabel>
+									<div className="relative">
+										<FormControl>
+											<Input
+												className="peer pl-11"
+												placeholder="Нууц үг"
+												type="password"
+												{...field}
+												disabled={isPending}
+											/>
+										</FormControl>
+										<Lock className={AUTH_INPUT_ICON_CLASS} strokeWidth={2.5} />
+									</div>
 									<FormMessage />
 								</FormItem>
 							)}
@@ -362,15 +391,19 @@ export default function RegistrationForm() {
 							name="confirmPassword"
 							render={({ field }) => (
 								<FormItem>
-									<FormLabel>Нууц үг давтах</FormLabel>
-									<FormControl>
-										<Input
-											placeholder="Нууц үг"
-											type="password"
-											{...field}
-											disabled={isPending}
-										/>
-									</FormControl>
+									<FormLabel className="text-sm font-bold text-foreground">Нууц үг давтах</FormLabel>
+									<div className="relative">
+										<FormControl>
+											<Input
+												className="peer pl-11"
+												placeholder="Нууц үг"
+												type="password"
+												{...field}
+												disabled={isPending}
+											/>
+										</FormControl>
+										<KeyRound className={AUTH_INPUT_ICON_CLASS} strokeWidth={2.5} />
+									</div>
 									<FormMessage />
 								</FormItem>
 							)}
@@ -380,18 +413,19 @@ export default function RegistrationForm() {
 					{/* Бүртгүүлэх товч */}
 					<Button
 						type="submit"
-						className="w-full h-11 bg-blue-600 hover:bg-blue-700 text-white font-semibold"
+						size="lg"
+						className="mt-2 w-full"
 						disabled={isPending}
 						onClick={(e) => {
 							e.preventDefault();
 							form.handleSubmit(handleSubmit)();
 						}}
 					>
-						{isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+						{isPending ? <Loader2 className="size-5 animate-spin" /> : <Save className="size-5" strokeWidth={2.5} />}
 						{isPending ? "Хадгалж байна..." : "ХАДГАЛАХ"}
 					</Button>
-				</CardContent>
+				</div>
 			</Form>
-		</Card>
+		</AuthShell>
 	);
 }

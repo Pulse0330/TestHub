@@ -94,30 +94,40 @@ export function IDashboardHeader() {
 	const isActive = (path: string) => pathname === path;
 
 	return (
-		<header className="w-full border bg-background/95 backdrop-blur rounded-2xl shadow-lg relative z-50 max-w-7xl mx-auto">
-			<div className="flex h-16 items-center justify-between gap-4 px-4 md:px-6">
+		<header className="card-pop relative z-50 mx-auto w-full max-w-7xl rounded-3xl">
+			<div className="flex h-16 items-center justify-between gap-3 px-3 md:px-5">
 				{/* 1. Logo */}
-				<Link href="/" className="flex items-center gap-2 shrink-0">
-					<Image
-						src="/image/logoLogin.png"
-						alt="ECM Logo"
-						width={40}
-						height={40}
-						className="object-contain"
-						priority
-					/>
+				<Link href="/" className="group flex shrink-0 items-center gap-2.5">
+					<span className="flex size-10 items-center justify-center rounded-2xl border-2 border-border bg-card shadow-[0_3px_0_0_var(--border)] transition-transform group-hover:animate-wiggle">
+						<Image
+							src="/image/logoLogin.png"
+							alt="ECM Logo"
+							width={40}
+							height={40}
+							className="size-7 object-contain"
+							priority
+						/>
+					</span>
+					<span className="hidden text-xl font-black tracking-tight text-gradient sm:inline">
+						EXMO
+					</span>
 				</Link>
 
 				{/* 2. Desktop Navigation (Hidden on Mobile) */}
 				<div className="hidden lg:block">
 					<NavigationMenu delayDuration={0}>
-						<NavigationMenuList>
+						<NavigationMenuList className="gap-1">
 							{menuItems.map((item) => (
 								<NavigationMenuItem key={item.title}>
 									{
 										<Link
 											href={item.href || "#"}
-											className={navigationMenuTriggerStyle()}
+											className={cn(
+												navigationMenuTriggerStyle(),
+												"h-10 rounded-full px-4 text-sm font-bold text-muted-foreground hover:bg-muted hover:text-foreground",
+												isActive(item.href || "") &&
+													"bg-primary/10 text-primary hover:bg-primary/15 hover:text-primary",
+											)}
 										>
 											{item.title}
 										</Link>
@@ -137,51 +147,63 @@ export function IDashboardHeader() {
 
 						<DropdownMenu>
 							<DropdownMenuTrigger asChild>
-								<Button variant="ghost" className="gap-2 px-2 md:px-3 h-10">
+								<Button
+									variant="ghost"
+									className="h-11 gap-2 rounded-2xl border-2 border-border bg-card px-1.5 shadow-[0_3px_0_0_var(--border)] hover:bg-muted active:translate-y-0.5 active:shadow-none md:pr-3"
+								>
 									<UserAvatar
 										userImage={userInfo.userImage}
 										userName={userInfo.userName}
 										size="sm"
 										showOnlineStatus
 									/>
-									<span className="hidden md:block text-sm font-medium max-w-25 truncate">
+									<span className="hidden max-w-25 truncate text-sm font-extrabold md:block">
 										{userInfo.userName}
 									</span>
 								</Button>
 							</DropdownMenuTrigger>
-							<DropdownMenuContent align="end" className="w-64">
-								<DropdownMenuLabel>
+							<DropdownMenuContent align="end" className="w-64 p-1.5">
+								<DropdownMenuLabel className="rounded-xl bg-muted/60 p-2.5">
 									<div className="flex items-center gap-3">
 										<UserAvatar
 											userImage={userInfo.userImage}
 											userName={userInfo.userName}
 											size="md"
 										/>
-										<div className="flex-1 min-w-0">
-											<p className="text-sm font-semibold truncate">
+										<div className="min-w-0 flex-1">
+											<p className="truncate text-sm font-extrabold">
 												{userInfo.userName}
 											</p>
-											<p className="text-xs text-muted-foreground truncate">
+											<p className="truncate text-xs font-semibold text-muted-foreground">
 												{userInfo.schoolName}
 											</p>
 										</div>
 									</div>
 								</DropdownMenuLabel>
-								<DropdownMenuSeparator />
+								<DropdownMenuSeparator className="my-1.5" />
 								<div className="px-2 py-1.5">
 									<span className="size-4">
 										<AnimatedThemeToggler />
 									</span>
 								</div>
-								<DropdownMenuItem onClick={() => router.push("/userProfile")}>
-									<UserCircle className="w-4 h-4 mr-2" /> Профайл
+								<DropdownMenuItem
+									onClick={() => router.push("/userProfile")}
+									className="cursor-pointer gap-3 rounded-xl px-3 py-2.5 text-sm font-bold"
+								>
+									<span className="flex size-7 items-center justify-center rounded-lg bg-pop-violet-soft text-pop-violet-ink">
+										<UserCircle className="size-4" />
+									</span>
+									Профайл
 								</DropdownMenuItem>
-								<DropdownMenuSeparator />
+								<DropdownMenuSeparator className="my-1.5" />
 								<DropdownMenuItem
 									onClick={() => setShowLogoutDialog(true)}
-									className="text-red-600"
+									className="cursor-pointer gap-3 rounded-xl px-3 py-2.5 text-sm font-bold text-destructive focus:bg-pop-coral-soft focus:text-destructive"
 								>
-									<LogOut className="w-4 h-4 mr-2" /> Гарах
+									<span className="flex size-7 items-center justify-center rounded-lg bg-pop-coral-soft text-pop-coral-ink">
+										<LogOut className="size-4" />
+									</span>
+									Гарах
 								</DropdownMenuItem>
 							</DropdownMenuContent>
 						</DropdownMenu>
@@ -190,43 +212,48 @@ export function IDashboardHeader() {
 						<div className="lg:hidden">
 							<Sheet open={open} onOpenChange={setOpen}>
 								<SheetTrigger asChild>
-									<Button variant="outline" size="icon" className="h-10 w-10">
-										<Menu className="h-5 w-5" />
+									<Button variant="outline" size="icon" className="size-11 rounded-2xl">
+										<Menu className="size-5" />
 									</Button>
 								</SheetTrigger>
-								<SheetContent side="left" className="w-[300px] sm:w-[350px]">
+								<SheetContent side="left" className="w-[300px] rounded-r-3xl border-r-2 sm:w-[350px]">
 									<SheetHeader className="text-left">
-										<SheetTitle className="flex items-center gap-2">
-											<Image
-												src="/image/logoLogin.png"
-												alt="Logo"
-												width={32}
-												height={32}
-												priority
-												style={{ height: "auto" }}
-											/>
-											ECM System
+										<SheetTitle className="flex items-center gap-2.5">
+											<span className="flex size-10 items-center justify-center rounded-2xl border-2 border-border bg-card shadow-[0_3px_0_0_var(--border)]">
+												<Image
+													src="/image/logoLogin.png"
+													alt="Logo"
+													width={32}
+													height={32}
+													priority
+													className="size-7 object-contain"
+													style={{ height: "auto" }}
+												/>
+											</span>
+											<span className="text-xl font-black tracking-tight text-gradient">
+												ECM System
+											</span>
 										</SheetTitle>
 									</SheetHeader>
-									<div className="flex flex-col gap-4 py-6 px-4">
-										<Accordion type="single" collapsible className="w-full">
+									<div className="flex flex-col gap-4 px-4 py-4">
+										<Accordion type="single" collapsible className="w-full space-y-1.5">
 											{menuItems.map((item) => (
 												<Link
 													key={item.title}
 													href={item.href || "#"}
 													onClick={() => setOpen(false)}
 													className={cn(
-														"flex py-3 text-sm font-medium border-b hover:text-primary transition-colors",
+														"flex rounded-2xl border-2 border-transparent px-4 py-3 text-sm font-bold text-muted-foreground transition-colors hover:bg-muted hover:text-foreground",
 														isActive(item.href || "") &&
-															"text-primary font-bold",
+															"border-primary/30 bg-primary/10 text-primary hover:bg-primary/10 hover:text-primary",
 													)}
 												>
 													{item.title}
 												</Link>
 											))}
 										</Accordion>
-										<div className="mt-auto pt-6 border-t flex flex-col gap-2">
-											<div className="sm:hidden pb-4">
+										<div className="mt-auto flex flex-col gap-2 border-t-2 border-border pt-6">
+											<div className="pb-4 sm:hidden">
 												<ServerDate />
 											</div>
 										</div>
@@ -240,21 +267,21 @@ export function IDashboardHeader() {
 
 			{/* Logout Dialog */}
 			<AlertDialog open={showLogoutDialog} onOpenChange={setShowLogoutDialog}>
-				<AlertDialogContent>
-					<AlertDialogHeader>
-						<AlertDialogTitle className="flex items-center gap-2">
-							<LogOut className="w-5 h-5 text-red-600" />
-							Гарахдаа итгэлтэй байна уу?
-						</AlertDialogTitle>
+				<AlertDialogContent className="max-w-sm">
+					<AlertDialogHeader className="items-center text-center sm:items-center sm:text-center">
+						<div className="mb-2 flex size-16 items-center justify-center rounded-3xl bg-pop-coral-soft text-pop-coral-ink">
+							<LogOut className="size-7" strokeWidth={2.5} />
+						</div>
+						<AlertDialogTitle>Гарахдаа итгэлтэй байна уу?</AlertDialogTitle>
 						<AlertDialogDescription>
 							Та системээс гарахдаа итгэлтэй байна уу?
 						</AlertDialogDescription>
 					</AlertDialogHeader>
-					<AlertDialogFooter>
-						<AlertDialogCancel>Цуцлах</AlertDialogCancel>
+					<AlertDialogFooter className="mt-2 gap-2 sm:justify-center">
+						<AlertDialogCancel className="flex-1">Цуцлах</AlertDialogCancel>
 						<AlertDialogAction
 							onClick={handleLogout}
-							className="bg-red-600 hover:bg-red-700"
+							className="flex-1 bg-destructive text-white shadow-[0_4px_0_0_color-mix(in_oklch,var(--destructive)_70%,black)] hover:bg-destructive"
 						>
 							Тийм, Гарах
 						</AlertDialogAction>
@@ -290,15 +317,15 @@ const UserAvatar: React.FC<{
 			) : (
 				<div
 					className={cn(
-						"rounded-full bg-primary/10 flex items-center justify-center",
+						"flex items-center justify-center rounded-xl bg-gradient-to-br from-pop-violet to-pop-pink text-white",
 						sizeMap[size],
 					)}
 				>
-					<User className="w-5 h-5 text-primary" />
+					<User className="size-4" strokeWidth={2.5} />
 				</div>
 			)}
 			{showOnlineStatus && (
-				<span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 border-2 border-background rounded-full" />
+				<span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full border-2 border-card bg-success" />
 			)}
 		</div>
 	);

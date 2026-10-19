@@ -78,10 +78,13 @@ export function UploadPDFDialog({
 		<Dialog open={open} onOpenChange={onOpenChange}>
 			<DialogContent className="sm:max-w-md">
 				<DialogHeader>
-					<DialogTitle>
+					<DialogTitle className="flex items-center gap-3">
+						<span className="flex size-10 shrink-0 items-center justify-center rounded-2xl bg-pop-coral-soft text-pop-coral-ink">
+							<FileText className="size-5" strokeWidth={2.5} />
+						</span>
 						{selectRow?.last_name[0]}.{selectRow?.first_name}
 					</DialogTitle>
-					<DialogDescription>
+					<DialogDescription className="font-semibold">
 						{selectRow?.register_number} • {selectRow?.seat_number}-р суудал
 					</DialogDescription>
 				</DialogHeader>
@@ -89,20 +92,24 @@ export function UploadPDFDialog({
 				{!file ? (
 					<div
 						{...getRootProps()}
-						className={`border-2 border-dashed rounded-lg p-10 text-center cursor-pointer transition-colors py-6 ${isDragActive ? "border-primary bg-primary/10" : "border-slate-300 hover:border-primary"}`}
+						className={`cursor-pointer rounded-2xl border-2 border-dashed p-10 py-8 text-center transition-colors ${isDragActive ? "border-primary bg-primary/10" : "border-border bg-muted/40 hover:border-primary hover:bg-primary/5"}`}
 					>
 						<input {...getInputProps()} />
-						<UploadCloud className="mx-auto h-10 w-10 text-slate-400 mb-2" />
-						<p className="text-sm text-slate-600">
+						<span className="mx-auto mb-3 flex size-14 items-center justify-center rounded-2xl bg-pop-sky-soft text-pop-sky-ink">
+							<UploadCloud className="size-7" strokeWidth={2.5} />
+						</span>
+						<p className="text-sm font-bold text-muted-foreground">
 							PDF файлаа энд чирч оруулна уу
 						</p>
 					</div>
 				) : (
 					<div className="space-y-4">
-						<div className="flex items-center justify-between p-3 border rounded-lg bg-slate-50">
+						<div className="flex items-center justify-between rounded-2xl border-2 border-border bg-muted/50 p-3">
 							<div className="flex items-center gap-2 overflow-hidden">
-								<FileText className="h-8 w-8 text-red-500 shrink-0" />
-								<span className="text-sm truncate">{file.name}</span>
+								<span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-pop-coral-soft text-pop-coral-ink">
+									<FileText className="size-5" strokeWidth={2.5} />
+								</span>
+								<span className="truncate text-sm font-bold">{file.name}</span>
 							</div>
 							{!isUploading && (
 								<Button
@@ -110,7 +117,7 @@ export function UploadPDFDialog({
 									size="icon"
 									onClick={() => setFile(null)}
 								>
-									<X className="h-4 w-4" />
+									<X className="size-4" />
 								</Button>
 							)}
 						</div>
@@ -118,7 +125,7 @@ export function UploadPDFDialog({
 						{isUploading && (
 							<div className="space-y-2">
 								<Progress value={progress} />
-								<p className="text-xs text-center text-muted-foreground">
+								<p className="text-center text-xs font-bold text-muted-foreground">
 									{progress}% байршуулж байна...
 								</p>
 							</div>
@@ -137,7 +144,7 @@ export function UploadPDFDialog({
 					<Button onClick={handleUpload} disabled={!file || isUploading}>
 						{isUploading ? (
 							<>
-								<Loader2 className="mr-2 h-4 w-4 animate-spin" />
+								<Loader2 className="size-4 animate-spin" />
 								Илгээж байна...
 							</>
 						) : (

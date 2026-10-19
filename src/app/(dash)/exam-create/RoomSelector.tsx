@@ -62,13 +62,13 @@ export function RoomSelector({
 					{[1, 2, 3, 4].map((i) => (
 						<div
 							key={i}
-							className="p-4 rounded-xl border border-border space-y-3"
+							className="space-y-3 rounded-2xl border-2 border-border p-4"
 						>
 							<div className="flex items-center gap-3">
 								<Skeleton className="h-4 w-4 rounded-full" />
-								<Skeleton className="h-5 w-32" />
+								<Skeleton className="h-5 w-32 rounded-lg" />
 							</div>
-							<div className="flex gap-2 pt-2 border-t">
+							<div className="flex gap-2 border-t-2 border-border pt-2">
 								<Skeleton className="h-4 w-20" />
 								<Skeleton className="h-4 w-20" />
 							</div>
@@ -76,9 +76,11 @@ export function RoomSelector({
 					))}
 				</div>
 			) : rooms === null || rooms.length === 0 ? (
-				<div className="flex flex-col items-center justify-center h-40 text-muted-foreground">
-					<DoorOpen size={32} className="mb-2 opacity-20" />
-					<p className="text-sm italic">Өрөө олдсонгүй</p>
+				<div className="flex h-48 flex-col items-center justify-center gap-3 text-muted-foreground">
+					<span className="flex size-16 items-center justify-center rounded-full bg-pop-sky-soft text-pop-sky-ink">
+						<DoorOpen size={28} strokeWidth={2.5} />
+					</span>
+					<p className="text-sm font-bold">Өрөө олдсонгүй</p>
 				</div>
 			) : (
 				<RadioGroup
@@ -94,12 +96,12 @@ export function RoomSelector({
 							<div key={room.id} className="relative group">
 								<Label
 									htmlFor={`room-${room.id}`}
-									className={`relative flex flex-col p-3 rounded-xl border transition-all cursor-pointer ${
+									className={`relative flex cursor-pointer flex-col rounded-2xl border-2 p-3 transition-all ${
 										isDisabled
-											? "bg-muted/20 border-dashed"
+											? "border-dashed border-border bg-muted/40"
 											: selectedId === String(room.id)
-												? "border-primary bg-primary/5 ring-1 ring-primary shadow-sm"
-												: "border-border bg-card hover:border-primary/50 hover:bg-muted/50"
+												? "border-primary bg-primary/10 shadow-[0_3px_0_0_color-mix(in_oklch,var(--primary)_35%,transparent)]"
+												: "border-border bg-card hover:-translate-y-0.5 hover:border-primary/50 hover:bg-accent/50"
 									}`}
 								>
 									<div
@@ -112,10 +114,11 @@ export function RoomSelector({
 												disabled={isDisabled} // 👈 ЭНЭ
 											/>
 											<div className="flex flex-col gap-0.5 overflow-hidden">
-												<div className="flex items-center gap-2 font-medium text-sm">
+												<div className="flex items-center gap-2 text-sm font-extrabold">
 													<DoorOpen
 														size={14}
-														className="text-muted-foreground"
+														className="text-pop-sky-ink"
+														strokeWidth={2.5}
 													/>
 													<span
 														className={
@@ -125,13 +128,13 @@ export function RoomSelector({
 														{room.room_number}-р өрөө
 													</span>
 													{room.branchname && (
-														<span className="text-[10px] font-normal text-muted-foreground bg-muted px-1.5 py-0.5 rounded truncate">
+														<span className="truncate rounded-full bg-muted px-2 py-0.5 text-[10px] font-bold text-muted-foreground">
 															{room.branchname}
 														</span>
 													)}
 												</div>
 												{room.name && (
-													<div className="flex items-center gap-2 text-[11px] text-muted-foreground">
+													<div className="flex items-center gap-2 text-[11px] font-semibold text-muted-foreground">
 														<Building size={12} />
 														<span className="truncate">{room.name}</span>
 													</div>
@@ -140,18 +143,18 @@ export function RoomSelector({
 										</div>
 									</div>
 
-									<div className="mt-2 flex items-center justify-between border-t border-border/50 pt-2 w-full">
+									<div className="mt-2 flex w-full items-center justify-between gap-2 border-t-2 border-dashed border-border pt-2">
 										<div
-											className={`flex items-center gap-1.5 text-[11px] text-muted-foreground ${isDisabled ? "opacity-60" : ""}`}
+											className={`flex items-center gap-1.5 text-[11px] font-bold text-muted-foreground ${isDisabled ? "opacity-60" : ""}`}
 										>
-											<Monitor size={14} className="text-muted-foreground" />
+											<Monitor size={14} strokeWidth={2.5} />
 											<span>{room.pccnt ?? 0} суудал</span>
 										</div>
 
 										{room.flag === 1 ? (
 											<Badge
-												variant={"secondary"}
-												className="text-[9px] h-4 bg-green-500/10 text-red-600 border-none px-1"
+												variant="coral"
+												className="h-5 rounded-full px-2 text-[10px] font-bold"
 											>
 												Түр хаагдсан
 											</Badge>
@@ -160,19 +163,19 @@ export function RoomSelector({
 												<Button
 													size="sm"
 													variant="outline"
-													className="h-7 text-[10px] gap-1 text-blue-600 border-blue-200 hover:text-blue-700 hover:bg-blue-50 relative z-10"
+													className="relative z-10 h-7 gap-1 rounded-full px-2.5 text-[10px] font-bold text-pop-sky-ink"
 													asChild
 												>
 													<Link href={`room/${room.id}`}>
 														Ширээний зохион байгуулалт
-														<ArrowRight size={10} />
+														<ArrowRight size={10} strokeWidth={3} />
 													</Link>
 												</Button>
 											)
 										) : (
 											<Badge
-												variant="secondary"
-												className="text-[9px] h-4 bg-green-500/10 text-green-600 border-none px-1"
+												variant="mint"
+												className="h-5 rounded-full px-2 text-[10px] font-bold"
 											>
 												Төхөөрөмжтэй
 											</Badge>

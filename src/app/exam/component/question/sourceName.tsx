@@ -122,41 +122,41 @@ const SourceBlock = memo(function SourceBlock({
 
 	return (
 		<div
-			className={`rounded-lg border transition-all duration-200 ${
+			className={`rounded-2xl border-2 transition-all duration-200 ${
 				isActive
-					? "border-blue-400 bg-blue-50/60 dark:bg-blue-950/30 shadow-sm"
-					: "border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/50"
+					? "border-primary/40 bg-primary/5"
+					: "border-border bg-card"
 			}`}
 		>
 			{/* Header */}
 			<button
 				type="button"
 				onClick={() => setExpanded((v) => !v)}
-				className="w-full flex items-center justify-between gap-3 px-4 py-3 text-left rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+				className="flex w-full items-center justify-between gap-3 rounded-2xl px-4 py-3 text-left focus:outline-none focus-visible:ring-4 focus-visible:ring-primary/30"
 			>
-				<div className="flex items-center gap-2 min-w-0">
-					<FileText
-						className={`w-4 h-4 shrink-0 ${
-							isActive ? "text-blue-500" : "text-slate-400 dark:text-slate-500"
+				<div className="flex min-w-0 items-center gap-2.5">
+					<span
+						className={`flex size-8 shrink-0 items-center justify-center rounded-xl ${
+							isActive
+								? "bg-primary/15 text-primary"
+								: "bg-muted text-muted-foreground"
 						}`}
-					/>
+					>
+						<FileText className="size-4" strokeWidth={2.5} />
+					</span>
 					<div className="flex flex-col min-w-0">
 						{sectionLabel && (
 							<span
 								className={`text-[10px] font-bold uppercase tracking-wide ${
-									isActive
-										? "text-blue-500 dark:text-blue-400"
-										: "text-slate-400 dark:text-slate-500"
+									isActive ? "text-primary" : "text-muted-foreground"
 								}`}
 							>
 								{sectionLabel}
 							</span>
 						)}
 						<span
-							className={`text-xs font-semibold truncate ${
-								isActive
-									? "text-blue-700 dark:text-blue-300"
-									: "text-slate-600 dark:text-slate-400"
+							className={`truncate text-xs font-bold ${
+								isActive ? "text-primary" : "text-foreground"
 							}`}
 						>
 							{rangeLabel}
@@ -164,9 +164,9 @@ const SourceBlock = memo(function SourceBlock({
 					</div>
 				</div>
 				{expanded ? (
-					<ChevronUp className="w-4 h-4 shrink-0 text-slate-400" />
+					<ChevronUp className="size-4 shrink-0 text-muted-foreground" />
 				) : (
-					<ChevronDown className="w-4 h-4 shrink-0 text-slate-400" />
+					<ChevronDown className="size-4 shrink-0 text-muted-foreground" />
 				)}
 			</button>
 
@@ -179,14 +179,14 @@ const SourceBlock = memo(function SourceBlock({
 							alt="Эхийн зураг"
 							width={800}
 							height={256}
-							className="w-full rounded-md object-cover max-h-64"
+							className="max-h-64 w-full rounded-xl object-cover"
 							unoptimized
 						/>
 					)}
 					{source.sourceName && (
 						<HtmlContent
 							html={source.sourceName}
-							className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed prose prose-sm max-w-none dark:prose-invert overflow-y-auto max-h-[60vh] pr-1 scrollbar-thin scrollbar-thumb-slate-300 dark:scrollbar-thumb-slate-600 [&_*]:break-words [&_*]:whitespace-normal"
+							className="prose prose-sm dark:prose-invert max-h-[60vh] max-w-none overflow-y-auto pr-1 text-sm leading-relaxed text-foreground/85 [&_*]:break-words [&_*]:whitespace-normal"
 						/>
 					)}
 				</div>
@@ -208,10 +208,12 @@ const ExamSourceCard = memo(function ExamSourceCard({
 	if (deduped.length === 0) return null;
 
 	return (
-		<Card className="border-slate-200 dark:border-slate-700 shadow-sm">
+		<Card className="gap-3 py-0">
 			<CardHeader className="pb-2 pt-4 px-4">
-				<CardTitle className="text-sm font-semibold text-slate-600 dark:text-slate-400 flex items-center gap-2">
-					<FileText className="w-4 h-4" />
+				<CardTitle className="flex items-center gap-2.5 text-sm font-extrabold text-foreground">
+					<span className="flex size-8 items-center justify-center rounded-xl bg-pop-sky-soft text-pop-sky-ink">
+						<FileText className="size-4" strokeWidth={2.5} />
+					</span>
 					Эх материал
 				</CardTitle>
 			</CardHeader>

@@ -47,17 +47,17 @@ export function ITable<TData extends Record<string, unknown>, TValue>({
 	return (
 		<div
 			className={cn(
-				"w-full rounded-2xl border bg-card shadow-sm overflow-hidden",
+				"card-pop w-full overflow-hidden",
 				className,
 			)}
 		>
 			<Table>
-				<TableHeader className="bg-muted/50">
+				<TableHeader className="bg-muted">
 					{table.getHeaderGroups().map((headerGroup) => (
-						<TableRow key={headerGroup.id}>
+						<TableRow key={headerGroup.id} className="border-b-2 hover:bg-transparent">
 							<TableHead className="w-10" />
 							{headerGroup.headers.map((header) => (
-								<TableHead key={header.id} className="font-bold py-4">
+								<TableHead key={header.id} className="py-3.5 text-xs font-extrabold tracking-wide text-muted-foreground uppercase">
 									{flexRender(
 										header.column.columnDef.header,
 										header.getContext(),
@@ -85,8 +85,8 @@ export function ITable<TData extends Record<string, unknown>, TValue>({
 									className={cn(
 										"transition-colors border-b last:border-0",
 										isSubRow
-											? "bg-muted/5 hover:bg-muted/10 text-sm"
-											: "hover:bg-muted/30 font-medium text-[15px]",
+											? "bg-muted/30 text-sm hover:bg-accent/50"
+											: "text-[15px] font-semibold hover:bg-accent/50",
 									)}
 								>
 									<TableCell className="w-10 relative p-0 px-2">
@@ -95,12 +95,12 @@ export function ITable<TData extends Record<string, unknown>, TValue>({
 												{/* Босоо зураас - Сүүлийнх бол таллана */}
 												<div
 													className={cn(
-														"absolute left-6 top-0 w-px bg-border",
+														"absolute top-0 left-6 w-0.5 bg-border",
 														isLastChild ? "h-1/2" : "h-full",
 													)}
 												/>
 												{/* Хөндлөн зураас - Булан гаргах */}
-												<div className="absolute left-6 top-1/2 w-3 h-px bg-border" />
+												<div className="absolute top-1/2 left-6 h-0.5 w-3 bg-border" />
 											</>
 										)}
 
@@ -108,11 +108,12 @@ export function ITable<TData extends Record<string, unknown>, TValue>({
 											{row.getCanExpand() && (
 												<button
 													onClick={row.getToggleExpandedHandler()}
-													className="p-1 hover:bg-background rounded-md border bg-card shadow-sm transition-transform active:scale-95"
+													className="flex size-6 items-center justify-center rounded-lg border-2 border-border bg-card shadow-[0_2px_0_0_var(--border)] transition-all hover:bg-muted active:translate-y-0.5 active:shadow-none"
 													type="button"
 												>
 													<ChevronRight
 														size={12}
+														strokeWidth={3}
 														className={cn(
 															"transition-transform duration-200",
 															row.getIsExpanded() && "rotate-90 text-primary",
@@ -147,7 +148,7 @@ export function ITable<TData extends Record<string, unknown>, TValue>({
 						<TableRow>
 							<TableCell
 								colSpan={columns.length + 1}
-								className="h-32 text-center text-muted-foreground"
+								className="h-32 text-center font-semibold text-muted-foreground"
 							>
 								Өгөгдөл олдсонгүй.
 							</TableCell>

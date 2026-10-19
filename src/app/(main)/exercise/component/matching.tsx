@@ -221,7 +221,7 @@ export default function MatchingByLine({
 	const renderContent = (item: QuestionItem) => (
 		<div className="flex flex-col gap-2">
 			{item.answer_img && (
-				<div className="relative group/img w-full aspect-video sm:aspect-square max-h-40 bg-slate-50 dark:bg-slate-800 rounded-lg overflow-hidden border border-slate-100 dark:border-slate-700">
+				<div className="relative group/img w-full aspect-video sm:aspect-square max-h-40 bg-muted rounded-xl overflow-hidden border-2 border-border">
 					<Image
 						src={item.answer_img}
 						alt="Content"
@@ -236,14 +236,14 @@ export default function MatchingByLine({
 								item.answer_img as string,
 							);
 						}}
-						className="absolute top-2 right-2 p-1.5 rounded-full bg-white/80 dark:bg-slate-900/80 shadow-sm opacity-0 group-hover/img:opacity-100 transition-opacity cursor-pointer hover:bg-white dark:hover:bg-slate-900 pointer-events-auto"
+						className="absolute top-2 right-2 p-1.5 rounded-xl bg-card border-2 border-border opacity-0 group-hover/img:opacity-100 transition-opacity cursor-pointer hover:bg-accent pointer-events-auto"
 					>
-						<Maximize2 className="w-4 h-4 text-slate-600" />
+						<Maximize2 className="size-4 text-foreground" strokeWidth={2.5} />
 					</div>
 				</div>
 			)}
 			{item.answer_name_html && (
-				<div className="text-sm sm:text-base font-medium text-slate-700 dark:text-slate-200 wrap-break-words">
+				<div className="text-sm sm:text-base font-bold text-foreground wrap-break-words">
 					{parse(item.answer_name_html.trim())}
 				</div>
 			)}
@@ -257,13 +257,13 @@ export default function MatchingByLine({
 
 	return (
 		<div
-			className="w-full max-w-5xl mx-auto p-4 select-none"
+			className="w-full max-w-5xl mx-auto p-1 sm:p-4 select-none"
 			ref={containerRef}
 		>
 			<Xwrapper>
 				{/* Header Section */}
 				<div className="text-center mb-8 space-y-3">
-					<h2 className="text-xl font-bold text-slate-900 dark:text-white">
+					<h2 className="text-lg sm:text-xl font-black text-foreground">
 						{/* ✅ FIX 2: isMobile state-ийн оронд CSS class ашиглав */}
 						<span className="md:hidden">Тохирохыг сонгоно уу</span>
 						<span className="hidden md:inline">
@@ -271,45 +271,46 @@ export default function MatchingByLine({
 						</span>
 					</h2>
 					{!showResults && (
-						<div className="inline-flex items-center gap-2 px-4 py-1.5 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 rounded-full text-sm font-medium">
-							<Lightbulb className="w-4 h-4" />
+						<div className="inline-flex items-center gap-2 px-4 py-1.5 bg-pop-sun-soft text-pop-sun-ink rounded-full text-sm font-bold">
+							<Lightbulb className="size-4" strokeWidth={2.5} />
 							Картууд дээр дарж холболт хийнэ
 						</div>
 					)}
 				</div>
 
 				{/* Status Bar */}
-				<div className="flex justify-center gap-4 mb-10">
+				<div className="flex flex-wrap justify-center gap-4 mb-8 sm:mb-10">
 					{!showResults ? (
 						<Button
 							onClick={handleCheckAnswers}
 							disabled={connections.length === 0}
-							className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-full px-8 h-12 shadow-md transition-all active:scale-95"
+							size="lg"
+							className="rounded-2xl px-8"
 						>
-							<CheckCircle2 className="w-5 h-5 mr-2" />
+							<CheckCircle2 className="size-5 mr-1" strokeWidth={2.75} />
 							Шалгах ({connections.length}/{questionsOnly.length})
 						</Button>
 					) : (
-						<div className="flex items-center gap-4 animate-in fade-in zoom-in">
+						<div className="flex flex-wrap items-center justify-center gap-3 sm:gap-4 animate-in fade-in zoom-in">
 							<Button
 								onClick={handleReset}
 								variant="outline"
-								className="rounded-full px-6 h-11 border-2"
+								className="rounded-2xl px-6 h-11"
 							>
-								<RotateCcw className="w-4 h-4 mr-2" />
+								<RotateCcw className="size-4 mr-1" strokeWidth={2.75} />
 								Дахин эхлэх
 							</Button>
-							<div className="flex gap-4 px-6 py-2 bg-slate-100 dark:bg-slate-800 rounded-full border">
-								<span className="text-green-600 font-bold flex items-center gap-1.5">
-									<div className="w-2 h-2 rounded-full bg-green-500" />
+							<div className="flex gap-2">
+								<span className="text-success font-extrabold flex items-center gap-1.5 rounded-full bg-success/10 border-2 border-success/40 px-4 py-1.5">
+									<div className="size-2.5 rounded-full bg-success" />
 									{
 										connections.filter((c) => getConnectionCorrectness(c))
 											.length
 									}{" "}
 									зөв
 								</span>
-								<span className="text-red-500 font-bold flex items-center gap-1.5">
-									<div className="w-2 h-2 rounded-full bg-red-500" />
+								<span className="text-destructive font-extrabold flex items-center gap-1.5 rounded-full bg-destructive/10 border-2 border-destructive/40 px-4 py-1.5">
+									<div className="size-2.5 rounded-full bg-destructive" />
 									{
 										connections.filter((c) => !getConnectionCorrectness(c))
 											.length
@@ -326,7 +327,7 @@ export default function MatchingByLine({
 					{/* Questions Column */}
 					<div className="grid gap-4 items-start">
 						{/* ✅ FIX 4: {!isMobile && ...} оронд hidden md:block */}
-						<h3 className="hidden md:block text-center font-bold text-slate-400 text-xs uppercase tracking-widest mb-2">
+						<h3 className="hidden md:block text-center font-extrabold text-muted-foreground text-xs uppercase tracking-widest mb-2">
 							Асуултууд
 						</h3>
 						{questionsOnly.map((q) => {
@@ -343,10 +344,10 @@ export default function MatchingByLine({
 									type="button"
 									onClick={() => handleItemClick(id, true)}
 									className={cn(
-										"w-full p-5 rounded-2xl border-2 text-left transition-all relative bg-white dark:bg-slate-900 shadow-sm hover:shadow-md",
+										"w-full p-4 sm:p-5 rounded-2xl border-2 text-left transition-[border-color,background-color,box-shadow] relative bg-card shadow-[0_4px_0_0_var(--border)]",
 										isActive
-											? "border-indigo-500 ring-4 ring-indigo-50 dark:ring-indigo-900/30"
-											: "border-slate-100 dark:border-slate-800",
+											? "border-primary bg-primary/10 ring-4 ring-primary/20 shadow-[0_4px_0_0_var(--primary)]"
+											: "border-border hover:border-primary/40 hover:bg-accent/40",
 									)}
 									style={
 										!showResults && !isActive && dotColor
@@ -359,8 +360,8 @@ export default function MatchingByLine({
 										{/* ✅ FIX 5: hidden md:flex */}
 										<div
 											className={cn(
-												"hidden md:flex min-w-[1rem] h-4 rounded-full border-2 border-white shadow-sm shrink-0 items-center justify-center text-[10px] font-bold text-white transition-all",
-												count > 0 ? "px-1" : "w-4 bg-slate-200",
+												"hidden md:flex min-w-[1.25rem] h-5 rounded-full border-2 border-card shrink-0 items-center justify-center text-[10px] font-black text-white transition-all",
+												count > 0 ? "px-1" : "w-5 bg-muted border-border",
 											)}
 											style={
 												count > 0
@@ -382,7 +383,7 @@ export default function MatchingByLine({
 					{/* Answers Column */}
 					<div className="grid gap-4 items-start">
 						{/* ✅ FIX 6: hidden md:block */}
-						<h3 className="hidden md:block text-center font-bold text-slate-400 text-xs uppercase tracking-widest mb-2">
+						<h3 className="hidden md:block text-center font-extrabold text-muted-foreground text-xs uppercase tracking-widest mb-2">
 							Хариултууд
 						</h3>
 						{answersOnly.map((a) => {
@@ -399,10 +400,10 @@ export default function MatchingByLine({
 									type="button"
 									onClick={() => handleItemClick(id, false)}
 									className={cn(
-										"w-full p-5 rounded-2xl border-2 text-left transition-all bg-white dark:bg-slate-900 shadow-sm hover:shadow-md",
+										"w-full p-4 sm:p-5 rounded-2xl border-2 text-left transition-[border-color,background-color,box-shadow] bg-card shadow-[0_4px_0_0_var(--border)]",
 										activeStart && !connected
-											? "border-dashed border-indigo-300 animate-pulse"
-											: "border-slate-100 dark:border-slate-800",
+											? "border-dashed border-primary/50 bg-primary/5 animate-pulse"
+											: "border-border hover:border-primary/40 hover:bg-accent/40",
 									)}
 									style={
 										!showResults && lastColor ? { borderColor: lastColor } : {}
@@ -412,8 +413,8 @@ export default function MatchingByLine({
 										{/* ✅ FIX 7: hidden md:flex */}
 										<div
 											className={cn(
-												"hidden md:flex min-w-[1rem] h-4 rounded-full border-2 border-white shadow-sm shrink-0 items-center justify-center text-[10px] font-bold text-white transition-all",
-												count > 0 ? "px-1" : "w-4 bg-slate-200",
+												"hidden md:flex min-w-[1.25rem] h-5 rounded-full border-2 border-card shrink-0 items-center justify-center text-[10px] font-black text-white transition-all",
+												count > 0 ? "px-1" : "w-5 bg-muted border-border",
 											)}
 											style={
 												count > 0
@@ -461,8 +462,8 @@ export default function MatchingByLine({
 			<Dialog open={!!zoomedImage} onOpenChange={() => setZoomedImage(null)}>
 				<DialogContent className="max-w-4xl p-0 bg-transparent border-none shadow-none">
 					<DialogTitle className="sr-only">Зураг</DialogTitle>
-					<DialogClose className="fixed top-4 right-4 z-50 bg-white rounded-full p-2">
-						<XCircle className="w-6 h-6" />
+					<DialogClose className="fixed top-4 right-4 z-50 bg-card text-foreground border-2 border-border rounded-xl p-2 shadow-[0_3px_0_0_var(--border)]">
+						<XCircle className="size-6" strokeWidth={2.5} />
 					</DialogClose>
 					{zoomedImage && (
 						<div className="relative w-full aspect-video">

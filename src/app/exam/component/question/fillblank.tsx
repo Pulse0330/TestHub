@@ -65,12 +65,12 @@ export default function FillInTheBlankQuestion({
 	const hasAnswerButNotSubmitted = answer.trim() && !isSubmitted && isEditing;
 
 	const inputClassName = isNotSubmitted
-		? "border-red-500 bg-red-50"
+		? "border-destructive bg-destructive/10"
 		: hasAnswerButNotSubmitted
-			? "border-red-500 border-2"
+			? "border-destructive"
 			: isSubmitted && !isEditing
-				? "border-blue-500 bg-blue-50"
-				: "border-primary/50 focus-visible:ring-primary";
+				? "border-primary bg-primary/10 text-primary"
+				: "border-primary/50 focus-visible:ring-primary/30";
 
 	const canEdit = !readOnly;
 	const showSubmitButton = canEdit && isEditing;
@@ -81,10 +81,10 @@ export default function FillInTheBlankQuestion({
 			<div className="grid w-full items-center gap-2">
 				<Label
 					htmlFor={`input-${questionId}`}
-					className="text-sm font-medium text-gray-700"
+					className="flex-wrap text-sm font-bold text-foreground"
 				>
-					Хариултаа бичнэ үү: <span className="text-red-600">*</span>
-					<span className="text-xs text-gray-500 ml-2">
+					Хариултаа бичнэ үү: <span className="text-destructive">*</span>
+					<span className="ml-1 text-xs font-semibold text-muted-foreground">
 						(Заавал илгээх товч дарна уу)
 					</span>
 				</Label>
@@ -99,7 +99,7 @@ export default function FillInTheBlankQuestion({
 							onChange={handleChange}
 							readOnly={readOnly || (isSubmitted && !isEditing)}
 							disabled={readOnly}
-							className={`w-full transition-colors ${inputClassName} ${
+							className={`h-12 w-full rounded-xl border-2 text-base font-bold transition-colors ${inputClassName} ${
 								readOnly || (isSubmitted && !isEditing)
 									? "cursor-not-allowed"
 									: ""
@@ -113,7 +113,7 @@ export default function FillInTheBlankQuestion({
 
 						{isNotSubmitted && (
 							<div className="absolute right-3 top-1/2 -translate-y-1/2">
-								<AlertCircle className="w-5 h-5 text-red-600" />
+								<AlertCircle className="size-5 text-destructive" />
 							</div>
 						)}
 					</div>
@@ -121,8 +121,8 @@ export default function FillInTheBlankQuestion({
 					{showSubmitButton && (
 						<Button
 							onClick={handleSubmit}
-							size="icon"
-							className="bg-primary hover:bg-primary/90"
+							size="icon-lg"
+							className="rounded-xl"
 							title="Илгээх"
 							disabled={!answer.trim()}
 						>
@@ -133,9 +133,9 @@ export default function FillInTheBlankQuestion({
 					{showEditButton && (
 						<Button
 							onClick={handleEdit}
-							size="icon"
+							size="icon-lg"
 							variant="outline"
-							className="border-blue-500 text-blue-600 hover:bg-blue-50"
+							className="rounded-xl text-primary hover:text-primary"
 							title="Засах"
 						>
 							<Edit2 className="w-4 h-4" />
@@ -144,8 +144,8 @@ export default function FillInTheBlankQuestion({
 				</div>
 
 				{isNotSubmitted && (
-					<div className="p-3 bg-red-50 border border-red-200 rounded-md">
-						<p className="text-sm text-red-800 font-medium">
+					<div className="rounded-2xl border-2 border-destructive/30 bg-destructive/10 p-3">
+						<p className="text-sm font-bold text-destructive">
 							⚠ Хариултаа заавал илгээх шаардлагатай!
 						</p>
 					</div>

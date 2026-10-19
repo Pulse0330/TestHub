@@ -42,11 +42,11 @@ export function NavMain({
 										// Хэрэв isActive prop ажиллахгүй бол className-ээр гараар өнгө өгч болно
 										className={
 											isActive
-												? "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
-												: ""
+												? "rounded-xl bg-primary/10 font-bold text-primary hover:bg-primary/15 hover:text-primary"
+												: "rounded-xl font-bold text-muted-foreground hover:text-foreground"
 										}
 									>
-										{item.icon && <item.icon />}
+										{item.icon && <item.icon strokeWidth={2.5} />}
 										<span>{item.title}</span>
 									</Link>
 								</SidebarMenuButton>

@@ -79,17 +79,17 @@ const NumberInputQuestion: React.FC<NumberInputQuestionProps> = ({
 
 	const getInputBorderClass = (answer: Answer): string => {
 		if (!showResults) {
-			return "border-gray-300 dark:border-gray-600";
+			return "border-input";
 		}
 
 		const userValue = userAnswers[answer.answer_id];
 		if (!userValue && userValue !== 0) {
-			return "border-gray-300 dark:border-gray-600";
+			return "border-input";
 		}
 
 		return isCorrect(answer)
-			? "border-gray-400 dark:border-gray-500"
-			: "border-gray-400 dark:border-gray-500";
+			? "border-success bg-success/10 text-success"
+			: "border-destructive bg-destructive/10 text-destructive";
 	};
 
 	const getResultIcon = (answer: Answer) => {
@@ -99,36 +99,40 @@ const NumberInputQuestion: React.FC<NumberInputQuestionProps> = ({
 		if (!userValue && userValue !== 0) return null;
 
 		return isCorrect(answer) ? (
-			<div className="shrink-0 text-xs text-gray-600 dark:text-gray-400">✓</div>
+			<div className="shrink-0 flex size-8 items-center justify-center rounded-xl bg-success text-primary-foreground text-sm font-black animate-pop-in">
+				✓
+			</div>
 		) : (
-			<div className="shrink-0 text-xs text-gray-600 dark:text-gray-400">✗</div>
+			<div className="shrink-0 flex size-8 items-center justify-center rounded-xl bg-destructive text-primary-foreground text-sm font-black animate-pop-in">
+				✗
+			</div>
 		);
 	};
 
 	return (
 		<div className="space-y-3">
-			<div className="grid gap-2">
+			<div className="grid gap-2.5">
 				{answers.map((answer) => (
 					<div
 						key={answer.answer_id}
-						className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg"
+						className="flex flex-wrap items-center gap-2.5 sm:gap-3 p-3 bg-card border-2 border-border rounded-2xl shadow-[0_4px_0_0_var(--border)]"
 					>
 						{/* Variable Label */}
 						<div className="shrink-0">
-							<div className="w-10 h-10 rounded bg-gray-700 dark:bg-gray-600 flex items-center justify-center">
-								<span className="text-white font-semibold text-base">
+							<div className="min-w-10 h-10 px-2 rounded-xl bg-pop-sun-soft border-2 border-pop-sun/50 flex items-center justify-center">
+								<span className="text-pop-sun-ink font-black text-base">
 									{answer.answer_name || "?"}
 								</span>
 							</div>
 						</div>
 
 						{/* Equals sign */}
-						<div className="shrink-0 text-gray-400 dark:text-gray-500 font-medium">
+						<div className="shrink-0 text-muted-foreground font-black text-lg">
 							=
 						</div>
 
 						{/* Input field */}
-						<div className="flex-1">
+						<div className="flex-1 min-w-[6rem]">
 							<input
 								id={`input-${answer.answer_id}`}
 								type="text"
@@ -139,11 +143,11 @@ const NumberInputQuestion: React.FC<NumberInputQuestionProps> = ({
 								}
 								placeholder="..."
 								disabled={showResults}
-								className={`w-full px-3 py-2 text-sm border rounded
-									focus:outline-none focus:ring-1 focus:ring-orange-500
-									bg-white dark:bg-gray-900 text-gray-900 dark:text-white
-									placeholder-gray-400
-									disabled:opacity-60 disabled:cursor-not-allowed
+								className={`w-full h-11 px-4 text-base font-bold border-2 rounded-xl
+									focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/20
+									bg-background text-foreground
+									placeholder:text-muted-foreground
+									disabled:opacity-90 disabled:cursor-not-allowed
 									${getInputBorderClass(answer)}`}
 							/>
 						</div>
@@ -155,7 +159,7 @@ const NumberInputQuestion: React.FC<NumberInputQuestionProps> = ({
 						{showResults &&
 							userAnswers[answer.answer_id] &&
 							!isCorrect(answer) && (
-								<div className="shrink-0 text-xs text-gray-600 dark:text-gray-400 font-medium">
+								<div className="shrink-0 rounded-full bg-success/10 px-3 py-1 text-xs text-success font-extrabold">
 									→ {answer.answer_name_html}
 								</div>
 							)}
@@ -165,13 +169,13 @@ const NumberInputQuestion: React.FC<NumberInputQuestionProps> = ({
 
 			{/* Show all correct answers when results are displayed */}
 
-			<div className="flex items-center justify-between gap-4">
-				<div className="text-xs text-gray-500 dark:text-gray-400">
+			<div className="flex flex-wrap items-center justify-between gap-3">
+				<div className="text-xs font-semibold text-muted-foreground">
 					Бүх хувьсагчдын утгыг оруулна уу. Бутархай тоо бол цэг (.) ашиглана.
 				</div>
 
 				{showResults && onRestart ? (
-					<Button onClick={handleRestart} className="text-xs font-medium">
+					<Button onClick={handleRestart} size="sm">
 						Дахин оролдох
 					</Button>
 				) : (
@@ -179,7 +183,7 @@ const NumberInputQuestion: React.FC<NumberInputQuestionProps> = ({
 					Object.keys(userAnswers).some(
 						(key) => userAnswers[Number(key)] !== "",
 					) && (
-						<Button onClick={handleReset} className="text-xs  font-medium">
+						<Button onClick={handleReset} variant="outline" size="sm">
 							Арилгах
 						</Button>
 					)

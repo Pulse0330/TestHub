@@ -1,7 +1,7 @@
 "use client";
 
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { Minus, Plus, Save } from "lucide-react";
+import { Armchair, Minus, Plus, Save } from "lucide-react";
 import { use, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Desk } from "@/app/(dash)/room/[room_id]/desk";
@@ -233,27 +233,30 @@ export default function RoomPage({ params }: RoomPageProps) {
 
 	if (isDataLoading || isRoomDetailLoading) {
 		return (
-			<div className="h-screen w-full flex items-center justify-center">
-				<Spinner />
+			<div className="flex h-[60vh] w-full items-center justify-center">
+				<Spinner className="size-8 text-primary" />
 			</div>
 		);
 	}
 
 	return (
-		<div className="py-6 max-w-7xl mx-auto space-y-6 select-none text-foreground">
+		<div className="mx-auto max-w-7xl space-y-6 py-6 text-foreground select-none">
 			{/* TOOLBAR */}
 
-			<header className="flex flex-col md:flex-row items-start md:items-center justify-between mb-8 gap-4 border-b pb-6 text-foreground">
-				<div className="flex items-center gap-3">
-					<IBackButton />
-					<div>
-						<h1 className="text-2xl font-bold tracking-tight items-center flex gap-2">
+			<header className="mb-8 flex flex-wrap items-end justify-between gap-4 text-foreground">
+				<div className="flex min-w-0 items-center gap-3 md:gap-4">
+					<IBackButton className="shrink-0" />
+					<div className="flex size-14 shrink-0 items-center justify-center rounded-2xl bg-pop-violet-soft text-pop-violet-ink shadow-[0_4px_0_0_color-mix(in_oklch,var(--pop-violet)_35%,transparent)]">
+						<Armchair className="size-7" strokeWidth={2.5} />
+					</div>
+					<div className="min-w-0">
+						<h1 className="flex flex-wrap items-center gap-2 text-2xl font-black tracking-tight md:text-3xl">
 							Ширээний зохион байгуулалт{" "}
 							<span className="text-muted-foreground">
 								| {roomDetail?.room_number || "—"}-р өрөө
 							</span>
 						</h1>
-						<p className="text-xs text-muted-foreground mt-1">
+						<p className="mt-1 text-sm font-semibold text-muted-foreground">
 							{tableCount} Ширээ | {roomDetail?.branchname}
 						</p>
 					</div>
@@ -261,22 +264,25 @@ export default function RoomPage({ params }: RoomPageProps) {
 				<AlertDialog>
 					{/* Хэрэв бүртгэгдсэн бол товчийг идэвхгүй болгоно */}
 					<AlertDialogTrigger asChild>
-						<Button className={`w-full md:w-auto `}>
+						<Button className="w-full md:w-auto">
 							{isPending ? (
 								<div className="flex items-center gap-2">
 									<Spinner /> Хадгалж байна...
 								</div>
 							) : (
 								<div className="flex items-center gap-2">
-									<Save size={16} />
+									<Save size={16} strokeWidth={2.5} />
 									{"Хадгалах"}
 								</div>
 							)}
 						</Button>
 					</AlertDialogTrigger>
 
-					<AlertDialogContent>
-						<AlertDialogHeader>
+					<AlertDialogContent className="max-w-sm">
+						<AlertDialogHeader className="items-center text-center sm:items-center sm:text-center">
+							<div className="mb-2 flex size-16 items-center justify-center rounded-3xl bg-pop-mint-soft text-pop-mint-ink">
+								<Save className="size-7" strokeWidth={2.5} />
+							</div>
 							<AlertDialogTitle>
 								{isAlreadyRegistered
 									? "Бүртгэлтэй байна"
@@ -288,12 +294,12 @@ export default function RoomPage({ params }: RoomPageProps) {
 									: "Та ширээний байршлыг хадгалах гэж байна. Энэ үйлдлийг хийхэд бэлэн үү?"}
 							</AlertDialogDescription>
 						</AlertDialogHeader>
-						<AlertDialogFooter>
-							<AlertDialogCancel>
+						<AlertDialogFooter className="mt-2 gap-2 sm:justify-center">
+							<AlertDialogCancel className="flex-1">
 								{isAlreadyRegistered ? "Хаах" : "Болих"}
 							</AlertDialogCancel>
 							{
-								<AlertDialogAction onClick={handleSave}>
+								<AlertDialogAction onClick={handleSave} className="flex-1">
 									Тийм, хадгалах
 								</AlertDialogAction>
 							}
@@ -302,11 +308,11 @@ export default function RoomPage({ params }: RoomPageProps) {
 				</AlertDialog>
 			</header>
 
-			<div className="flex flex-col lg:flex-row gap-6 items-start">
+			<div className="flex flex-col items-start gap-6 lg:flex-row">
 				{/* ROOM CONTAINER */}
 				<main
 					ref={containerRef}
-					className="relative w-full bg-muted/20 border-2 border-border rounded-4xl overflow-hidden shadow-inner ring-8 ring-muted/10"
+					className="relative w-full overflow-hidden rounded-3xl border-2 border-border bg-card shadow-[0_4px_0_0_var(--border)]"
 					style={{ aspectRatio: `${RATIO_X} / ${RATIO_Y}` }}
 					onMouseMove={handleMouseMove}
 					onMouseUp={handleMouseUp}
@@ -314,7 +320,7 @@ export default function RoomPage({ params }: RoomPageProps) {
 				>
 					{/* GRID */}
 					<div
-						className="absolute inset-0 pointer-events-none opacity-[0.2] dark:opacity-[0.15]"
+						className="pointer-events-none absolute inset-0 opacity-50"
 						style={{
 							backgroundImage: `linear-gradient(to right, var(--border) 1px, transparent 1px), linear-gradient(to bottom, var(--border) 1px, transparent 1px)`,
 							backgroundSize: `${(SNAP_STEP / GRID_X) * 100}% ${(SNAP_STEP / GRID_Y) * 100}%`,
@@ -345,7 +351,7 @@ export default function RoomPage({ params }: RoomPageProps) {
 					</div> */}
 
 					{/* CONTROL BUTTONS (BOTTOM RIGHT) */}
-					<div className="absolute bottom-4 right-4 z-20 flex flex-col gap-2 scale-90 md:scale-100 origin-bottom-right">
+					<div className="absolute right-4 bottom-4 z-20 flex origin-bottom-right scale-90 flex-col gap-2 md:scale-100">
 						{/* <div className="flex items-center gap-2 px-3 py-1 bg-card rounded-lg border border-border shadow-lg">
 							<span className="text-[10px] font-bold text-muted-foreground uppercase">
 								Too
@@ -358,25 +364,25 @@ export default function RoomPage({ params }: RoomPageProps) {
 							/>
 						</div> */}
 
-						<div className="flex bg-card rounded-lg p-0.5 border border-border shadow-lg">
+						<div className="flex rounded-2xl border-2 border-border bg-card p-1 shadow-[0_3px_0_0_var(--border)]">
 							<Button
 								variant="ghost"
 								size="icon"
-								className="h-8 w-8"
+								className="size-8 rounded-xl"
 								onClick={() => setSizeMultiplier((m) => Math.max(m - 5, 20))}
 							>
-								<Minus size={16} />
+								<Minus size={16} strokeWidth={2.5} />
 							</Button>
-							<div className="px-2 flex items-center text-[10px] font-bold text-muted-foreground">
+							<div className="flex items-center px-2 text-[11px] font-extrabold text-muted-foreground">
 								Хэмжээ
 							</div>
 							<Button
 								variant="ghost"
 								size="icon"
-								className="h-8 w-8"
+								className="size-8 rounded-xl"
 								onClick={() => setSizeMultiplier((m) => Math.min(m + 5, 100))}
 							>
-								<Plus size={16} />
+								<Plus size={16} strokeWidth={2.5} />
 							</Button>
 						</div>
 					</div>
@@ -396,14 +402,14 @@ export default function RoomPage({ params }: RoomPageProps) {
 					))}
 				</main>
 
-				<aside className="w-full lg:w-48  flex flex-col gap-4">
+				<aside className="flex w-full flex-col gap-4 lg:w-48">
 					<div className="flex flex-col gap-2 px-1">
-						<span className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">
+						<span className="text-[11px] font-black tracking-widest text-muted-foreground uppercase">
 							Бэлэн загварууд
 						</span>
-						<div className="h-px bg-border w-10" />
+						<div className="h-1 w-10 rounded-full bg-gradient-to-r from-pop-violet to-pop-pink" />
 					</div>
-					<div className="overflow-x-auto w-full">
+					<div className="w-full overflow-x-auto scrollbar-none">
 						<LayoutPicker
 							currentLayout={currentLayout}
 							onSelect={handleLayoutChange}
@@ -411,14 +417,14 @@ export default function RoomPage({ params }: RoomPageProps) {
 					</div>
 				</aside>
 			</div>
-			<div className="flex gap-6">
-				<div className="flex items-center gap-3">
-					<div className="bg-indigo-500/10 border-indigo-500/30 hover:border-indigo-500 text-indigo-600 dark:text-indigo-400 dark:bg-indigo-500/40  size-10 rounded-md flex items-center justify-center border-2 transition-all shadow-md p-0.5"></div>{" "}
+			<div className="flex flex-wrap gap-3">
+				<div className="flex items-center gap-3 rounded-full border-2 border-border bg-card py-1.5 pr-4 pl-1.5 text-sm font-bold">
+					<div className="flex size-8 items-center justify-center rounded-xl border-2 border-pop-violet/40 bg-pop-violet-soft p-0.5 shadow-[0_3px_0_0_color-mix(in_oklch,var(--pop-violet)_35%,transparent)]"></div>{" "}
 					Бүртгэдсэн ширээ
 				</div>
-				<div className="flex items-center gap-3">
+				<div className="flex items-center gap-3 rounded-full border-2 border-border bg-card py-1.5 pr-4 pl-1.5 text-sm font-bold">
 					{" "}
-					<div className="bg-orange-100 dark:bg-orange-900/40 dark:border-orange-500 text-orange-500 border-orange-500  size-10 rounded-md flex items-center justify-center border-2 transition-all shadow-md p-0.5"></div>
+					<div className="flex size-8 items-center justify-center rounded-xl border-2 border-pop-sun bg-pop-sun-soft p-0.5 shadow-[0_3px_0_0_color-mix(in_oklch,var(--pop-sun)_60%,transparent)]"></div>
 					Нэмж бүртгэсэн ширээ
 				</div>
 			</div>

@@ -36,14 +36,14 @@ export function SourceBlock({
 		: plainText;
 
 	return (
-		<div className="mt-3 p-3 border rounded-lg">
+		<div className="mt-3 mb-4 rounded-2xl border-2 border-border bg-muted/40 p-3.5 sm:p-4">
 			{sourceImg && (
 				<Image
 					src={sourceImg}
 					alt="source"
 					width={56}
 					height={56}
-					className="w-14 h-14 object-cover rounded-md mb-2"
+					className="mb-2 size-14 rounded-xl object-cover"
 					unoptimized
 				/>
 			)}
@@ -51,16 +51,18 @@ export function SourceBlock({
 				<audio
 					controls
 					controlsList="nodownload"
-					className="w-full h-10"
+					className="mb-2 h-10 w-full rounded-full"
 					src={srcAudio}
 				>
 					<track kind="captions" />
 				</audio>
 			)}
 			{sourceName && (
-				<div className="text-sm text-gray-700 leading-relaxed">
+				<div className="text-sm leading-relaxed text-foreground/85">
 					{sourceTitle && (
-						<span className="font-semibold block mb-1">{sourceTitle}</span>
+						<span className="mb-1.5 block font-extrabold text-foreground">
+							{sourceTitle}
+						</span>
 					)}
 					{expanded || !needsTruncate ? (
 						<>
@@ -71,7 +73,7 @@ export function SourceBlock({
 									variant="link"
 									size="sm"
 									onClick={() => setExpanded(false)}
-									className="h-auto p-0 ml-1 text-blue-600 font-semibold"
+									className="ml-1 h-auto p-0 font-bold text-primary"
 								>
 									Хураах
 								</Button>
@@ -85,7 +87,7 @@ export function SourceBlock({
 								variant="link"
 								size="sm"
 								onClick={() => setExpanded(true)}
-								className="h-auto p-0 ml-1 text-blue-600 font-semibold"
+								className="ml-1 h-auto p-0 font-bold text-primary"
 							>
 								...дэлгэрэнгүй
 							</Button>

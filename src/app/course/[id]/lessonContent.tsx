@@ -1,9 +1,7 @@
 "use client";
 
-import { ArrowLeft, ArrowRight, BookOpen, CheckCircle2 } from "lucide-react";
+import { CheckCircle2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { ContentView } from "@/types/course/contentView";
 import { SafeHtmlContent } from "./safeHtmlContent";
 
@@ -12,6 +10,11 @@ interface LessonContentProps {
 	lessonIndex: number;
 	totalLessons: number;
 	isCompleted: boolean;
+	/**
+	 * Navigation handlers. The player page renders these in its sticky
+	 * bottom bar (Өмнөх / Дууссан / Дараах / Бусад хичээл); they stay part
+	 * of the props contract.
+	 */
 	onMarkComplete: () => void;
 	onPrevious: () => void;
 	onNext: () => void;
@@ -23,81 +26,39 @@ export function LessonContent({
 	lessonIndex,
 	totalLessons,
 	isCompleted,
-	onMarkComplete,
-	onPrevious,
-	onNext,
-	onFinish,
 }: LessonContentProps) {
-	const isLastLesson = lessonIndex === totalLessons - 1;
-	const isFirstLesson = lessonIndex === 0;
-
 	return (
-		<Card>
-			<CardHeader>
-				<div className="flex items-start justify-between gap-4">
-					<div className="space-y-2">
-						<div className="flex items-center gap-2">
-							<Badge variant="secondary">{lesson.elesson_type}</Badge>
-							{isCompleted && (
-								<Badge className="bg-green-600">
-									<CheckCircle2 className="h-3 w-3 mr-1" />
-									Дууссан
-								</Badge>
-							)}
-						</div>
-						<CardTitle className="text-xl">
-							Хичээл {lessonIndex + 1}: {lesson.content_name}
-						</CardTitle>
-					</div>
+		<article className="card-pop overflow-hidden animate-pop-in">
+			{/* Lesson heading */}
+			<header className="relative border-b-2 border-border bg-gradient-to-br from-pop-violet-soft via-card to-card px-5 pt-5 pb-4 md:px-8 md:pt-7 md:pb-5">
+				<div className="flex flex-wrap items-center gap-2 mb-3">
+					<span className="inline-flex items-center rounded-full bg-pop-violet text-primary-foreground px-2.5 py-0.5 text-xs font-black tabular-nums">
+						{lessonIndex + 1} / {totalLessons}
+					</span>
+					<Badge variant="sky" className="rounded-full">
+						{lesson.elesson_type}
+					</Badge>
+					{isCompleted && (
+						<Badge className="rounded-full bg-success text-primary-foreground">
+							<CheckCircle2 className="h-3 w-3 mr-1" />
+							Дууссан
+						</Badge>
+					)}
 				</div>
-			</CardHeader>
-			<CardContent className="space-y-4">
-				<SafeHtmlContent
-					html={lesson.url || ""}
-					contentType={lesson.l_content_type || 0}
-				/>
+				<h2 className="text-xl md:text-3xl font-black leading-tight tracking-tight text-foreground">
+					Хичээл {lessonIndex + 1}: {lesson.content_name}
+				</h2>
+			</header>
 
-				{/* Navigation Buttons */}
-				<div className="flex items-center justify-between pt-4 border-t">
-					<Button
-						variant="outline"
-						onClick={onPrevious}
-						disabled={isFirstLesson}
-					>
-						<ArrowLeft className="mr-2 h-4 w-4" />
-						Өмнөх
-					</Button>
-
-					<div className="flex gap-2">
-						{!isCompleted && (
-							<Button
-								onClick={onMarkComplete}
-								className="bg-green-600 hover:bg-green-700"
-							>
-								<CheckCircle2 className="mr-2 h-4 w-4" />
-								Дууссан
-							</Button>
-						)}
-
-						{!isLastLesson && (
-							<Button onClick={onNext}>
-								Дараах
-								<ArrowRight className="ml-2 h-4 w-4" />
-							</Button>
-						)}
-
-						{isLastLesson && (
-							<Button
-								onClick={onFinish}
-								className="bg-blue-600 hover:bg-blue-700"
-							>
-								Бусад хичээл
-								<BookOpen className="ml-2 h-4 w-4" />
-							</Button>
-						)}
-					</div>
+			{/* Reading area */}
+			<div className="px-5 py-6 md:px-10 md:py-8">
+				<div className="text-base leading-relaxed text-foreground">
+					<SafeHtmlContent
+						html={lesson.url || ""}
+						contentType={lesson.l_content_type || 0}
+					/>
 				</div>
-			</CardContent>
-		</Card>
+			</div>
+		</article>
 	);
 }

@@ -118,11 +118,11 @@ export default function IdleTimerProvider({
 
 			{showWarning && !isExcluded && (
 				<Portal>
-					<div className="fixed inset-0  flex items-center justify-center pointer-events-auto">
-						<div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8 max-w-sm w-full mx-4 text-center animate-in fade-in zoom-in duration-200">
-							<div className="w-16 h-16  rounded-full flex items-center justify-center mx-auto mb-4">
+					<div className="pointer-events-auto fixed inset-0 flex items-center justify-center bg-[oklch(0.2_0.05_285/0.45)]">
+						<div className="card-pop mx-4 w-full max-w-sm p-8 text-center animate-in fade-in zoom-in duration-200">
+							<div className="mx-auto mb-4 flex size-16 items-center justify-center rounded-3xl bg-pop-sun-soft">
 								<svg
-									className="w-8 h-8 text-amber-500"
+									className="size-8 text-pop-sun-ink"
 									fill="none"
 									stroke="currentColor"
 									viewBox="0 0 24 24"
@@ -151,7 +151,7 @@ export default function IdleTimerProvider({
 										stroke="currentColor"
 										strokeWidth="6"
 										fill="none"
-										className="text-gray-200 dark:text-gray-700"
+										className="text-muted"
 									/>
 									<circle
 										cx="40"
@@ -162,19 +162,19 @@ export default function IdleTimerProvider({
 										fill="none"
 										strokeDasharray={`${2 * Math.PI * 34}`}
 										strokeDashoffset={`${2 * Math.PI * 34 * (1 - countdown / 10)}`}
-										className="text-amber-500 transition-all duration-1000"
+										className="text-pop-sun transition-all duration-1000"
 										strokeLinecap="round"
 									/>
 								</svg>
-								<span className="absolute inset-0 flex items-center justify-center text-2xl font-bold text-gray-800 dark:text-gray-100">
+								<span className="absolute inset-0 flex items-center justify-center text-2xl font-black text-foreground">
 									{countdown}
 								</span>
 							</div>
-							<h2 className="text-xl font-bold text-gray-800 dark:text-gray-100 mb-2">
+							<h2 className="mb-2 text-xl font-black text-foreground">
 								Идэвхгүй байна
 							</h2>
-							<p className="text-gray-500 dark:text-gray-400 text-sm mb-6">
-								<span className="font-semibold text-amber-500">
+							<p className="mb-6 text-sm font-semibold text-muted-foreground">
+								<span className="font-extrabold text-pop-sun-ink">
 									{countdown} секунд
 								</span>
 								-ын дараа автоматаар гарна.

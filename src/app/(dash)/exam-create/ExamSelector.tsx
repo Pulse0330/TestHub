@@ -58,27 +58,29 @@ export function ExamSelector({
 				<div className="space-y-4 p-1">
 					{[1, 2, 3].map((i) => (
 						<div key={i} className="space-y-3">
-							<Skeleton className="h-6 w-3/4" />
+							<Skeleton className="h-6 w-3/4 rounded-xl" />
 							<div className="pl-6 space-y-2">
-								<Skeleton className="h-12 w-full rounded-lg" />
+								<Skeleton className="h-14 w-full rounded-2xl" />
 							</div>
 						</div>
 					))}
 				</div>
 			) : exams.length === 0 ? (
-				<div className="flex flex-col items-center justify-center h-40 text-muted-foreground">
-					<BookOpen size={32} className="mb-2 opacity-20" />
-					<p className="text-sm italic">Шалгалт олдсонгүй</p>
+				<div className="flex h-48 flex-col items-center justify-center gap-3 text-muted-foreground">
+					<span className="flex size-16 items-center justify-center rounded-full bg-pop-violet-soft text-pop-violet-ink">
+						<BookOpen size={28} strokeWidth={2.5} />
+					</span>
+					<p className="text-sm font-bold">Шалгалт олдсонгүй</p>
 				</div>
 			) : (
 				<div className="space-y-6">
 					{exams.map((exam: Exam) => (
 						<div key={exam.id} className="space-y-3">
 							<div className="flex items-center gap-2 px-1">
-								<h3 className="font-bold text-[13px] uppercase tracking-tight text-foreground/80">
+								<h3 className="text-sm font-extrabold tracking-tight text-foreground">
 									{exam.name}
 								</h3>
-								<Badge variant="outline" className="text-[10px] ml-auto h-5">
+								<Badge variant="sky" className="ml-auto h-6 shrink-0 rounded-full text-[11px] font-bold">
 									{exam.duration} мин
 								</Badge>
 							</div>
@@ -86,16 +88,16 @@ export function ExamSelector({
 							<RadioGroup
 								value={selectedExamDateId || ""}
 								onValueChange={handleValueChange}
-								className="pl-4 space-y-2 border-l-2 border-muted ml-2"
+								className="ml-2 space-y-2 border-l-2 border-dashed border-border pl-4"
 							>
 								{exam.exam_dates.map((date: ExamDate) => (
 									<Label
 										key={date.id}
 										htmlFor={`date-${date.id}`}
-										className={`relative flex items-center justify-between p-3 rounded-xl border transition-all cursor-pointer group ${
+										className={`group relative flex cursor-pointer items-center justify-between rounded-2xl border-2 p-3 transition-all ${
 											selectedExamDateId === String(date.id)
-												? "border-primary bg-primary/5 ring-1 ring-primary shadow-sm"
-												: "border-border bg-card hover:border-primary/50 hover:bg-muted/50"
+												? "border-primary bg-primary/10 shadow-[0_3px_0_0_color-mix(in_oklch,var(--primary)_35%,transparent)]"
+												: "border-border bg-card hover:-translate-y-0.5 hover:border-primary/50 hover:bg-accent/50"
 										}`}
 									>
 										<div className="flex items-center gap-3">
@@ -104,11 +106,11 @@ export function ExamSelector({
 												id={`date-${date.id}`}
 											/>
 											<div className="flex flex-col gap-0.5">
-												<div className="flex items-center gap-2 font-bold text-xs">
-													<CalendarClock size={13} className="text-primary" />
+												<div className="flex items-center gap-2 text-xs font-extrabold">
+													<CalendarClock size={14} className="text-primary" strokeWidth={2.5} />
 													{format(new Date(date.start_date), "yyyy.MM.dd")}
 												</div>
-												<div className="flex items-center gap-2 text-[11px] text-muted-foreground font-medium">
+												<div className="flex items-center gap-2 text-[11px] font-bold text-muted-foreground">
 													<Clock size={12} />
 													<span>
 														{format(new Date(date.start_date), "HH:mm")} -{" "}
@@ -118,7 +120,7 @@ export function ExamSelector({
 											</div>
 										</div>
 										{selectedExamDateId === String(date.id) && (
-											<Badge className="bg-primary text-[9px] h-4 px-1.5 uppercase font-black">
+											<Badge className="h-5 rounded-full px-2 text-[10px] font-black uppercase">
 												Сонгосон
 											</Badge>
 										)}

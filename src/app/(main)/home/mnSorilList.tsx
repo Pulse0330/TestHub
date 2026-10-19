@@ -19,6 +19,7 @@ import {
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { memo } from "react";
+import { Skeleton } from "@/components/ui/skeleton";
 
 // ── Types ────────────────────────────────────────────────────────
 interface AdItem {
@@ -55,27 +56,27 @@ interface DashboardData {
 const getLessonTheme = (title: string) => {
 	const name = title.toLowerCase();
 	if (name.includes("мат")) return {
-		glow: "hover:shadow-cyan-500/10 hover:border-cyan-500/30",
-		text: "text-cyan-500 dark:text-cyan-400",
-		bg: "bg-cyan-500/10",
+		glow: "hover:border-pop-sky",
+		text: "text-pop-sky-ink",
+		bg: "bg-pop-sky-soft",
 		icon: Cpu,
 	};
 	if (name.includes("физ")) return {
-		glow: "hover:shadow-fuchsia-500/10 hover:border-fuchsia-500/30",
-		text: "text-fuchsia-500 dark:text-fuchsia-400",
-		bg: "bg-fuchsia-500/10",
+		glow: "hover:border-pop-pink",
+		text: "text-pop-pink-ink",
+		bg: "bg-pop-pink-soft",
 		icon: Orbit,
 	};
 	if (name.includes("англи")) return {
-		glow: "hover:shadow-amber-500/10 hover:border-amber-500/30",
-		text: "text-amber-500 dark:text-amber-400",
-		bg: "bg-amber-500/10",
+		glow: "hover:border-pop-sun",
+		text: "text-pop-sun-ink",
+		bg: "bg-pop-sun-soft",
 		icon: Terminal,
 	};
 	return {
-		glow: "hover:shadow-emerald-500/10 hover:border-emerald-500/30",
-		text: "text-emerald-500 dark:text-emerald-400",
-		bg: "bg-emerald-500/10",
+		glow: "hover:border-pop-mint",
+		text: "text-pop-mint-ink",
+		bg: "bg-pop-mint-soft",
 		icon: Code2,
 	};
 };
@@ -85,26 +86,29 @@ const PremiumPromoBanner = memo(({ item }: { item: AdItem }) => (
 	<motion.div
 		initial={{ opacity: 0, y: 10 }}
 		animate={{ opacity: 1, y: 0 }}
-		className="relative overflow-hidden rounded-2xl bg-neutral-900 border border-neutral-800 p-6 md:p-8 text-white shadow-xl flex flex-col md:flex-row items-center justify-between gap-6"
+		className="relative flex flex-col items-center justify-between gap-6 overflow-hidden rounded-3xl bg-gradient-to-br from-pop-sky to-pop-violet p-6 text-white shadow-[0_6px_0_0_color-mix(in_oklch,var(--pop-violet)_45%,transparent)] md:flex-row md:p-8"
 	>
-		<div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px] pointer-events-none" />
-		<div className="flex-1 space-y-4 z-10">
-			<div className="inline-flex items-center gap-2 bg-neutral-800 border border-neutral-700 px-3 py-1 rounded-md text-[10px] font-mono tracking-widest text-neutral-300">
-				<Radio className="w-3.5 h-3.5 text-rose-500 animate-pulse" /> LIVE ZAR
+		<div aria-hidden className="pointer-events-none absolute inset-0">
+			<div className="absolute -right-10 -top-10 size-40 rounded-full bg-white/10" />
+			<div className="absolute -bottom-14 left-1/3 size-32 rounded-full bg-white/10" />
+		</div>
+		<div className="z-10 flex-1 space-y-4">
+			<div className="inline-flex items-center gap-2 rounded-full bg-white/20 px-3 py-1 text-[11px] font-extrabold tracking-wide">
+				<Radio className="size-3.5 animate-pulse text-pop-sun" strokeWidth={2.75} /> LIVE ZAR
 			</div>
-			<h2 className="text-xl md:text-2xl font-black tracking-tight uppercase">{item.title}</h2>
-			<p className="text-neutral-400 text-xs md:text-sm leading-relaxed max-w-xl whitespace-pre-line">{item.descr}</p>
+			<h2 className="text-xl font-black uppercase tracking-tight md:text-2xl">{item.title}</h2>
+			<p className="max-w-xl whitespace-pre-line text-xs font-semibold leading-relaxed text-primary-foreground/85 md:text-sm">{item.descr}</p>
 			<a
 				href={item.url}
 				target="_blank"
 				rel="noreferrer"
-				className="inline-flex items-center gap-1.5 bg-white text-black hover:bg-neutral-200 font-mono text-xs px-4 py-2.5 rounded-lg transition-all font-bold"
+				className="inline-flex items-center gap-1.5 rounded-xl bg-card px-4 py-2.5 text-xs font-extrabold text-foreground shadow-[0_4px_0_0_color-mix(in_oklch,var(--pop-violet)_55%,black)] transition-all hover:bg-accent active:translate-y-0.5"
 			>
-				ХОЛБОГДОХ <ArrowRight className="w-3.5 h-3.5" />
+				ХОЛБОГДОХ <ArrowRight className="size-3.5" strokeWidth={2.75} />
 			</a>
 		</div>
 		{item.filename && (
-			<div className="relative w-full md:w-52 h-32 rounded-xl overflow-hidden border border-neutral-800 shadow-xl flex-shrink-0">
+			<div className="relative z-10 h-32 w-full flex-shrink-0 overflow-hidden rounded-2xl border-4 border-white/30 md:w-52">
 				<Image src={item.filename} alt="Promo" fill className="object-cover" />
 			</div>
 		)}
@@ -118,31 +122,31 @@ const NeonCourseCard = memo(({ item }: { item: CourseItem }) => {
 	const LessonLogo = theme.icon;
 
 	return (
-		<div className={`group relative flex flex-col justify-between rounded-xl border border-neutral-200 dark:border-neutral-800/80 bg-white dark:bg-neutral-950 p-4 transition-all duration-200 ${theme.glow}`}>
+		<div className={`group card-pop lift relative flex flex-col justify-between p-4 ${theme.glow}`}>
 			<div className="space-y-4">
 				<div className="flex items-center justify-between">
-					<div className={`w-9 h-9 rounded-lg ${theme.bg} ${theme.text} flex items-center justify-center transform -skew-x-6 transition-transform duration-500 group-hover:rotate-[360deg]`}>
-						<LessonLogo className="w-4 h-4 skew-x-6 stroke-[2]" />
+					<div className={`flex size-11 items-center justify-center rounded-xl ${theme.bg} ${theme.text} transition-transform duration-300 group-hover:rotate-6`}>
+						<LessonLogo className="size-5" strokeWidth={2.5} />
 					</div>
-					<div className="flex items-center gap-1 text-[10px] font-mono font-bold text-neutral-500 dark:text-neutral-400 bg-neutral-100 dark:bg-neutral-900 px-2 py-0.5 rounded border border-neutral-200/50 dark:border-neutral-800">
-						<Activity className="w-3 h-3 text-emerald-500" /> {item.rate}
+					<div className="flex items-center gap-1 rounded-full bg-pop-sun-soft px-2 py-0.5 text-[11px] font-extrabold text-pop-sun-ink">
+						<Activity className="size-3" strokeWidth={2.75} /> {item.rate}
 					</div>
 				</div>
 				<div>
-					<h4 className="font-bold text-xs md:text-sm text-neutral-800 dark:text-neutral-200 line-clamp-2 min-h-[38px]">
+					<h4 className="line-clamp-2 min-h-[38px] text-xs font-extrabold md:text-sm">
 						{item.title}
 					</h4>
-					<p className="text-[10px] font-mono text-neutral-400 mt-1 truncate">{item.catname}</p>
+					<p className="mt-1 truncate text-[11px] font-semibold text-muted-foreground">{item.catname}</p>
 				</div>
 			</div>
-			<div className="mt-4 pt-3 border-t border-neutral-100 dark:border-neutral-900 flex items-center justify-between">
-				<span className="text-xs font-mono font-bold text-neutral-900 dark:text-neutral-100">
+			<div className="mt-4 flex items-center justify-between border-t-2 border-dashed border-border pt-3">
+				<span className="text-sm font-black">
 					{item.amount > 0 ? `${item.amount.toLocaleString()}₮` : "0₮"}
 				</span>
-				<span className={`text-[9px] font-mono font-bold px-2 py-0.5 rounded uppercase border ${
+				<span className={`rounded-full px-2 py-0.5 text-[10px] font-extrabold uppercase ${
 					item.ispay
-						? "bg-neutral-900 text-white dark:bg-neutral-800 border-transparent"
-						: "bg-emerald-500/10 text-emerald-500 border-emerald-500/20"
+						? "bg-pop-violet-soft text-pop-violet-ink"
+						: "bg-pop-mint-soft text-pop-mint-ink"
 				}`}>
 					{item.ispay ? "Premium" : "Free"}
 				</span>
@@ -156,21 +160,21 @@ NeonCourseCard.displayName = "NeonCourseCard";
 const ModernSorilRow = memo(({ item }: { item: ExamItem }) => {
 	const router = useRouter();
 	return (
-		<div className="group flex items-center justify-between p-3 bg-white dark:bg-neutral-950 rounded-xl border border-neutral-200/60 dark:border-neutral-800/60 hover:border-neutral-400 dark:hover:border-neutral-700 transition-all">
-			<div className="flex items-center gap-3 min-w-0">
-				<div className="relative w-10 h-10 rounded-lg overflow-hidden bg-neutral-100 dark:bg-neutral-900 flex-shrink-0 border border-neutral-200 dark:border-neutral-800">
+		<div className="group card-pop lift flex items-center justify-between gap-3 p-3">
+			<div className="flex min-w-0 items-center gap-3">
+				<div className="relative size-12 flex-shrink-0 overflow-hidden rounded-xl bg-pop-sky-soft">
 					<Image src={item.filename} alt="" fill className="object-cover" />
 				</div>
 				<div className="min-w-0">
-					<h5 className="font-bold text-xs md:text-sm text-neutral-800 dark:text-neutral-200 truncate">
+					<h5 className="truncate text-xs font-extrabold md:text-sm">
 						{item.soril_name}
 					</h5>
-					<div className="flex items-center gap-3 text-[10px] font-mono text-neutral-400 mt-0.5">
-						<span className="flex items-center gap-1">
-							<Binary className="w-3 h-3 text-neutral-400" /> {item.que_cnt} Q-DATA
+					<div className="mt-1 flex flex-wrap items-center gap-1.5 text-[10px]">
+						<span className="inline-flex items-center gap-1 rounded-full bg-pop-mint-soft px-2 py-0.5 font-bold text-pop-mint-ink">
+							<Binary className="size-3" strokeWidth={2.5} /> {item.que_cnt} Q-DATA
 						</span>
 						{item.isopensoril === 1 && (
-							<span className="text-cyan-500 dark:text-cyan-400 font-bold uppercase tracking-wider text-[9px]">Нээлттэй</span>
+							<span className="rounded-full bg-pop-sky-soft px-2 py-0.5 font-extrabold uppercase tracking-wide text-pop-sky-ink">Нээлттэй</span>
 						)}
 					</div>
 				</div>
@@ -178,9 +182,9 @@ const ModernSorilRow = memo(({ item }: { item: ExamItem }) => {
 			<button
 				type="button"
 				onClick={() => router.push(`/exam/${item.exam_id}`)}
-				className="flex items-center justify-center w-8 h-8 rounded-lg bg-neutral-50 dark:bg-neutral-900 group-hover:bg-black dark:group-hover:bg-white text-neutral-500 group-hover:text-white dark:group-hover:text-black transition-all"
+				className="flex size-9 flex-shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary transition-all group-hover:bg-primary group-hover:text-primary-foreground"
 			>
-				<ChevronRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+				<ChevronRight className="size-4 transition-transform group-hover:translate-x-0.5" strokeWidth={2.75} />
 			</button>
 		</div>
 	);
@@ -200,10 +204,10 @@ export default function MnDashboard() {
 
 	if (isLoading) {
 		return (
-			<div className="max-w-7xl mx-auto p-6 grid grid-cols-2 md:grid-cols-4 gap-4 animate-pulse">
+			<div className="grid grid-cols-2 gap-4 md:grid-cols-4">
 				{Array.from({ length: 4 }).map((_, i) => (
 					// biome-ignore lint/suspicious/noArrayIndexKey: skeleton placeholder
-					<div key={i} className="h-36 bg-neutral-100 dark:bg-neutral-900 rounded-xl" />
+					<Skeleton key={i} className="h-36 rounded-3xl" />
 				))}
 			</div>
 		);
@@ -211,9 +215,11 @@ export default function MnDashboard() {
 
 	if (isError) {
 		return (
-			<div className="flex flex-col items-center justify-center py-20 gap-2 text-neutral-400">
-				<ShieldX className="w-10 h-10 text-rose-500" />
-				<p className="text-xs font-mono tracking-widest uppercase">System Error 500</p>
+			<div className="flex flex-col items-center justify-center gap-3 py-20 text-center">
+				<div className="flex size-16 items-center justify-center rounded-full bg-pop-coral-soft text-pop-coral-ink">
+					<ShieldX className="size-8" strokeWidth={2.5} />
+				</div>
+				<p className="text-xs font-extrabold uppercase tracking-widest text-muted-foreground">System Error 500</p>
 			</div>
 		);
 	}
@@ -223,36 +229,52 @@ export default function MnDashboard() {
 	const exams = data?.RetDataFourth ?? [];
 
 	return (
-		<div className="max-w-7xl mx-auto p-4 md:p-6 space-y-10 min-h-screen">
-			{ads.length > 0 && <PremiumPromoBanner item={ads[0]} />}
+		<div className="@container space-y-4">
+			{/* Bento: promo + soril list side by side, courses as a scroll strip */}
+			<div className="grid grid-cols-1 gap-4 @4xl:grid-cols-5">
+				{ads.length > 0 && (
+					<div className={exams.length > 0 ? "@4xl:col-span-3" : "@4xl:col-span-5"}>
+						<PremiumPromoBanner item={ads[0]} />
+					</div>
+				)}
+
+				{exams.length > 0 && (
+					<div className={`flex flex-col gap-3 rounded-3xl border-2 border-border bg-card p-4 shadow-[0_4px_0_0_var(--border)] ${ads.length > 0 ? "@4xl:col-span-2" : "@4xl:col-span-5"}`}>
+						<div className="flex items-center gap-2.5">
+							<span className="flex size-9 items-center justify-center rounded-xl bg-pop-sky-soft text-pop-sky-ink">
+								<Layers className="size-[18px]" strokeWidth={2.5} />
+							</span>
+							<h3 className="text-base font-black tracking-tight">
+								Албан ёсны жишиг сорилууд
+							</h3>
+							<span className="ml-auto rounded-full bg-primary px-2 py-0.5 text-[11px] font-extrabold text-primary-foreground">
+								{exams.length}
+							</span>
+						</div>
+						<div className="-mx-1 max-h-[22rem] space-y-2 overflow-y-auto px-1 pb-1">
+							{exams.map((exam) => (
+								<ModernSorilRow key={exam.exam_id} item={exam} />
+							))}
+						</div>
+					</div>
+				)}
+			</div>
 
 			{courses.length > 0 && (
-				<div className="space-y-4">
-					<div className="flex items-center gap-2">
-						<Compass className="w-4 h-4 text-neutral-500" />
-						<h3 className="text-sm font-mono font-bold uppercase tracking-wider text-neutral-400">
-							/ Сонгон бэлтгэх хөтөлбөрүүд
+				<div className="space-y-3 rounded-3xl border-2 border-border bg-card p-4 shadow-[0_4px_0_0_var(--border)]">
+					<div className="flex items-center gap-2.5">
+						<span className="flex size-9 items-center justify-center rounded-xl bg-pop-mint-soft text-pop-mint-ink">
+							<Compass className="size-[18px]" strokeWidth={2.5} />
+						</span>
+						<h3 className="text-base font-black tracking-tight">
+							Сонгон бэлтгэх хөтөлбөрүүд
 						</h3>
 					</div>
-					<div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+					<div className="scrollbar-none -mx-1 flex snap-x gap-3 overflow-x-auto px-1 pb-2">
 						{courses.map((course) => (
-							<NeonCourseCard key={course.planid} item={course} />
-						))}
-					</div>
-				</div>
-			)}
-
-			{exams.length > 0 && (
-				<div className="space-y-4">
-					<div className="flex items-center gap-2">
-						<Layers className="w-4 h-4 text-neutral-500" />
-						<h3 className="text-sm font-mono font-bold uppercase tracking-wider text-neutral-400">
-							/ Албан ёсны жишиг сорилууд
-						</h3>
-					</div>
-					<div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-						{exams.map((exam) => (
-							<ModernSorilRow key={exam.exam_id} item={exam} />
+							<div key={course.planid} className="w-44 shrink-0 snap-start sm:w-52">
+								<NeonCourseCard item={course} />
+							</div>
 						))}
 					</div>
 				</div>

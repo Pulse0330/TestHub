@@ -225,12 +225,14 @@ const SectionHeader = React.memo<SectionHeaderProps>(function SectionHeader({
 	title,
 }) {
 	return (
-		<div className="flex items-center gap-1.5 pt-1 pb-0.5">
-			<Icon className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />
-			<span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+		<div className="flex items-center gap-2 pt-3 pb-1.5">
+			<span className="flex size-7 items-center justify-center rounded-lg bg-muted text-muted-foreground">
+				<Icon className="size-3.5" strokeWidth={2.5} />
+			</span>
+			<span className="text-[11px] font-extrabold uppercase tracking-wide text-muted-foreground sm:text-xs">
 				{title}
 			</span>
-			<div className="flex-1 h-px bg-slate-200 dark:bg-slate-700 ml-1" />
+			<div className="ml-1 h-0.5 flex-1 rounded-full bg-border" />
 		</div>
 	);
 });
@@ -247,33 +249,33 @@ interface AckWarningDialogProps {
 function AckWarningDialog({ open, onClose }: AckWarningDialogProps) {
 	return (
 		<Dialog open={open} onOpenChange={onClose}>
-			<DialogContent className="w-[85vw] max-w-sm p-0 overflow-hidden bg-white dark:bg-slate-900 border-red-200 dark:border-red-800">
+			<DialogContent className="w-[85vw] max-w-sm overflow-hidden p-0">
 				{/* Red accent top bar */}
 
-				<div className="px-5 pt-4 pb-5">
+				<div className="px-5 pt-6 pb-5">
 					{/* Icon + Title */}
 					<div className="flex flex-col items-center text-center gap-3 mb-4">
-						<div className="w-14 h-14 rounded-full bg-red-50 dark:bg-red-900/30 flex items-center justify-center border-2 border-red-200 dark:border-red-700">
+						<div className="flex size-16 items-center justify-center rounded-3xl bg-destructive/10 shadow-[0_4px_0_0_color-mix(in_oklch,var(--destructive)_30%,transparent)]">
 							<AlertTriangle
-								className="w-7 h-7 text-red-600 dark:text-red-400"
+								className="size-8 text-destructive"
 								strokeWidth={2.5}
 							/>
 						</div>
 						<div>
-							<DialogTitle className="text-base font-bold text-slate-900 dark:text-slate-50 mb-1">
+							<DialogTitle className="mb-1 text-lg font-black text-foreground">
 								Дүрмийг зөвшөөрөөгүй байна
 							</DialogTitle>
-							<DialogDescription className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+							<DialogDescription className="text-xs font-semibold leading-relaxed">
 								Шалгалт эхлүүлэхийн өмнө доорх нөхцлийг зайлшгүй зөвшөөрнө үү
 							</DialogDescription>
 						</div>
 					</div>
 
 					{/* Info box */}
-					<div className=" border rounded-lg p-3 mb-4">
+					<div className="mb-4 rounded-2xl bg-muted p-3">
 						<div className="flex items-start gap-2">
-							<CheckCircle2 className="w-4 h-4 text-red-500 dark:text-red-400 flex-shrink-0 mt-0.5" />
-							<p className="text-[11px] sm:text-xs leading-snug font-medium">
+							<CheckCircle2 className="mt-0.5 size-4 shrink-0 text-destructive" />
+							<p className="text-[11px] leading-snug font-semibold text-foreground sm:text-xs">
 								<span className="font-bold">"Шалгалтын дүрэм журам"</span>-ийн
 								checkbox-ийг чагтална уу. Дүрмийг уншиж, зөвшөөрсний дараа
 								шалгалтыг эхлүүлэх боломжтой.
@@ -284,7 +286,7 @@ function AckWarningDialog({ open, onClose }: AckWarningDialogProps) {
 					{/* Action button */}
 					<Button
 						onClick={onClose}
-						className="w-full h-9 text-xs font-semibold bg-slate-900 hover:bg-slate-800 dark:bg-slate-100 dark:hover:bg-slate-200 text-white dark:text-slate-900 shadow-sm"
+						className="w-full"
 					>
 						Ойлголоо, буцах
 					</Button>
@@ -336,21 +338,24 @@ export default function ExamRulesDialog({
 	return (
 		<>
 			<Dialog open={open} onOpenChange={onOpenChange}>
-				<DialogContent className="w-[90vw] max-w-3xl h-[85vh] p-0 flex flex-col overflow-hidden bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700">
+				<DialogContent className="flex h-[85vh] w-[90vw] max-w-3xl flex-col gap-0 overflow-hidden p-0">
 					{/* Header */}
-					<div className="flex-none px-3 pt-3 pb-2 sm:px-4 sm:pt-4 sm:pb-3 border-b border-slate-200 dark:border-slate-700 bg-gradient-to-br from-slate-50 via-white to-slate-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
+					<div className="flex-none border-b-2 border-border bg-page-gradient px-4 pt-5 pb-4 sm:px-6">
 						<DialogHeader>
-							<DialogTitle className="flex items-center gap-1.5 text-base sm:text-lg font-bold text-slate-900 dark:text-slate-50">
+							<DialogTitle className="flex items-center gap-3 text-xl font-black text-foreground sm:text-2xl">
+								<span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-pop-violet-soft text-2xl shadow-[0_4px_0_0_color-mix(in_oklch,var(--pop-violet)_30%,transparent)]">
+									🍀
+								</span>
 								Амжилт хүсье!
 							</DialogTitle>
-							<DialogDescription className="text-xs sm:text-sm font-medium mt-0.5 text-slate-600 dark:text-slate-400">
+							<DialogDescription className="mt-1 text-xs font-semibold sm:text-sm">
 								Цахимаар шалгалт өгөх дүрмийг анхааралтай уншиж эхлүүлнэ үү .
 							</DialogDescription>
 						</DialogHeader>
 
-						<Alert className="mt-2 border py-1.5 px-2 border-red-200 dark:border-red-800">
-							<AlertTriangle className="h-3.5 w-3.5 text-red-600 dark:text-red-400" />
-							<AlertDescription className="font-semibold text-[10px] sm:text-xs text-red-900 dark:text-red-100">
+						<Alert className="mt-3 rounded-2xl border-2 border-destructive/30 bg-destructive/10 px-3 py-2">
+							<AlertTriangle className="size-4 text-destructive" />
+							<AlertDescription className="text-[11px] font-bold text-destructive sm:text-xs">
 								⚠️ АНХААРУУЛГА: Хуулах аливаа оролдлого бүрийг системд бүртгэж
 								байгааг анхаарна уу !!
 							</AlertDescription>
@@ -358,11 +363,13 @@ export default function ExamRulesDialog({
 					</div>
 
 					{/* Content */}
-					<div className="flex-1 min-h-0 overflow-y-auto px-3 sm:px-4 py-3 bg-white dark:bg-slate-900 flex flex-col justify-between">
+					<div className="flex min-h-0 flex-1 flex-col justify-between overflow-y-auto bg-card px-4 py-4 sm:px-6">
 						<div>
 							<div className="mb-2">
-								<h3 className="text-sm sm:text-base font-bold flex items-center gap-1.5 text-slate-900 dark:text-slate-50">
-									<Shield className="w-4 h-4 sm:w-5 sm:h-5" />
+								<h3 className="flex items-center gap-2 text-base font-extrabold text-foreground sm:text-lg">
+									<span className="flex size-8 items-center justify-center rounded-xl bg-primary/10 text-primary">
+										<Shield className="size-4" strokeWidth={2.5} />
+									</span>
 									Шалгалтын дүрэм журам
 								</h3>
 							</div>
@@ -372,14 +379,14 @@ export default function ExamRulesDialog({
 									icon={Monitor}
 									title={isMobile ? "Утасны хяналт" : "Дэлгэцийн хяналт"}
 								/>
-								<div className="space-y-2 mb-1">
+								<div className="mb-1 grid gap-2 sm:grid-cols-2">
 									{monitoringRules.map((rule) => (
 										<RuleItem key={rule.title} {...rule} />
 									))}
 								</div>
 
 								<SectionHeader icon={Ban} title="Системийн хязгаарлалт" />
-								<div className="space-y-2 mb-1">
+								<div className="mb-1 grid gap-2 sm:grid-cols-2">
 									{SYSTEM_RESTRICTIONS.map((rule) => (
 										<RuleItem key={rule.title} {...rule} />
 									))}
@@ -389,14 +396,14 @@ export default function ExamRulesDialog({
 									icon={Users}
 									title="Хандлага болон аюулгүй байдал"
 								/>
-								<div className="space-y-2 mb-1">
+								<div className="mb-1 grid gap-2 sm:grid-cols-2">
 									{BEHAVIORAL_RULES.map((rule) => (
 										<RuleItem key={rule.title} {...rule} />
 									))}
 								</div>
 
 								<SectionHeader icon={CheckCircle2} title="Шалгалтын зөвлөмж" />
-								<div className="space-y-2">
+								<div className="grid gap-2 sm:grid-cols-2">
 									{EXAM_GUIDELINES.map((rule) => (
 										<RuleItem key={rule.title} {...rule} />
 									))}
@@ -406,22 +413,22 @@ export default function ExamRulesDialog({
 
 						{/* Acknowledgment */}
 						<div
-							className={`mt-3 p-2 sm:p-2.5 border-2 rounded-lg transition-colors duration-200 ${
+							className={`mt-4 rounded-2xl border-2 p-3 transition-colors duration-200 sm:p-4 ${
 								acknowledged
-									? "border-emerald-400 dark:border-emerald-600 bg-emerald-50 dark:bg-emerald-900/20"
-									: "border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-800/50"
+									? "border-success bg-success/10 shadow-[0_4px_0_0_color-mix(in_oklch,var(--success)_40%,transparent)]"
+									: "border-border bg-muted/60"
 							}`}
 						>
-							<div className="flex flex-row justify-between items-start gap-2">
+							<div className="flex flex-row items-start justify-between gap-3">
 								<Checkbox
 									id="ack-all"
 									checked={acknowledged}
 									onCheckedChange={() => setAcknowledged((v) => !v)}
-									className="mt-0.5 h-4 w-4 border-slate-400 dark:border-slate-500 data-[state=checked]:bg-slate-900 dark:data-[state=checked]:bg-slate-100 data-[state=checked]:text-white dark:data-[state=checked]:text-slate-900"
+									className="mt-0.5 size-5 rounded-md border-2 data-[state=checked]:border-success data-[state=checked]:bg-success data-[state=checked]:text-white"
 								/>
 								<label
 									htmlFor="ack-all"
-									className="text-[10px] sm:text-xs font-medium leading-snug cursor-pointer text-slate-700 dark:text-slate-300"
+									className="flex-1 cursor-pointer text-xs leading-snug font-bold text-foreground sm:text-sm"
 								>
 									Би Шалгалтын дүрэмтэй танилцсан бөгөөд энэ дүрмийг зөрчвөл
 									шалгалтнаас гаргахыг зөвшөөрч байна.
@@ -431,27 +438,27 @@ export default function ExamRulesDialog({
 					</div>
 
 					{/* Footer */}
-					<DialogFooter className="flex-none flex flex-row items-center justify-between gap-2 p-2.5 sm:p-3 border-t border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800">
+					<DialogFooter className="flex flex-none flex-row items-center justify-between gap-2 border-t-2 border-border bg-muted/50 px-4 py-3 sm:justify-between sm:px-6">
 						<Button
 							variant="outline"
 							onClick={handleCancel}
 							disabled={showMessage}
-							className="text-[10px] sm:text-xs font-medium h-8 px-2.5 border-slate-300 dark:border-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300"
+							className="text-xs sm:text-sm"
 						>
-							<X className="w-3.5 h-3.5 mr-1" />
+							<X className="size-4" />
 							Цуцлах
 						</Button>
 
 						<Button
 							onClick={handleNext}
 							disabled={showMessage}
-							className="text-[10px] sm:text-xs font-medium h-8 px-2.5 bg-slate-900 hover:bg-slate-800 dark:bg-slate-100 dark:hover:bg-slate-200 text-white dark:text-slate-900 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+							className="text-xs disabled:cursor-not-allowed sm:text-sm"
 						>
 							{showMessage ? (
 								"Бэлдэж байна..."
 							) : (
 								<>
-									<CheckCircle2 className="w-3.5 h-3.5 mr-1" />
+									<CheckCircle2 className="size-4" />
 									Шалгалт эхлүүлэх
 								</>
 							)}
@@ -490,23 +497,23 @@ const RuleItem = React.memo<RuleItemProps>(function RuleItem({
 		switch (severity) {
 			case "high":
 				return {
-					bg: "border-slate-400 dark:border-slate-500",
-					icon: "text-red-600 dark:text-red-400",
-					badge: "bg-red-600 dark:bg-red-500 text-white",
+					bg: "border-border bg-card",
+					icon: "bg-pop-coral-soft text-pop-coral-ink",
+					badge: "bg-destructive text-white",
 					label: "Ноцтой",
 				};
 			case "medium":
 				return {
-					bg: "border-slate-400 dark:border-slate-500",
-					icon: "text-amber-600 dark:text-amber-400",
-					badge: "bg-amber-600 dark:bg-amber-500 text-white",
+					bg: "border-border bg-card",
+					icon: "bg-pop-sun-soft text-pop-sun-ink",
+					badge: "bg-warning text-foreground",
 					label: "Дунд",
 				};
 			case "low":
 				return {
-					bg: "border-slate-400 dark:border-slate-500",
-					icon: "text-emerald-600 dark:text-emerald-400",
-					badge: "bg-emerald-600 dark:bg-emerald-500 text-white",
+					bg: "border-border bg-card",
+					icon: "bg-pop-mint-soft text-pop-mint-ink",
+					badge: "bg-success text-white",
 					label: "Зөвлөмж",
 				};
 		}
@@ -514,22 +521,24 @@ const RuleItem = React.memo<RuleItemProps>(function RuleItem({
 
 	return (
 		<div
-			className={`p-2 sm:p-2.5 rounded-lg border transition-all duration-200 ${severityConfig.bg}`}
+			className={`h-full rounded-2xl border-2 p-3 transition-all duration-200 ${severityConfig.bg}`}
 		>
-			<div className="flex items-start gap-2">
-				<div className={`flex-shrink-0 ${severityConfig.icon}`}>
-					<Icon className="w-3.5 h-3.5 sm:w-4 sm:h-4" strokeWidth={2.5} />
+			<div className="flex items-start gap-3">
+				<div
+					className={`flex size-8 shrink-0 items-center justify-center rounded-xl ${severityConfig.icon}`}
+				>
+					<Icon className="size-4" strokeWidth={2.5} />
 				</div>
 				<div className="flex-1 min-w-0">
-					<div className="flex items-center gap-2 flex-wrap">
-						<h4 className="text-[10px] sm:text-xs leading-tight font-semibold text-slate-900 dark:text-slate-50">
+					<div className="flex flex-wrap items-center gap-2">
+						<h4 className="text-xs leading-tight font-extrabold text-foreground sm:text-sm">
 							{title}
 						</h4>
 						<span
 							className={`text-[9px] sm:text-[10px] px-1.5 py-0.5 rounded-full font-bold`}
 						></span>
 					</div>
-					<p className="text-[10px] sm:text-xs leading-snug mt-0.5 text-slate-600 dark:text-slate-400">
+					<p className="mt-1 text-[11px] leading-snug font-semibold text-muted-foreground sm:text-xs">
 						{description}
 					</p>
 				</div>

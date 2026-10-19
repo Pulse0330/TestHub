@@ -1,12 +1,18 @@
 "use client";
 
+import { Clock } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
 interface ExamTimerProps {
 	onElapsedChange?: (seconds: number) => void;
+	/** Жижиг (утасны top bar) хувилбар */
+	compact?: boolean;
 }
 
-export default function ExamTimer({ onElapsedChange }: ExamTimerProps) {
+export default function ExamTimer({
+	onElapsedChange,
+	compact = false,
+}: ExamTimerProps) {
 	const [seconds, setSeconds] = useState(0);
 	const onElapsedChangeRef = useRef(onElapsedChange);
 
@@ -35,46 +41,44 @@ export default function ExamTimer({ onElapsedChange }: ExamTimerProps) {
 	const secs = seconds % 60;
 
 	return (
-		<div className="relative inline-block min-w-60">
-			<div className="absolute -inset-0.5 bg-slate-200 dark:bg-slate-800 rounded-2xl blur-sm opacity-50"></div>
-			<div className="relative bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm overflow-hidden">
-				<div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30"></div>
-
-				<div className="px-6 py-6 flex items-center justify-center bg-white dark:bg-slate-900">
-					<div className="flex items-center font-mono">
-						{hrs > 0 && (
-							<>
-								<div className="text-center group">
-									<div className="text-3xl font-bold text-slate-800 dark:text-slate-100 tabular-nums">
-										{hrs.toString().padStart(2, "0")}
-									</div>
-									<div className="text-[9px] font-bold text-slate-400 uppercase mt-1">
-										Цаг
-									</div>
-								</div>
-								<div className="text-2xl text-slate-300 dark:text-slate-700 px-2 self-start mt-1">
-									:
-								</div>
-							</>
-						)}
-
-						<div className="text-center">
-							<div className="text-3xl font-bold text-slate-800 dark:text-slate-100 tabular-nums leading-none">
-								{mins.toString().padStart(2, "0")}
-							</div>
+		<div
+			role="timer"
+			aria-label="Үргэлжилсэн хугацаа"
+			className={`inline-flex shrink-0 items-center rounded-full bg-pop-sky-soft text-pop-sky-ink shadow-[0_3px_0_0_color-mix(in_oklch,var(--pop-sky)_35%,transparent)] ${
+				compact
+					? "gap-1.5 py-1 pl-1 pr-3 [&_.timer-num]:text-base"
+					: "gap-2 py-1.5 pl-1.5 pr-4 [&_.timer-num]:text-xl"
+			}`}
+		>
+			<div
+				className={`flex items-center justify-center rounded-full bg-pop-sky text-white ${compact ? "size-6" : "size-8"}`}
+			>
+				<Clock className={compact ? "size-3.5" : "size-4"} strokeWidth={2.75} />
+			</div>
+			<div className="flex items-baseline tabular-nums">
+				{hrs > 0 && (
+					<>
+						<div className="flex items-baseline gap-0.5">
+							<span className="timer-num font-black leading-none">
+								{hrs.toString().padStart(2, "0")}
+							</span>
+							<span className="text-[9px] font-extrabold uppercase opacity-70">
+								Цаг
+							</span>
 						</div>
+						<span className="px-1 text-lg font-black opacity-50">:</span>
+					</>
+				)}
 
-						<div className="text-2xl text-slate-300 dark:text-slate-700 px-2 self-start mt-1">
-							:
-						</div>
+				<span className="timer-num font-black leading-none">
+					{mins.toString().padStart(2, "0")}
+				</span>
 
-						<div className="text-center">
-							<div className="text-3xl font-bold text-indigo-500 dark:text-indigo-400 tabular-nums leading-none">
-								{secs.toString().padStart(2, "0")}
-							</div>
-						</div>
-					</div>
-				</div>
+				<span className="px-1 text-lg font-black opacity-50">:</span>
+
+				<span className="timer-num font-black leading-none text-primary">
+					{secs.toString().padStart(2, "0")}
+				</span>
 			</div>
 		</div>
 	);

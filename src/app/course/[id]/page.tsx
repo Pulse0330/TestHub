@@ -1,12 +1,26 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { CheckCircle2, Loader2 } from "lucide-react";
+import {
+	ArrowLeft,
+	ArrowRight,
+	BookOpen,
+	CheckCircle2,
+	ListOrdered,
+	Loader2,
+} from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { memo, useCallback, useEffect, useMemo, useState } from "react";
 import StyledBackButton from "@/components/backButton";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import {
+	Sheet,
+	SheetContent,
+	SheetDescription,
+	SheetHeader,
+	SheetTitle,
+} from "@/components/ui/sheet";
 import { getContentView } from "@/lib/api";
 import { useAuthStore } from "@/stores/useAuthStore";
 import type { ContentViewResponse } from "@/types/course/contentView";
@@ -16,10 +30,12 @@ import { LessonSidebar } from "./lessonSidebar";
 
 // Loading component мемоизлох
 const LoadingSpinner = memo(() => (
-	<div className="flex items-center justify-center min-h-screen px-4">
-		<div className="text-center space-y-4">
-			<Loader2 className="h-10 w-10 md:h-12 md:w-12 animate-spin text-primary mx-auto" />
-			<p className="text-sm md:text-base text-muted-foreground">
+	<div className="flex items-center justify-center min-h-screen px-4 bg-page-gradient">
+		<div className="card-pop animate-pop-in text-center space-y-4 p-8 w-full max-w-xs">
+			<div className="mx-auto flex size-16 items-center justify-center rounded-2xl bg-pop-violet-soft text-pop-violet-ink shadow-[0_4px_0_0_color-mix(in_oklch,var(--pop-violet)_35%,transparent)]">
+				<Loader2 className="size-8 animate-spin" strokeWidth={2.5} />
+			</div>
+			<p className="text-sm md:text-base font-bold text-muted-foreground">
 				Ачааллаж байна...
 			</p>
 		</div>
@@ -29,16 +45,23 @@ LoadingSpinner.displayName = "LoadingSpinner";
 
 // Error component мемоизлох
 const ErrorMessage = memo(({ message }: { message: string }) => (
-	<div className="flex items-center justify-center min-h-screen px-4">
-		<Card className="max-w-md w-full">
-			<CardContent className="pt-6 space-y-4">
+	<div className="flex items-center justify-center min-h-screen px-4 bg-page-gradient">
+		<Card className="max-w-md w-full animate-pop-in">
+			<CardContent className="pt-2 space-y-5">
 				<div className="text-center">
-					<p className="text-base md:text-lg font-semibold mb-2 text-destructive">
+					<div className="mx-auto mb-4 flex size-16 items-center justify-center rounded-full bg-destructive/10 text-4xl">
+						😵
+					</div>
+					<p className="text-lg md:text-xl font-black mb-2 text-destructive">
 						Алдаа гарлаа
 					</p>
-					<p className="text-xs md:text-sm text-muted-foreground">{message}</p>
+					<p className="text-xs md:text-sm font-semibold text-muted-foreground">
+						{message}
+					</p>
 				</div>
-				<StyledBackButton />
+				<div className="flex justify-center">
+					<StyledBackButton />
+				</div>
 			</CardContent>
 		</Card>
 	</div>
@@ -47,21 +70,21 @@ ErrorMessage.displayName = "ErrorMessage";
 
 // Completion message мемоизлох
 const CompletionMessage = memo(() => (
-	<Card className="mt-4 bg-green-50 dark:bg-green-950/20 border-green-200 dark:border-green-800">
-		<CardContent className="p-3 md:p-4">
-			<div className="flex items-center gap-2 md:gap-3">
-				<CheckCircle2 className="h-5 w-5 md:h-6 md:w-6 text-green-600 dark:text-green-400 shrink-0" />
-				<div>
-					<p className="text-sm md:text-base font-semibold text-green-900 dark:text-green-100">
-						Амжилттай дүүргэлээ!
-					</p>
-					<p className="text-xs md:text-sm text-green-700 dark:text-green-300">
-						Та энэ хичээлийг бүрэн судаллаа
-					</p>
-				</div>
+	<div className="mt-4 animate-pop-in rounded-3xl border-2 border-success/40 bg-success/10 p-4 md:p-5 shadow-[0_4px_0_0_color-mix(in_oklch,var(--success)_35%,transparent)]">
+		<div className="flex items-center gap-3 md:gap-4">
+			<div className="flex size-11 md:size-12 shrink-0 items-center justify-center rounded-2xl bg-success text-primary-foreground">
+				<CheckCircle2 className="size-6" strokeWidth={2.5} />
 			</div>
-		</CardContent>
-	</Card>
+			<div>
+				<p className="text-base md:text-lg font-black text-foreground">
+					Амжилттай дүүргэлээ! 🎉
+				</p>
+				<p className="text-xs md:text-sm font-semibold text-muted-foreground">
+					Та энэ хичээлийг бүрэн судаллаа
+				</p>
+			</div>
+		</div>
+	</div>
 ));
 CompletionMessage.displayName = "CompletionMessage";
 
@@ -207,6 +230,32 @@ export default function CoursePage() {
 		[currentLesson?.exam_id, currentLesson?.examname],
 	);
 
+	// ← → товчоор өмнөх / дараах хичээл рүү шилжих
+	useEffect(() => {
+		const onKeyDown = (e: KeyboardEvent) => {
+			if (e.defaultPrevented || e.altKey || e.ctrlKey || e.metaKey || e.shiftKey)
+				return;
+			const target = e.target as HTMLElement | null;
+			if (
+				target &&
+				(target.isContentEditable ||
+					["INPUT", "TEXTAREA", "SELECT", "VIDEO", "AUDIO"].includes(
+						target.tagName,
+					))
+			)
+				return;
+			if (e.key === "ArrowLeft") {
+				e.preventDefault();
+				handlePrevious();
+			} else if (e.key === "ArrowRight") {
+				e.preventDefault();
+				handleNext();
+			}
+		};
+		window.addEventListener("keydown", onKeyDown);
+		return () => window.removeEventListener("keydown", onKeyDown);
+	}, [handlePrevious, handleNext]);
+
 	if (isPending) {
 		return <LoadingSpinner />;
 	}
@@ -223,103 +272,102 @@ export default function CoursePage() {
 		);
 	}
 
+	const isFirstLesson = currentLessonIndex === 0;
+	const isLastLesson = currentLessonIndex === contents.length - 1;
+
+	const sidebar = (
+		<LessonSidebar
+			contents={contents}
+			currentLessonIndex={currentLessonIndex}
+			onLessonSelect={handleLessonSelect}
+			showBackButton={contents.length > 1}
+		/>
+	);
+
 	return (
-		<div className="min-h-screen bg-background">
-			{/* Header */}
-			<div className="border-b bg-card sticky top-0 z-10">
-				<div className="px-3 md:px-4 py-2.5 md:py-3">
-					<div className="flex items-center gap-2 mb-2 md:mb-3">
+		<div className="min-h-screen bg-page-gradient flex flex-col">
+			{/* ── Top bar ── */}
+			<header className="sticky top-0 z-20 border-b-2 border-border bg-card">
+				<div className="mx-auto flex max-w-[1500px] items-center gap-2 sm:gap-3 px-3 md:px-6 py-2.5">
+					<div className="flex shrink-0 items-center gap-2">
 						<StyledBackButton
 							onClick={() => router.push("/Lists/courseList")}
 						/>
-						<span className="text-xs md:text-sm font-medium text-gray-700 dark:text-gray-300">
+						<span className="hidden md:inline text-sm font-bold text-muted-foreground">
 							Буцах
 						</span>
 					</div>
-					<div className="flex items-center justify-between">
-						<h1 className="text-base md:text-xl font-bold truncate flex-1 mr-2">
+					<div className="hidden sm:flex size-9 shrink-0 items-center justify-center rounded-xl bg-pop-violet-soft text-pop-violet-ink">
+						<BookOpen className="size-5" strokeWidth={2.5} />
+					</div>
+					<div className="flex-1 min-w-0">
+						<h1 className="text-sm md:text-lg font-black tracking-tight truncate">
 							{contents[0]?.content_name || "Хичээлийн агуулга"}
 						</h1>
-						{/* Mobile menu toggle */}
-						<Button
-							onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-							className="lg:hidden p-2 rounded-md hover:bg-accent"
-							aria-label="Toggle lesson list"
-						>
-							<svg
-								className="w-5 h-5"
-								fill="none"
-								stroke="currentColor"
-								viewBox="0 0 24 24"
-							>
-								<title>Menu</title>
-								<path
-									strokeLinecap="round"
-									strokeLinejoin="round"
-									strokeWidth={2}
-									d="M4 6h16M4 12h16M4 18h16"
-								/>
-							</svg>
-						</Button>
-					</div>
-				</div>
-			</div>
-
-			{/* Main Content */}
-			<div className="px-3 md:px-4 py-3 md:py-4">
-				<div className="grid grid-cols-1 lg:grid-cols-4 gap-3 md:gap-4">
-					{/* Sidebar - Lesson List */}
-					<div
-						className={`
-							lg:col-span-1
-							${isSidebarOpen ? "block" : "hidden lg:block"}
-							${isSidebarOpen ? "fixed inset-0 z-50 bg-background lg:relative" : ""}
-						`}
-					>
-						{isSidebarOpen && (
-							<div className="lg:hidden p-3 border-b flex items-center justify-between sticky top-0 bg-background">
-								<h2 className="font-semibold">Хичээлийн жагсаалт</h2>
-								<Button
-									onClick={() => setIsSidebarOpen(false)}
-									className="p-2 rounded-md hover:bg-accent"
-									aria-label="Close lesson list"
-								>
-									<svg
-										className="w-5 h-5"
-										fill="none"
-										stroke="currentColor"
-										viewBox="0 0 24 24"
-									>
-										<title>Close</title>
-										<path
-											strokeLinecap="round"
-											strokeLinejoin="round"
-											strokeWidth={2}
-											d="M6 18L18 6M6 6l12 12"
-										/>
-									</svg>
-								</Button>
+						{contents.length > 0 && (
+							<div className="mt-1 flex items-center gap-2">
+								<div className="h-1.5 flex-1 max-w-xs overflow-hidden rounded-full bg-muted">
+									<div
+										className="h-full rounded-full bg-gradient-to-r from-pop-violet to-pop-pink transition-all duration-500"
+										style={{
+											width: `${((currentLessonIndex + 1) / contents.length) * 100}%`,
+										}}
+									/>
+								</div>
+								<span className="text-[11px] md:text-xs font-bold text-muted-foreground tabular-nums">
+									{currentLessonIndex + 1} / {contents.length}
+								</span>
 							</div>
 						)}
-						<div
-							className={
-								isSidebarOpen ? "p-3 overflow-y-auto h-[calc(100vh-60px)]" : ""
-							}
-						>
-							<LessonSidebar
-								contents={contents}
-								currentLessonIndex={currentLessonIndex}
-								onLessonSelect={handleLessonSelect}
-								showBackButton={contents.length > 1}
-							/>
-						</div>
 					</div>
+					{/* Mobile lesson drawer toggle */}
+					<Button
+						onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+						variant="outline"
+						size="sm"
+						className="lg:hidden shrink-0 gap-1.5"
+						aria-label="Toggle lesson list"
+					>
+						<ListOrdered className="size-4" strokeWidth={2.5} />
+						<span className="hidden sm:inline">Хичээлүүд</span>
+					</Button>
+				</div>
+			</header>
 
-					{/* Main Lesson Content */}
-					<div className="lg:col-span-3">
+			{/* ── Mobile lesson drawer ── */}
+			<Sheet open={isSidebarOpen} onOpenChange={setIsSidebarOpen}>
+				<SheetContent
+					side="left"
+					className="lg:hidden w-[88%] max-w-sm gap-0 p-0 bg-background"
+				>
+					<SheetHeader className="px-4 py-3 border-b-2 border-border bg-card">
+						<SheetTitle className="font-black text-lg">
+							Хичээлийн жагсаалт
+						</SheetTitle>
+						<SheetDescription className="sr-only">
+							{contents[0]?.content_name || "Хичээлийн агуулга"}
+						</SheetDescription>
+					</SheetHeader>
+					<div className="flex-1 min-h-0 p-3">{sidebar}</div>
+				</SheetContent>
+			</Sheet>
+
+			{/* ── Player body ── */}
+			<div className="mx-auto w-full max-w-[1500px] flex-1 px-3 md:px-6 py-4 md:py-6">
+				<div className="grid grid-cols-1 lg:grid-cols-[300px_minmax(0,1fr)] xl:grid-cols-[340px_minmax(0,1fr)] gap-4 md:gap-6">
+					{/* Desktop left rail */}
+					<aside
+						aria-label="Хичээлийн жагсаалт"
+						className="hidden lg:block lg:sticky lg:top-20 lg:h-[calc(100vh-6.5rem)] self-start"
+					>
+						{sidebar}
+					</aside>
+
+					{/* Reading column */}
+					<main className="min-w-0 flex flex-col">
 						<div
 							id={`lesson-${currentLessonIndex}`}
-							className="max-h-[calc(100vh-180px)] md:max-h-[calc(100vh-200px)] lg:max-h-[calc(100vh-250px)] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100"
+							className="mx-auto w-full max-w-4xl scroll-mt-20"
 						>
 							{isHomework ? (
 								<Homework
@@ -344,7 +392,68 @@ export default function CoursePage() {
 								</>
 							)}
 						</div>
-					</div>
+
+						{/* ── Sticky player controls ── */}
+						<div className="sticky bottom-0 z-10 mt-4 -mx-3 md:mx-0 px-3 md:px-0 pb-3 md:pb-4 pt-2 bg-gradient-to-t from-background via-background/90 to-transparent">
+							<nav
+								aria-label="Хичээлийн удирдлага"
+								className="mx-auto flex w-full max-w-4xl items-center gap-2 rounded-2xl border-2 border-border bg-card p-2 shadow-[0_4px_0_0_var(--border)]"
+							>
+								<Button
+									variant="outline"
+									onClick={handlePrevious}
+									disabled={isFirstLesson}
+									aria-label="Өмнөх хичээл"
+									className="shrink-0"
+								>
+									<ArrowLeft className="h-4 w-4" />
+									<span className="hidden sm:inline">Өмнөх хичээл</span>
+								</Button>
+
+								<span className="hidden md:inline mx-auto text-xs font-bold text-muted-foreground tabular-nums">
+									<kbd className="rounded-md border-2 border-border bg-muted px-1.5 font-black">
+										←
+									</kbd>{" "}
+									<kbd className="rounded-md border-2 border-border bg-muted px-1.5 font-black">
+										→
+									</kbd>
+								</span>
+
+								<div className="ml-auto flex min-w-0 items-center gap-2">
+									{!isHomework && !isCompleted && (
+										<Button
+											onClick={handleMarkComplete}
+											variant="success"
+											className="min-w-0"
+										>
+											<CheckCircle2 className="h-4 w-4" />
+											<span className="truncate">
+												Дууссан
+												<span className="hidden sm:inline"> гэж тэмдэглэх</span>
+											</span>
+										</Button>
+									)}
+
+									{!isLastLesson && (
+										<Button onClick={handleNext} className="shrink-0">
+											<span>
+												Дараах
+												<span className="hidden sm:inline"> хичээл</span>
+											</span>
+											<ArrowRight className="h-4 w-4" />
+										</Button>
+									)}
+
+									{isLastLesson && (
+										<Button onClick={handleFinish} className="shrink-0">
+											Бусад хичээл
+											<BookOpen className="h-4 w-4" />
+										</Button>
+									)}
+								</div>
+							</nav>
+						</div>
+					</main>
 				</div>
 			</div>
 		</div>

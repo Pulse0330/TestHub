@@ -46,43 +46,52 @@ export function Homework({ content, onStartExam }: HomeworkProps) {
 	if (!isHomework) return null;
 
 	return (
-		<Card className="border-2 border-orange-200 bg-orange-50">
-			<CardHeader className="pb-4">
-				<div className="flex items-start justify-between gap-4">
-					<div className="flex-1 space-y-3">
-						<div className="flex items-center gap-3 flex-wrap">
-							<Badge className="bg-orange-600">
-								<BookOpen className="h-3.5 w-3.5 mr-1" />
-								Гэрийн даалгавар
-							</Badge>
-							<div className="p-2 rounded-lg bg-orange-100">
-								{getContentIcon(content.l_content_type)}
+		<Card className="gap-0 py-0 overflow-hidden animate-pop-in">
+			<div className="relative bg-gradient-to-br from-pop-sun-soft to-pop-coral-soft px-5 pt-5 pb-5 md:px-8 md:pt-7">
+				<div className="pointer-events-none absolute inset-0 bg-dots opacity-50" />
+				<CardHeader className="relative p-0">
+					<div className="flex items-start justify-between gap-4">
+						<div className="flex-1 min-w-0 space-y-3">
+							<div className="flex items-center gap-3 flex-wrap">
+								<div className="flex size-12 items-center justify-center rounded-2xl bg-pop-sun text-primary-foreground shadow-[0_4px_0_0_color-mix(in_oklch,var(--pop-sun)_60%,black)]">
+									{getContentIcon(content.l_content_type)}
+								</div>
+								<Badge variant="sun" className="rounded-full bg-card">
+									<BookOpen className="h-3.5 w-3.5 mr-1" />
+									Гэрийн даалгавар
+								</Badge>
 							</div>
+							<CardTitle className="text-xl md:text-2xl font-black leading-tight tracking-tight">
+								{content.examname}
+							</CardTitle>
 						</div>
-						<CardTitle className="text-xl">{content.examname}</CardTitle>
+						{content.stu_worked === 1 && (
+							<Badge className="shrink-0 rounded-full bg-success text-primary-foreground">
+								<CheckCircle2 className="h-4 w-4 mr-1" />
+								Дууссан
+							</Badge>
+						)}
 					</div>
-					{content.stu_worked === 1 && (
-						<Badge className="bg-green-600">
-							<CheckCircle2 className="h-4 w-4 mr-1" />
-							Дууссан
-						</Badge>
-					)}
-				</div>
-			</CardHeader>
+				</CardHeader>
+			</div>
 
-			<CardContent className="space-y-6">
+			<CardContent className="space-y-6 px-5 py-5 md:px-8 md:py-7">
 				{/* Exam Info */}
-				<div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+				<div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
 					{/* Асуултын тоо */}
 					{content.testcnt && (
-						<div className="bg-white rounded-lg p-3 border">
-							<div className="flex items-center gap-2">
-								<div className="p-2 bg-blue-100 rounded-lg">
-									<FileText className="h-4 w-4 text-blue-600" />
+						<div className="rounded-2xl bg-pop-sky-soft p-4">
+							<div className="flex items-center gap-3">
+								<div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-pop-sky text-primary-foreground">
+									<FileText className="h-4 w-4" strokeWidth={2.5} />
 								</div>
-								<div>
-									<p className="text-xs text-gray-600">Асуулт</p>
-									<p className="text-lg font-bold">{content.testcnt}</p>
+								<div className="min-w-0">
+									<p className="text-xs font-bold uppercase tracking-wide text-pop-sky-ink/80">
+										Асуулт
+									</p>
+									<p className="text-2xl font-black text-pop-sky-ink">
+										{content.testcnt}
+									</p>
 								</div>
 							</div>
 						</div>
@@ -90,14 +99,16 @@ export function Homework({ content, onStartExam }: HomeworkProps) {
 
 					{/* Хугацаа */}
 					{content.minut && (
-						<div className="bg-white rounded-lg p-3 border">
-							<div className="flex items-center gap-2">
-								<div className="p-2 bg-orange-100 rounded-lg">
-									<Clock className="h-4 w-4 text-orange-600" />
+						<div className="rounded-2xl bg-pop-sun-soft p-4">
+							<div className="flex items-center gap-3">
+								<div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-pop-sun text-primary-foreground">
+									<Clock className="h-4 w-4" strokeWidth={2.5} />
 								</div>
-								<div>
-									<p className="text-xs text-gray-600">Хугацаа</p>
-									<p className="text-lg font-bold">
+								<div className="min-w-0">
+									<p className="text-xs font-bold uppercase tracking-wide text-pop-sun-ink/80">
+										Хугацаа
+									</p>
+									<p className="text-2xl font-black text-pop-sun-ink">
 										{content.minut > 0 ? `${content.minut} мин` : "∞"}
 									</p>
 								</div>
@@ -106,22 +117,42 @@ export function Homework({ content, onStartExam }: HomeworkProps) {
 					)}
 
 					{/* Төлөв */}
-					<div className="bg-white rounded-lg p-3 border">
-						<div className="flex items-center gap-2">
+					<div
+						className={`rounded-2xl p-4 ${
+							content.stu_worked === 1 ? "bg-pop-mint-soft" : "bg-muted"
+						}`}
+					>
+						<div className="flex items-center gap-3">
 							<div
-								className={`p-2 rounded-lg ${
-									content.stu_worked === 1 ? "bg-green-100" : "bg-gray-100"
+								className={`flex size-9 shrink-0 items-center justify-center rounded-xl ${
+									content.stu_worked === 1
+										? "bg-pop-mint text-primary-foreground"
+										: "bg-card text-muted-foreground border-2 border-border"
 								}`}
 							>
 								{content.stu_worked === 1 ? (
-									<CheckCircle2 className="h-4 w-4 text-green-600" />
+									<CheckCircle2 className="h-4 w-4" strokeWidth={2.5} />
 								) : (
-									<AlertCircle className="h-4 w-4 text-gray-600" />
+									<AlertCircle className="h-4 w-4" strokeWidth={2.5} />
 								)}
 							</div>
-							<div>
-								<p className="text-xs text-gray-600">Төлөв</p>
-								<p className="text-sm font-bold">
+							<div className="min-w-0">
+								<p
+									className={`text-xs font-bold uppercase tracking-wide ${
+										content.stu_worked === 1
+											? "text-pop-mint-ink/80"
+											: "text-muted-foreground"
+									}`}
+								>
+									Төлөв
+								</p>
+								<p
+									className={`text-base font-black ${
+										content.stu_worked === 1
+											? "text-pop-mint-ink"
+											: "text-foreground"
+									}`}
+								>
 									{content.stu_worked === 1 ? "Хийсэн" : "Хийгээгүй"}
 								</p>
 							</div>
@@ -131,14 +162,14 @@ export function Homework({ content, onStartExam }: HomeworkProps) {
 
 				{/* Help/Description */}
 				{content.help && (
-					<div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
+					<div className="rounded-2xl border-2 border-pop-sky/40 bg-pop-sky-soft p-4">
 						<div className="flex items-start gap-3">
-							<AlertCircle className="h-5 w-5 text-blue-600 shrink-0 mt-0.5" />
+							<AlertCircle className="h-5 w-5 text-pop-sky-ink shrink-0 mt-0.5" strokeWidth={2.5} />
 							<div>
-								<p className="font-semibold text-sm text-blue-900 mb-1">
+								<p className="font-extrabold text-sm text-pop-sky-ink mb-1">
 									Анхааруулга
 								</p>
-								<p className="text-sm text-blue-700 leading-relaxed">
+								<p className="text-sm font-semibold text-foreground/80 leading-relaxed">
 									{content.help}
 								</p>
 							</div>
@@ -149,32 +180,33 @@ export function Homework({ content, onStartExam }: HomeworkProps) {
 				{/* Action Button */}
 				{content.stu_worked === 0 ? (
 					<Button
-						className="w-full md:w-auto bg-orange-600 hover:bg-orange-700"
+						size="lg"
+						className="w-full md:w-auto"
 						onClick={handleStartExam}
 						disabled={isStarting}
 					>
 						{isStarting ? (
 							<>
-								<Clock className="mr-2 h-4 w-4 animate-spin" />
+								<Clock className="h-4 w-4 animate-spin" />
 								Ачааллаж байна...
 							</>
 						) : (
 							<>
-								<PlayCircle className="mr-2 h-4 w-4" />
+								<PlayCircle className="h-4 w-4" />
 								Эхлүүлэх
 							</>
 						)}
 					</Button>
 				) : (
-					<div className="flex items-center gap-3 p-4 bg-green-50 rounded-lg border border-green-200">
-						<div className="p-2 bg-green-500 rounded-full">
-							<CheckCircle2 className="h-5 w-5 text-white" />
+					<div className="flex items-center gap-3 rounded-2xl border-2 border-success/40 bg-success/10 p-4">
+						<div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-success text-primary-foreground">
+							<CheckCircle2 className="h-5 w-5" strokeWidth={2.5} />
 						</div>
 						<div>
-							<p className="font-semibold text-green-900">
+							<p className="font-black text-foreground">
 								Даалгавар хийсэн байна
 							</p>
-							<p className="text-sm text-green-700">
+							<p className="text-sm font-semibold text-muted-foreground">
 								Та энэ даалгаврыг амжилттай хийж дууслаа
 							</p>
 						</div>

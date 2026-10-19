@@ -3,6 +3,7 @@
 import { ChevronLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 interface BackButtonProps {
 	className?: string;
@@ -21,7 +22,7 @@ export function IBackButton({
 			variant={variant}
 			size="icon"
 			onClick={() => router.back()}
-			className={className}
+			className={cn("rounded-xl", className)}
 		>
 			<ChevronLeft size={18} strokeWidth={2.5} />
 		</Button>

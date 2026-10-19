@@ -50,19 +50,20 @@ export default function FillInTheBlankQuestion({
 
 	const inputClassName = isReviewMode
 		? isCorrect === true
-			? "border-green-500 bg-green-50"
+			? "border-success bg-success/10"
 			: isCorrect === false
-				? "border-red-500 bg-red-50"
-				: "border-gray-300 bg-gray-50"
-		: "border-primary/50 focus-visible:ring-primary";
+				? "border-destructive bg-destructive/10"
+				: "border-border bg-muted"
+		: "border-input bg-card focus-visible:border-primary focus-visible:ring-primary/20";
 
 	return (
 		<div className="space-y-3">
 			<div className="grid w-full items-center gap-2">
 				<Label
 					htmlFor={`input-${questionId}`}
-					className="text-sm font-medium text-gray-700"
+					className="text-sm font-extrabold text-foreground"
 				>
+					<span aria-hidden="true">✏️</span>
 					{isReviewMode ? "Таны хариулт:" : "Хариултаа бичнэ үү:"}
 				</Label>
 
@@ -75,34 +76,34 @@ export default function FillInTheBlankQuestion({
 						onChange={handleChange}
 						readOnly={readOnly}
 						disabled={readOnly}
-						className={`w-full transition-colors ${inputClassName} ${
+						className={`w-full h-12 sm:h-14 rounded-2xl border-2 px-4 pr-12 text-base sm:text-lg font-bold shadow-[0_3px_0_0_var(--border)] transition-colors focus-visible:ring-4 ${inputClassName} ${
 							readOnly ? "cursor-not-allowed" : ""
 						}`}
 					/>
 
 					{isReviewMode && isCorrect !== null && (
-						<div className="absolute right-3 top-1/2 -translate-y-1/2">
+						<div className="absolute right-4 top-1/2 -translate-y-1/2">
 							{isCorrect ? (
-								<CheckCircle2 className="w-5 h-5 text-green-600" />
+								<CheckCircle2 className="size-6 text-success" strokeWidth={2.75} />
 							) : (
-								<XCircle className="w-5 h-5 text-red-600" />
+								<XCircle className="size-6 text-destructive" strokeWidth={2.75} />
 							)}
 						</div>
 					)}
 				</div>
 
 				{isReviewMode && isCorrect === false && correctAnswer && (
-					<div className="p-3 bg-green-50 border border-green-200 rounded-md">
-						<p className="text-sm text-green-800">
-							<span className="font-semibold">Зөв хариулт:</span>{" "}
+					<div className="p-3 bg-success/10 border-2 border-success rounded-2xl animate-pop-in">
+						<p className="text-sm font-semibold text-foreground">
+							<span className="font-extrabold text-success">Зөв хариулт:</span>{" "}
 							{correctAnswer}
 						</p>
 					</div>
 				)}
 
 				{isReviewMode && isCorrect === true && (
-					<div className="p-3 bg-green-50 border border-green-200 rounded-md">
-						<p className="text-sm text-green-800 font-medium">✓ Зөв хариулт!</p>
+					<div className="p-3 bg-success/10 border-2 border-success rounded-2xl animate-pop-in">
+						<p className="text-sm text-success font-extrabold">✓ Зөв хариулт!</p>
 					</div>
 				)}
 			</div>

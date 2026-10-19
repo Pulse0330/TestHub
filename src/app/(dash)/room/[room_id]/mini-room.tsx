@@ -67,10 +67,10 @@ const MiniRoom = ({
 
 	return (
 		<div
-			className={`relative w-full h-full rounded-xl border-2 transition-all duration-500 overflow-hidden border-primary/10  ${
+			className={`relative h-full w-full overflow-hidden rounded-xl border-2 transition-all duration-500 ${
 				isActive
-					? "bg-primary/3 border-primary/30"
-					: "bg-muted/20 border-border/20 group-hover:border-primary/10"
+					? "border-primary/30 bg-primary/10 text-primary"
+					: "border-border bg-muted/50 text-muted-foreground group-hover:border-primary/30"
 			}`}
 		>
 			{/* Чимэглэлийн Grid цэгүүд */}
@@ -86,10 +86,10 @@ const MiniRoom = ({
 			{dots.map((dot, index) => (
 				<div
 					key={`${type}-${dot.x}-${dot.y}`}
-					className={`absolute w-2.5 h-2.5 rounded-[1px] transition-all duration-500 shadow-sm ${
+					className={`absolute h-2.5 w-2.5 rounded-[3px] transition-all duration-500 ${
 						isActive
 							? "bg-primary"
-							: "bg-muted-foreground group-hover:bg-muted-foreground"
+							: "bg-muted-foreground/60 group-hover:bg-primary/60"
 					}`}
 					style={{
 						left: `${dot.x}%`,
@@ -112,7 +112,7 @@ export function LayoutPicker({ currentLayout, onSelect }: LayoutPickerProps) {
 	];
 
 	return (
-		<div className="flex flex-row lg:flex-col gap-3 w-full  pb-4 lg:pb-0 px-1">
+		<div className="flex w-full flex-row gap-3 px-1 pt-1 pb-4 lg:flex-col lg:pb-0">
 			{options.map((option) => {
 				const isActive = currentLayout === option.id;
 				return (
@@ -120,10 +120,10 @@ export function LayoutPicker({ currentLayout, onSelect }: LayoutPickerProps) {
 						key={option.id}
 						type="button"
 						onClick={() => onSelect(option.id)}
-						className={`group relative flex flex-col min-w-45 lg:w-full p-3  border-dashed border-2 border-primary inset-shadow-lg rounded-2xl transition-all duration-300 snap-center ${
+						className={`group relative flex min-w-45 snap-center flex-col rounded-2xl border-2 p-3 transition-all duration-300 lg:w-full ${
 							isActive
-								? "bg-background shadow-[0_10px_40px_rgba(0,0,0,0.1)] border-solid z-10"
-								: "bg-card/40 border border-border/40 hover:bg-background hover:border-primary hover:shadow-md"
+								? "z-10 border-primary bg-card shadow-[0_4px_0_0_color-mix(in_oklch,var(--primary)_35%,transparent)]"
+								: "border-border bg-card shadow-[0_4px_0_0_var(--border)] hover:-translate-y-0.5 hover:border-primary/50"
 						}`}
 					>
 						{/* Дүрслэл */}
@@ -134,7 +134,7 @@ export function LayoutPicker({ currentLayout, onSelect }: LayoutPickerProps) {
 						{/* Текст болон Төлөв */}
 						<div className="flex items-center justify-between w-full px-1">
 							<span
-								className={`text-[10px] font-black uppercase tracking-widest truncate ${
+								className={`truncate text-[11px] font-black tracking-widest uppercase ${
 									isActive
 										? "text-primary"
 										: "text-muted-foreground group-hover:text-foreground"

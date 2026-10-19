@@ -2,20 +2,21 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
-import { Loader2, X } from "lucide-react";
+import { Book, ClipboardList, Clock, Loader2, Lock, LogIn, User, X } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
+import type * as React from "react";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import * as z from "zod";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { createSessionRequest, loginToken, loginTokenRequest } from "@/lib/api";
 import { setCookie } from "@/lib/cookie";
+import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/stores/useAuthStore";
 
 const formSchema = z.object({
@@ -143,30 +144,34 @@ export function LoginForm({ onClose }: LoginFormProps) {
 	const errorMessage = form.formState.errors.root?.message;
 	const isLoading = isPending || tokenIsLoading;
 
+
 	return (
-		<Card className={`w-full max-w-sm bg-white dark:bg-[#0d1117] shadow-2xl rounded-2xl overflow-hidden border ${hasRootError ? "border-red-300 dark:border-red-800" : "border-gray-200 dark:border-neutral-800"}`}>
+		<AuthShell hasError={hasRootError}>
+			{onClose && (
+				<button type="button" onClick={onClose} className={AUTH_CLOSE_BUTTON_CLASS} aria-label="Хаах">
+					<X className="size-4" strokeWidth={2.5} />
+				</button>
+			)}
+
 			{/* Header */}
-			<CardHeader className="relative px-6 pt-6 pb-5 border-b border-gray-100 dark:border-neutral-800">
-				{onClose && (
-					<button
-						type="button"
-						onClick={onClose}
-						className="absolute top-4 right-4 w-7 h-7 rounded-lg flex items-center justify-center text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 hover:bg-gray-100 dark:hover:bg-neutral-800 transition-all"
-						aria-label="Хаах"
-					>
-						<X className="w-4 h-4" />
-					</button>
-				)}
-				<Image src="/image/logoLogin.png" alt="EXMO" width={110} height={36} className="h-9 w-auto mb-4" />
-				<h2 className="text-lg font-bold text-gray-900 dark:text-white">Тавтай морилно уу</h2>
-				<p className="text-sm text-gray-500 dark:text-neutral-400 mt-0.5">Өөрийн бүртгэлээр нэвтэрч орно уу</p>
-			</CardHeader>
+			<div className="px-6 pt-6 pr-14 pb-2 sm:px-8 sm:pt-8 sm:pr-14">
+				<Image src="/image/logoLogin.png" alt="EXMO" width={110} height={36} className="mb-5 hidden h-8 w-auto md:block" />
+				<div className="flex items-center gap-3">
+					<div className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-pop-violet-soft text-2xl shadow-[0_4px_0_0_color-mix(in_oklch,var(--pop-violet)_35%,transparent)]">
+						<span aria-hidden="true">👋</span>
+					</div>
+					<div className="min-w-0">
+						<h2 className="text-2xl font-black tracking-tight text-foreground">Тавтай морилно уу</h2>
+						<p className="text-sm font-semibold text-muted-foreground">Өөрийн бүртгэлээр нэвтэрч орно уу</p>
+					</div>
+				</div>
+			</div>
 
 			<Form {...form}>
 				<form onSubmit={form.handleSubmit(onSubmit)}>
-					<CardContent className="px-6 pt-5 pb-2 grid gap-4">
+					<div className="grid gap-4 px-6 pt-5 pb-2 sm:px-8">
 						{hasRootError && (
-							<div className="rounded-lg border border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-950/40 px-3 py-2.5 text-sm text-red-600 dark:text-red-400 flex items-start gap-2">
+							<div className="flex animate-pop-in items-start gap-2 rounded-2xl border-2 border-destructive/30 bg-destructive/10 px-4 py-3 text-sm font-bold text-destructive">
 								<WarningIcon />
 								<span className="flex-1">{errorMessage}</span>
 							</div>
@@ -174,71 +179,189 @@ export function LoginForm({ onClose }: LoginFormProps) {
 
 						<FormField control={form.control} name="username" render={({ field }) => (
 							<FormItem>
-								<FormLabel className="text-sm font-medium text-gray-700 dark:text-neutral-300">Нэвтрэх нэр</FormLabel>
-								<FormControl>
-									<Input
-										placeholder="Нэвтрэх нэр"
-										type="text"
-										autoComplete="username"
-										disabled={isLoading}
-										className={`h-10 bg-gray-50 dark:bg-neutral-900 border-gray-200 dark:border-neutral-700 focus:border-emerald-500 dark:focus:border-emerald-500 ${hasRootError ? "border-red-300 dark:border-red-800" : ""}`}
-										{...field}
-									/>
-								</FormControl>
+								<FormLabel className="text-sm font-bold text-foreground">Нэвтрэх нэр</FormLabel>
+								<div className="relative">
+									<FormControl>
+										<Input
+											placeholder="Нэвтрэх нэр"
+											type="text"
+											autoComplete="username"
+											disabled={isLoading}
+											className={`peer pl-11 ${hasRootError ? "border-destructive/60" : ""}`}
+											{...field}
+										/>
+									</FormControl>
+									<User className={AUTH_INPUT_ICON_CLASS} strokeWidth={2.5} />
+								</div>
 								<FormMessage />
 							</FormItem>
 						)} />
 
 						<FormField control={form.control} name="password" render={({ field }) => (
 							<FormItem>
-								<div className="flex items-center justify-between">
-									<FormLabel className="text-sm font-medium text-gray-700 dark:text-neutral-300">Нууц үг</FormLabel>
-									<Link href="/forgot" className="text-xs text-emerald-600 dark:text-emerald-400 hover:underline">
+								<div className="flex items-center justify-between gap-2">
+									<FormLabel className="text-sm font-bold text-foreground">Нууц үг</FormLabel>
+									<Link href="/forgot" className="text-xs font-bold text-primary hover:underline">
 										Нууц үг мартсан?
 									</Link>
 								</div>
-								<FormControl>
-									<Input
-										placeholder="••••••••"
-										type="password"
-										autoComplete="current-password"
-										disabled={isLoading}
-										className={`h-10 bg-gray-50 dark:bg-neutral-900 border-gray-200 dark:border-neutral-700 focus:border-emerald-500 dark:focus:border-emerald-500 ${hasRootError ? "border-red-300 dark:border-red-800 animate-shake" : ""}`}
-										{...field}
-									/>
-								</FormControl>
+								<div className="relative">
+									<FormControl>
+										<Input
+											placeholder="••••••••"
+											type="password"
+											autoComplete="current-password"
+											disabled={isLoading}
+											className={`peer pl-11 ${hasRootError ? "border-destructive/60 animate-shake" : ""}`}
+											{...field}
+										/>
+									</FormControl>
+									<Lock className={AUTH_INPUT_ICON_CLASS} strokeWidth={2.5} />
+								</div>
 								<FormMessage />
 							</FormItem>
 						)} />
 
-						<Button
-							type="submit"
-							className="w-full h-10 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg transition-colors mt-1"
-							disabled={isLoading}
-						>
-							{isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+						<Button type="submit" size="lg" className="mt-2 w-full" disabled={isLoading}>
+							{isLoading ? <Loader2 className="size-5 animate-spin" /> : <LogIn className="size-5" strokeWidth={2.5} />}
 							{isLoading ? "Нэвтэрч байна..." : "Нэвтрэх"}
 						</Button>
-					</CardContent>
+					</div>
 				</form>
 			</Form>
 
-			<CardFooter className="px-6 pt-4 pb-5 flex-col gap-4">
+			<div className="flex flex-col gap-4 px-6 pt-4 pb-6 sm:px-8 sm:pb-8">
 				<div className="relative w-full">
 					<div className="absolute inset-0 flex items-center">
-						<span className="w-full border-t border-gray-200 dark:border-neutral-700" />
+						<span className="w-full border-t-2 border-dashed border-border" />
 					</div>
 					<div className="relative flex justify-center text-xs uppercase">
-						<span className="bg-white dark:bg-[#0d1117] px-2 text-gray-400 dark:text-neutral-500 tracking-wider">Эсвэл</span>
+						<span className="bg-card px-3 font-extrabold tracking-wider text-muted-foreground">Эсвэл</span>
 					</div>
 				</div>
-				<p className="text-sm text-center text-gray-500 dark:text-neutral-400">
+				<p className="text-center text-sm font-semibold text-muted-foreground">
 					Бүртгэл байхгүй юу?{" "}
-					<Link href="/sign" className="text-emerald-600 dark:text-emerald-400 font-semibold hover:underline">
+					<Link href="/sign" className="font-extrabold text-primary hover:underline">
 						Бүртгүүлэх
 					</Link>
 				</p>
-			</CardFooter>
-		</Card>
+			</div>
+		</AuthShell>
+	);
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Auth pages-д дундаа хэрэглэгдэх визуал бүрхүүл
+   (desktop: өнгөлөг brand panel + форм, mobile: жижиг өнгөлөг толгой)
+───────────────────────────────────────────────────────────── */
+
+export const AUTH_INPUT_ICON_CLASS =
+	"pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground transition-colors peer-focus-visible:text-primary";
+
+export const AUTH_CLOSE_BUTTON_CLASS =
+	"absolute top-3 right-3 z-20 flex size-9 items-center justify-center rounded-xl border-2 border-border bg-card text-muted-foreground shadow-[0_2px_0_0_var(--border)] transition-all hover:bg-accent hover:text-foreground active:translate-y-px active:shadow-none";
+
+const BRAND_FLOATERS = [
+	{ emoji: "📚", className: "top-[12%] right-[12%] text-5xl", delay: "0s" },
+	{ emoji: "✏️", className: "top-[42%] right-[6%] text-4xl", delay: "1.4s" },
+	{ emoji: "🎯", className: "bottom-[24%] right-[22%] text-4xl", delay: "2.6s" },
+	{ emoji: "🏆", className: "bottom-[8%] right-[6%] text-5xl", delay: "0.8s" },
+];
+
+const BRAND_CHIPS = [
+	{ icon: Clock, label: "Цаг хугацаатай шалгалт" },
+	{ icon: ClipboardList, label: "Дасгал ажил" },
+	{ icon: Book, label: "Сургалтын агуулга" },
+];
+
+function AuthBrandPanel() {
+	return (
+		<div className="relative hidden min-h-[32rem] flex-col justify-between overflow-hidden bg-gradient-to-br from-pop-violet via-pop-pink to-pop-sun p-8 text-white md:flex lg:p-10">
+			{/* Decorative shapes */}
+			<div aria-hidden="true" className="pointer-events-none absolute inset-0">
+				<div className="absolute -top-20 -left-16 size-56 rounded-full bg-primary-foreground/15" />
+				<div className="absolute -right-16 -bottom-24 size-64 rotate-12 rounded-[3rem] bg-primary-foreground/10" />
+				<div className="absolute bottom-[40%] left-[8%] size-5 rounded-full bg-primary-foreground/30" />
+				<div className="absolute top-[18%] left-[40%] size-3 rounded-full bg-primary-foreground/40" />
+				{BRAND_FLOATERS.map((f) => (
+					<span
+						key={f.emoji}
+						className={`absolute animate-float select-none drop-shadow-md ${f.className}`}
+						style={{ animationDelay: f.delay }}
+					>
+						{f.emoji}
+					</span>
+				))}
+			</div>
+
+			<div className="relative">
+				<span className="inline-flex items-center gap-2 rounded-full bg-primary-foreground/20 px-3 py-1 text-xs font-extrabold">
+					<span className="size-1.5 rounded-full bg-primary-foreground" />
+					Шалгалт · Дасгал ажил · Сургалт — нэг дор
+				</span>
+			</div>
+
+			<div className="relative max-w-[18rem]">
+				<p className="text-6xl leading-none font-black tracking-tight drop-shadow-[0_4px_0_rgb(0_0_0/0.12)]">EXMO</p>
+				<p className="mt-4 text-2xl leading-tight font-extrabold">Шалгалт, Сургалт, Дасгал</p>
+				<p className="mt-2 hidden text-sm leading-relaxed font-semibold opacity-90 lg:block">
+					Сурагч, оюутан, багш нарт зориулсан цахим шалгалт, дасгал ажил, сургалтын нэгдсэн платформ. Хаанаас ч нэвтэрч, мэдлэгээ хэмжээрэй.
+				</p>
+			</div>
+
+			<div className="relative flex flex-wrap gap-2">
+				{BRAND_CHIPS.map(({ icon: Icon, label }) => (
+					<span key={label} className="inline-flex items-center gap-1.5 rounded-full bg-primary-foreground/20 px-3 py-1.5 text-xs font-bold">
+						<Icon className="size-3.5" strokeWidth={2.5} />
+						{label}
+					</span>
+				))}
+			</div>
+		</div>
+	);
+}
+
+function AuthMobileHeader() {
+	return (
+		<div className="relative overflow-hidden bg-gradient-to-br from-pop-violet via-pop-pink to-pop-sun px-6 py-5 text-white md:hidden">
+			<div aria-hidden="true" className="pointer-events-none absolute -top-10 -left-8 size-28 rounded-full bg-primary-foreground/15" />
+			<div aria-hidden="true" className="pointer-events-none absolute -right-6 -bottom-12 size-28 rotate-12 rounded-[2rem] bg-primary-foreground/10" />
+			<div className="relative flex items-center justify-between gap-3 pr-10">
+				<div className="min-w-0">
+					<p className="text-3xl leading-none font-black tracking-tight">EXMO</p>
+					<p className="mt-1 truncate text-xs font-bold opacity-90">Шалгалт, Сургалт, Дасгал</p>
+				</div>
+				<div aria-hidden="true" className="flex shrink-0 gap-1 text-2xl">
+					<span className="animate-float">📚</span>
+					<span className="animate-float [animation-delay:1.2s]">✏️</span>
+					<span className="hidden animate-float [animation-delay:2.4s] min-[400px]:inline">🎯</span>
+					<span className="hidden animate-float [animation-delay:0.6s] min-[400px]:inline">🏆</span>
+				</div>
+			</div>
+		</div>
+	);
+}
+
+interface AuthShellProps {
+	children: React.ReactNode;
+	hasError?: boolean;
+	className?: string;
+}
+
+export function AuthShell({ children, hasError, className }: AuthShellProps) {
+	return (
+		<div
+			className={cn(
+				"w-full animate-pop-in overflow-hidden rounded-3xl border-2 bg-card text-card-foreground shadow-[0_6px_0_0_var(--border)] md:grid md:grid-cols-[minmax(0,5fr)_minmax(0,6fr)]",
+				hasError ? "border-destructive/50" : "border-border",
+				className,
+			)}
+		>
+			<AuthBrandPanel />
+			<div className="relative flex min-w-0 flex-col">
+				<AuthMobileHeader />
+				{children}
+			</div>
+		</div>
 	);
 }

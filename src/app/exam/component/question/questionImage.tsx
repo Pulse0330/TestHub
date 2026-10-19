@@ -148,11 +148,11 @@ const QuestionImage = memo(
 					sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, 320px"
 					quality={90}
 					style={{ objectFit: "contain" }}
-					className="rounded-lg pointer-events-none"
+					className="pointer-events-none rounded-2xl"
 					loading="lazy"
 				/>
-				<div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors rounded-lg flex items-center justify-center pointer-events-none">
-					<div className="opacity-0 group-hover:opacity-100 transition-opacity bg-white/90 text-gray-700 rounded-full p-2 shadow-lg">
+				<div className="pointer-events-none absolute inset-0 flex items-center justify-center rounded-2xl bg-foreground/0 transition-colors group-hover:bg-foreground/5">
+					<div className="flex size-10 items-center justify-center rounded-xl border-2 border-border bg-card text-foreground opacity-0 shadow-[0_3px_0_0_var(--border)] transition-opacity group-hover:opacity-100">
 						<Maximize size={18} />
 					</div>
 				</div>
@@ -164,7 +164,7 @@ const QuestionImage = memo(
 				{insideButton ? (
 					// biome-ignore lint/a11y/useSemanticElements: Cannot use <button> here as component is nested inside another button, which would create invalid HTML
 					<div
-						className="relative w-full h-48 cursor-pointer group"
+						className="group relative h-48 w-full cursor-pointer overflow-hidden rounded-2xl border-2 border-border bg-muted/40"
 						onClick={handleImageClick}
 						onKeyDown={handleImageKeyDown}
 						role="button"
@@ -176,7 +176,7 @@ const QuestionImage = memo(
 				) : (
 					<button
 						type="button"
-						className="relative w-full h-48 cursor-pointer group border-0 bg-transparent p-0"
+						className="group relative h-48 w-full cursor-pointer overflow-hidden rounded-2xl border-2 border-border bg-muted/40 p-0"
 						onClick={handleImageClick}
 						aria-label="Зургийг томруулах"
 					>
@@ -186,14 +186,14 @@ const QuestionImage = memo(
 
 				{isOpen && (
 					<Dialog open={isOpen} onOpenChange={handleDialogClose}>
-						<DialogContent className="w-[95vw] max-w-7xl h-[90vh] p-4 flex flex-col items-center justify-center">
+						<DialogContent className="flex h-[90vh] w-[95vw] max-w-7xl flex-col items-center justify-center p-4">
 							<DialogHeader>
-								<DialogTitle>{alt}</DialogTitle>
+								<DialogTitle className="text-base font-extrabold">{alt}</DialogTitle>
 							</DialogHeader>
 
 							<div
 								ref={imageContainerRef}
-								className="relative w-full h-full flex items-center justify-center overflow-hidden focus:outline-none"
+								className="relative flex h-full w-full items-center justify-center overflow-hidden rounded-2xl bg-muted focus:outline-none"
 								onMouseDown={handleMouseDown}
 								onMouseMove={handleMouseMove}
 								onMouseUp={handleMouseUp}
@@ -223,17 +223,18 @@ const QuestionImage = memo(
 										quality={100}
 										priority
 										style={{ objectFit: "contain" }}
-										className="rounded-lg shadow-lg pointer-events-none"
+										className="pointer-events-none rounded-xl"
 										draggable={false}
 									/>
 								</div>
 
-								<div className="absolute bottom-4 right-4 flex gap-2 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-lg p-2 shadow-lg">
+								<div className="absolute right-4 bottom-4 flex gap-2 rounded-2xl border-2 border-border bg-card p-2 shadow-[0_4px_0_0_var(--border)]">
 									<Button
 										type="button"
 										onClick={handleZoomIn}
 										disabled={zoom >= 3}
-										className="bg-white hover:bg-gray-100 text-gray-700 rounded-full p-2 shadow disabled:opacity-50"
+										variant="outline"
+										className="rounded-xl"
 										size="icon"
 										title="Томруулах"
 									>
@@ -243,7 +244,8 @@ const QuestionImage = memo(
 										type="button"
 										onClick={handleZoomOut}
 										disabled={zoom <= 0.5}
-										className="bg-white hover:bg-gray-100 text-gray-700 rounded-full p-2 shadow disabled:opacity-50"
+										variant="outline"
+										className="rounded-xl"
 										size="icon"
 										title="Жижигрүүлэх"
 									>
@@ -252,7 +254,8 @@ const QuestionImage = memo(
 									<Button
 										type="button"
 										onClick={handleRotate}
-										className="bg-white hover:bg-gray-100 text-gray-700 rounded-full p-2 shadow"
+										variant="outline"
+										className="rounded-xl"
 										size="icon"
 										title="Эргүүлэх"
 									>
@@ -261,18 +264,20 @@ const QuestionImage = memo(
 									<Button
 										type="button"
 										onClick={handleReset}
-										className="bg-white hover:bg-gray-100 text-gray-700 rounded px-3 py-2 shadow text-sm"
+										variant="outline"
+										className="rounded-xl px-3 text-sm"
 										title="Анхны байдалд оруулах"
 									>
 										Reset
 									</Button>
-									<div className="flex items-center px-3 text-sm font-medium bg-gray-100 dark:bg-gray-700 rounded">
+									<div className="flex items-center rounded-xl bg-muted px-3 text-sm font-bold tabular-nums">
 										{Math.round(zoom * 100)}%
 									</div>
 								</div>
 
 								<Button
-									className="absolute top-2 right-2 bg-white hover:bg-gray-100 text-gray-700 rounded-full p-2 shadow"
+									variant="outline"
+									className="absolute top-2 right-2 rounded-xl"
 									onClick={handleDialogClose}
 									size="icon"
 									title="Хаах"

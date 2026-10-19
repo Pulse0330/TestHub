@@ -27,17 +27,17 @@ const SaveButton = memo(function SaveButton({
 			<Button
 				onClick={onSave}
 				disabled={isSaving}
-				variant="default"
-				className="flex-1 h-10 bg-green-600 hover:bg-green-700 text-sm font-semibold"
+				variant="success"
+				className="h-11 flex-1 text-sm"
 			>
 				{isSaving ? (
 					<>
-						<Loader2 className="w-4 h-4 mr-2 animate-spin" />
+						<Loader2 className="size-4 animate-spin" />
 						Хадгалж байна
 					</>
 				) : (
 					<>
-						<Save className="w-4 h-4 mr-2" />
+						<Save className="size-4" />
 						Хадгалах ({pendingCount})
 					</>
 				)}
@@ -46,21 +46,22 @@ const SaveButton = memo(function SaveButton({
 	}
 
 	return (
-		<div className="fixed bottom-6 right-6 z-50 lg:block hidden">
+		<div className="fixed right-6 bottom-6 z-50 hidden lg:block">
 			<Button
 				onClick={onSave}
 				disabled={isSaving}
-				className="shadow-lg"
+				variant="success"
+				className="animate-pop-in"
 				size="lg"
 			>
 				{isSaving ? (
 					<>
-						<Loader2 className="w-4 h-4 mr-2 animate-spin" />
+						<Loader2 className="size-4 animate-spin" />
 						Хадгалж байна...
 					</>
 				) : (
 					<>
-						<Save className="w-4 h-4 mr-2" />
+						<Save className="size-4" />
 						Хадгалах ({pendingCount})
 					</>
 				)}

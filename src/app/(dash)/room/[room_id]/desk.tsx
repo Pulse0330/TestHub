@@ -42,12 +42,12 @@ export function Desk({
 			}`}
 		>
 			<div
-				className={`w-full h-full rounded-md flex items-center justify-center border-2 transition-all shadow-md p-0.5 ${
+				className={`flex h-full w-full items-center justify-center rounded-xl border-2 p-0.5 text-xs font-black tabular-nums transition-all ${
 					isActive
-						? "bg-indigo-600 border-indigo-400 shadow-indigo-500/50 scale-110 text-white"
+						? "scale-110 border-primary-shade bg-primary text-primary-foreground shadow-[0_4px_0_0_var(--primary-shade)]"
 						: isNew
-							? " bg-orange-100 dark:bg-orange-900/40 dark:border-orange-500 text-orange-500 border-orange-500"
-							: "bg-indigo-500/10 border-indigo-500/30 hover:border-indigo-500 text-indigo-600 dark:text-indigo-400 dark:bg-indigo-500/40"
+							? "border-pop-sun bg-pop-sun-soft text-pop-sun-ink shadow-[0_3px_0_0_color-mix(in_oklch,var(--pop-sun)_60%,transparent)]"
+							: "border-pop-violet/40 bg-pop-violet-soft text-pop-violet-ink shadow-[0_3px_0_0_color-mix(in_oklch,var(--pop-violet)_35%,transparent)] hover:-translate-y-0.5 hover:border-pop-violet"
 				}`}
 			>
 				{/* <Monitor /> */}

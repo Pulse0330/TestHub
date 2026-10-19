@@ -3,27 +3,41 @@
 import { motion } from "framer-motion";
 import {
 	ArrowRight,
+	BookOpen,
+	CalendarClock,
+	CalendarX,
+	ChevronRight,
 	Clock,
 	CreditCard,
 	FileText,
+	Hourglass,
+	Info,
 	Lock,
+	Play,
 	Timer,
 	Unlock,
 	User,
+	Wallet,
 	Zap,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { type ReactNode, useEffect, useRef, useState } from "react";
 import ExamRulesDialog from "@/components/examRuleDialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
-	Tooltip,
-	TooltipContent,
-	TooltipTrigger,
-} from "@/components/ui/tooltip";
+	Sheet,
+	SheetContent,
+	SheetDescription,
+	SheetFooter,
+	SheetHeader,
+	SheetTitle,
+} from "@/components/ui/sheet";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 import type { ExamlistsData } from "@/types/exam/examList";
+
+export type ExamCardVariant = "featured" | "compact" | "row";
 
 interface ExamCardProps {
 	exam: ExamlistsData;
@@ -31,49 +45,104 @@ interface ExamCardProps {
 	isExpired: boolean;
 	onPayClick?: () => void;
 	isCreatingInvoice?: boolean;
+	/** Layout variant. featured = active, compact = upcoming, row = finished */
+	variant?: ExamCardVariant;
+	/** Server-synced current time (for countdowns) */
+	now?: Date | null;
 }
 const formatDate = (dateStr: string) => {
 	const cleaned = dateStr.replace("T", " ").replace("Z", "").split(".")[0];
 	return cleaned.slice(0, 16); // "2026-03-12 17:23"
 };
-// flag: 0 = Эхлээгүй (хөх), 1 = Идэвхтэй (ногоон), 2+ = Дууссан (саарал)
+
+/**
+ * Parses a backend date as a wall-clock time (same convention as
+ * useServerTime, which parses the server ISO string directly as UTC).
+ */
+export const parseExamDate = (dateStr?: string | null): number | null => {
+	if (!dateStr) return null;
+	const m = dateStr.match(
+		/(\d{4})[-./](\d{1,2})[-./](\d{1,2})[ T]?(\d{1,2})?:?(\d{2})?:?(\d{2})?/,
+	);
+	if (m) {
+		return Date.UTC(
+			Number(m[1]),
+			Number(m[2]) - 1,
+			Number(m[3]),
+			Number(m[4] ?? 0),
+			Number(m[5] ?? 0),
+			Number(m[6] ?? 0),
+		);
+	}
+	const t = Date.parse(dateStr);
+	return Number.isNaN(t) ? null : t;
+};
+
+const MN_MONTHS = [
+	"1-р сар",
+	"2-р сар",
+	"3-р сар",
+	"4-р сар",
+	"5-р сар",
+	"6-р сар",
+	"7-р сар",
+	"8-р сар",
+	"9-р сар",
+	"10-р сар",
+	"11-р сар",
+	"12-р сар",
+] as const;
+
+const dateParts = (dateStr: string) => {
+	const t = parseExamDate(dateStr);
+	if (t === null) return null;
+	const d = new Date(t);
+	return {
+		month: MN_MONTHS[d.getUTCMonth()],
+		day: d.getUTCDate(),
+		time: `${String(d.getUTCHours()).padStart(2, "0")}:${String(d.getUTCMinutes()).padStart(2, "0")}`,
+	};
+};
+
+/** "2 өдөр 3 цаг" / "3 цаг 12 мин" / "12:05" */
+export const formatRemaining = (ms: number) => {
+	if (ms <= 0) return "0 мин";
+	const totalSec = Math.floor(ms / 1000);
+	const days = Math.floor(totalSec / 86400);
+	const hours = Math.floor((totalSec % 86400) / 3600);
+	const mins = Math.floor((totalSec % 3600) / 60);
+	const secs = totalSec % 60;
+	if (days > 0) return `${days} өдөр ${hours} цаг`;
+	if (hours > 0) return `${hours} цаг ${mins} мин`;
+	return `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
+};
+
+// flag: 0 = Эхлээгүй (sky), 1 = Идэвхтэй (mint), 2+ = Дууссан (muted)
 const getFlagConfig = (flag: number) => {
 	switch (flag) {
 		case 1:
 			return {
 				label: "Идэвхтэй",
 				Icon: Zap,
-				badgeClass: "bg-emerald-500 hover:bg-emerald-600 text-white",
-				cardBorder:
-					"border-border/40 hover:border-emerald-400/40 hover:shadow-emerald-500/10",
-				headerGradient: "from-emerald-500/80 via-emerald-500/30",
-				titleHover: "group-hover:text-emerald-500",
-				arrowBg: "bg-muted/50 group-hover:bg-emerald-500 group-hover:scale-110",
-				arrowIconClass: "text-muted-foreground group-hover:text-white",
+				badgeVariant: "mint" as const,
+				banner: "bg-pop-mint-soft text-pop-mint-ink",
+				titleHover: "group-hover:text-pop-mint-ink",
 			};
 		case 0:
 			return {
 				label: "Эхлээгүй",
 				Icon: Timer,
-				badgeClass: "bg-blue-500/90 hover:bg-blue-600 text-white",
-				cardBorder:
-					"border-border/40 hover:border-blue-400/40 hover:shadow-blue-500/10",
-				headerGradient: "from-blue-500/70 via-blue-500/30",
-				titleHover: "group-hover:text-blue-500",
-				arrowBg: "bg-muted/50 group-hover:bg-blue-500 group-hover:scale-110",
-				arrowIconClass: "text-muted-foreground group-hover:text-white",
+				badgeVariant: "sky" as const,
+				banner: "bg-pop-sky-soft text-pop-sky-ink",
+				titleHover: "group-hover:text-pop-sky-ink",
 			};
 		default:
 			return {
 				label: "Та энэ шалгалтанд оролцоогүй байна",
 				Icon: Clock,
-				badgeClass: "bg-slate-500/80 text-white",
-				cardBorder:
-					"border-border/40 hover:border-slate-400/40 hover:shadow-slate-500/10",
-				headerGradient: "from-slate-600/70 via-slate-500/30",
-				titleHover: "group-hover:text-slate-400",
-				arrowBg: "bg-muted/50 group-hover:bg-slate-500 group-hover:scale-110",
-				arrowIconClass: "text-muted-foreground group-hover:text-white",
+				badgeVariant: "secondary" as const,
+				banner: "bg-muted text-muted-foreground",
+				titleHover: "group-hover:text-foreground",
 			};
 	}
 };
@@ -84,15 +153,29 @@ export default function ExamCard({
 	isExpired,
 	onPayClick,
 	isCreatingInvoice,
+	variant = "featured",
+	now,
 }: ExamCardProps) {
 	const canTakeExam = !isPaid && !isExpired && exam.flag === 1;
 	const [rulesDialogOpen, setRulesDialogOpen] = useState(false);
 	const [selectedExamId, setSelectedExamId] = useState<number | null>(null);
+	const [sheetOpen, setSheetOpen] = useState(false);
+	const payRequestedRef = useRef(false);
 	const router = useRouter();
+	const isMobile = useIsMobile();
 
 	const flagConfig = getFlagConfig(exam.flag);
 	const isPurchased = exam.ispurchased === 1;
 	const isLocked = isPaid && !isPurchased;
+	const showPayButton = isPaid && !isExpired && !isPurchased;
+
+	// Close the detail sheet once the QPay invoice request finishes
+	useEffect(() => {
+		if (!isCreatingInvoice && payRequestedRef.current) {
+			payRequestedRef.current = false;
+			setSheetOpen(false);
+		}
+	}, [isCreatingInvoice]);
 
 	const handleRulesConfirm = () => {
 		if (selectedExamId) {
@@ -107,203 +190,446 @@ export default function ExamCard({
 		}
 	};
 
+	const handleStartFromSheet = () => {
+		setSheetOpen(false);
+		handleCardClick();
+	};
+
+	const handlePayFromSheet = () => {
+		payRequestedRef.current = true;
+		onPayClick?.();
+	};
+
+	// Time helpers
+	const nowMs = now ? now.getTime() : null;
+	const startMs = parseExamDate(exam.ognoo);
+	const endMs = parseExamDate(exam.enddate);
+	const endsIn =
+		nowMs !== null && endMs !== null && endMs > nowMs ? endMs - nowMs : null;
+	const startsIn =
+		nowMs !== null && startMs !== null && startMs > nowMs
+			? startMs - nowMs
+			: null;
+	const start = dateParts(exam.ognoo);
+	const end = dateParts(exam.enddate);
+
+	const statusBadge = isLocked ? (
+		<Badge variant="sun" className="border-2 border-pop-sun/40 bg-card">
+			<Lock />
+			Төлбөртэй
+		</Badge>
+	) : isPurchased ? (
+		<Badge variant="mint" className="border-2 border-pop-mint/40 bg-card">
+			<Unlock />
+			Төлөгдсөн
+		</Badge>
+	) : (
+		<Badge
+			variant={flagConfig.badgeVariant}
+			className="max-w-full whitespace-normal border-2 bg-card text-left"
+		>
+			<flagConfig.Icon />
+			{flagConfig.label}
+		</Badge>
+	);
+
+	const openSheet = () => setSheetOpen(true);
+
 	return (
 		<motion.div
-			initial={{ opacity: 0, y: 20 }}
+			initial={{ opacity: 0, y: 12 }}
 			animate={{ opacity: 1, y: 0 }}
-			transition={{ duration: 0.4 }}
+			transition={{ duration: 0.3 }}
 			className="h-full"
 		>
-			<button
-				type="button"
-				onClick={handleCardClick}
-				disabled={!canTakeExam}
-				aria-label={`${exam.title} шалгалт`}
-				className={cn(
-					"group h-full w-full relative flex flex-col backdrop-blur-md transition-all duration-500 ease-out rounded-lg sm:rounded-xl overflow-hidden text-left",
-					isLocked
-						? "border border-amber-500/40 bg-card/30 hover:shadow-lg hover:shadow-amber-500/20 hover:border-amber-500/60"
-						: `border bg-card/50 hover:shadow-xl ${flagConfig.cardBorder}`,
-					(!canTakeExam || isExpired) && "opacity-60 cursor-not-allowed",
-					canTakeExam && !isExpired && "cursor-pointer",
-				)}
-			>
-				{/* Image Header */}
-				<div className="relative w-full aspect-5/2 bg-muted shrink-0">
-					<div className="absolute inset-0 bg-linear-to-br from-zinc-700 via-zinc-800 to-zinc-900 dark:from-zinc-800 dark:via-zinc-900 dark:to-black" />
-
-					{isLocked && (
-						<div className="absolute inset-0 bg-black/40 backdrop-blur-[2px] flex items-center justify-center z-10">
-							<Lock className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 text-white" />
-						</div>
+			{variant === "featured" && (
+				<button
+					type="button"
+					onClick={openSheet}
+					aria-label={`${exam.title} шалгалт`}
+					className={cn(
+						"card-pop lift group relative flex h-full w-full cursor-pointer flex-col gap-4 overflow-hidden p-5 text-left",
+						isLocked && "border-pop-sun",
 					)}
+				>
+					{/* Top: status + icon */}
+					<div className="flex items-start justify-between gap-3">
+						<div className="min-w-0 space-y-2">
+							{statusBadge}
+							<p className="line-clamp-1 text-xs font-bold uppercase tracking-wide text-primary">
+								{exam.lesson_name}
+							</p>
+						</div>
+						<div
+							className={cn(
+								"flex size-12 shrink-0 items-center justify-center rounded-2xl transition-transform duration-300 group-hover:-rotate-6",
+								isLocked
+									? "bg-pop-sun text-foreground shadow-[0_3px_0_0_color-mix(in_oklch,var(--pop-sun)_60%,black)]"
+									: "bg-pop-mint text-primary-foreground shadow-[0_3px_0_0_color-mix(in_oklch,var(--pop-mint)_60%,black)]",
+							)}
+						>
+							{isLocked ? (
+								<Lock className="size-6" strokeWidth={2.5} />
+							) : (
+								<FileText className="size-6" strokeWidth={2.5} />
+							)}
+						</div>
+					</div>
 
+					<h3 className="break-words text-lg font-black leading-snug text-foreground sm:text-xl">
+						{exam.title}
+					</h3>
+
+					{/* Countdown / end time */}
 					<div
 						className={cn(
-							"absolute inset-0 bg-linear-to-t to-transparent",
+							"flex items-center gap-3 rounded-2xl p-3",
 							isLocked
-								? "from-background/85 via-background/50"
-								: flagConfig.headerGradient,
+								? "bg-pop-sun-soft text-pop-sun-ink"
+								: "bg-pop-mint-soft text-pop-mint-ink",
 						)}
-					/>
-
-					{/* Status badge */}
-					<div className="absolute top-1.5 left-1.5 sm:top-2 sm:left-2 z-20">
-						{isLocked ? (
-							<Badge className="bg-amber-500 hover:bg-amber-600 text-white border-0 px-1 sm:px-1.5 md:px-2 py-0 text-[7px] sm:text-[8px] md:text-[9px] shadow-lg whitespace-nowrap">
-								<Lock className="w-2 h-2 sm:w-2.5 sm:h-2.5 mr-0.5" />
-								Төлбөртэй
-							</Badge>
-						) : isPurchased ? (
-							<Badge className="bg-green-500/90 text-white border-0 px-1 sm:px-1.5 md:px-2 py-0 text-[7px] sm:text-[8px] md:text-[9px] shadow-lg whitespace-nowrap">
-								<Unlock className="w-2 h-2 sm:w-2.5 sm:h-2.5 mr-0.5" />
-								Төлөгдсөн
-							</Badge>
-						) : (
-							<Badge
-								className={cn(
-									"border-0 px-1 sm:px-1.5 md:px-2 py-0 text-[7px] sm:text-[8px] md:text-[9px] shadow-lg whitespace-nowrap",
-									flagConfig.badgeClass,
-								)}
-							>
-								<flagConfig.Icon className="w-2 h-2 sm:w-2.5 sm:h-2.5 mr-0.5" />
-								{flagConfig.label}
-							</Badge>
-						)}
-					</div>
-				</div>
-
-				{/* Content Section */}
-				<div className="p-2 sm:p-3 pb-10 sm:pb-12 flex flex-col flex-1 space-y-2 sm:space-y-3">
-					{/* Title Section */}
-					<div className="space-y-0.5 sm:space-y-1 flex-1">
-						<Tooltip>
-							<TooltipTrigger asChild>
-								<h3
-									className={cn(
-										"text-xs sm:text-sm font-semibold text-foreground break-words whitespace-normal leading-tight transition-colors duration-300",
-										isLocked
-											? "group-hover:text-amber-500"
-											: flagConfig.titleHover,
-									)}
-								>
-									{exam.title}
-								</h3>
-							</TooltipTrigger>
-							<TooltipContent className="max-w-xs">
-								<p>{exam.title}</p>
-							</TooltipContent>
-						</Tooltip>
-						<p className="text-[10px] sm:text-xs text-muted-foreground line-clamp-1">
-							{exam.lesson_name}
-						</p>
-						<p className="text-[10px] sm:text-xs text-muted-foreground line-clamp-1">
-							Эхлэх огноо :{exam.ognoo}
-						</p>
-						<p className="text-[10px] sm:text-xs text-muted-foreground line-clamp-1">
-							Дуусах огноо : {formatDate(exam.enddate)}
-						</p>
-					</div>
-
-					{/* Stats Grid */}
-					<div className="space-y-1.5 sm:space-y-2 text-[10px] sm:text-xs">
-						<div className="flex items-center justify-between gap-1.5 sm:gap-2 pb-1.5 sm:pb-2 border-b border-border/50">
-							<Tooltip>
-								<TooltipTrigger asChild>
-									<div className="flex items-center gap-1 sm:gap-1.5">
-										<Clock className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
-										<span className="font-medium text-[9px] sm:text-xs">
-											{exam.exam_minute} минут
-										</span>
-									</div>
-								</TooltipTrigger>
-								<TooltipContent>
-									<p>Шалгалтын нийт хугацаа</p>
-								</TooltipContent>
-							</Tooltip>
-
-							<Tooltip>
-								<TooltipTrigger asChild>
-									<div className="flex items-center gap-1 sm:gap-1.5">
-										<FileText className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
-										<span className="font-medium text-[9px] sm:text-xs">
-											{exam.que_cnt} асуулт
-										</span>
-									</div>
-								</TooltipTrigger>
-								<TooltipContent>
-									<p>Нийт асуултын тоо</p>
-								</TooltipContent>
-							</Tooltip>
+					>
+						<Hourglass className="size-5 shrink-0" strokeWidth={2.5} />
+						<div className="min-w-0 flex-1">
+							<p className="text-[11px] font-extrabold uppercase tracking-wide opacity-80">
+								{endsIn !== null ? "Дуусахад үлдсэн" : "Дуусах огноо"}
+							</p>
+							<p className="truncate text-lg font-black tabular-nums">
+								{endsIn !== null
+									? formatRemaining(endsIn)
+									: formatDate(exam.enddate)}
+							</p>
 						</div>
-
-						<Tooltip>
-							<TooltipTrigger asChild>
-								<div className="flex items-center gap-1 sm:gap-1.5">
-									<User className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
-									<span className="font-medium text-[9px] sm:text-xs">
-										{exam.teach_name}
-									</span>
-								</div>
-							</TooltipTrigger>
-							<TooltipContent>
-								<p>Багш: {exam.teach_name}</p>
-							</TooltipContent>
-						</Tooltip>
+						{endsIn !== null && (
+							<p className="shrink-0 text-right text-xs font-bold opacity-80">
+								{end ? `${end.month} ${end.day}` : ""}
+								<br />
+								{end?.time}
+							</p>
+						)}
 					</div>
 
-					{/* Payment Button */}
-					{isPaid && !isExpired && !isPurchased && (
-						<Tooltip>
-							<TooltipTrigger asChild>
-								<Button
-									onClick={(e) => {
-										e.stopPropagation();
-										onPayClick?.();
-									}}
-									disabled={isCreatingInvoice}
-									size="sm"
-									variant="default"
-									className="w-full h-7 sm:h-8 text-[10px] sm:text-xs mt-1.5 sm:mt-2 bg-amber-500 hover:bg-amber-600 border-0"
-								>
-									{isCreatingInvoice ? (
-										"Уншиж байна..."
-									) : (
-										<>
-											<CreditCard className="w-3 h-3 sm:w-3.5 sm:h-3.5 mr-1 sm:mr-1.5" />
-											Төлбөр төлөх
-										</>
-									)}
-								</Button>
-							</TooltipTrigger>
-							<TooltipContent>
-								<p>QPay төлбөрийн QR код үүсгэх</p>
-							</TooltipContent>
-						</Tooltip>
-					)}
+					{/* Meta chips */}
+					<div className="flex flex-wrap items-center gap-1.5 text-xs">
+						<span className="inline-flex items-center gap-1 rounded-full bg-pop-sky-soft px-2.5 py-1 font-bold text-pop-sky-ink">
+							<Clock className="size-3.5" />
+							{exam.exam_minute} минут
+						</span>
+						<span className="inline-flex items-center gap-1 rounded-full bg-pop-violet-soft px-2.5 py-1 font-bold text-pop-violet-ink">
+							<FileText className="size-3.5" />
+							{exam.que_cnt} асуулт
+						</span>
+						<span className="inline-flex min-w-0 max-w-full items-center gap-1 rounded-full bg-pop-pink-soft px-2.5 py-1 font-bold text-pop-pink-ink">
+							<User className="size-3.5 shrink-0" />
+							<span className="truncate">{exam.teach_name}</span>
+						</span>
+					</div>
 
-					{/* Arrow */}
-					<div
+					{/* CTA hint */}
+					<span
 						className={cn(
-							"absolute bottom-2.5 right-2.5 sm:bottom-3 sm:right-3 w-6 h-6 sm:w-7 sm:h-7 rounded-full flex items-center justify-center transition-all duration-300 pointer-events-none",
+							"mt-auto inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl text-sm font-bold transition-all",
 							isLocked
-								? "bg-amber-500/20 group-hover:bg-amber-500 group-hover:scale-110"
-								: flagConfig.arrowBg,
+								? "bg-pop-sun text-foreground shadow-[0_4px_0_0_color-mix(in_oklch,var(--pop-sun)_65%,black)]"
+								: "bg-primary text-primary-foreground shadow-[0_4px_0_0_var(--primary-shade)]",
 						)}
 					>
 						{isLocked ? (
-							<Lock className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-amber-600 group-hover:text-white transition-all" />
+							<>
+								<CreditCard className="size-4" />
+								Төлбөр төлөх
+							</>
+						) : canTakeExam ? (
+							<>
+								<Play className="size-4" />
+								Шалгалт өгөх
+							</>
 						) : (
-							<ArrowRight
-								className={cn(
-									"w-2.5 h-2.5 sm:w-3 sm:h-3 group-hover:translate-x-0.5 transition-all",
-									flagConfig.arrowIconClass,
-								)}
-							/>
+							<>
+								Дэлгэрэнгүй
+								<ArrowRight className="size-4" />
+							</>
+						)}
+					</span>
+				</button>
+			)}
+
+			{variant === "compact" && (
+				<button
+					type="button"
+					onClick={openSheet}
+					aria-label={`${exam.title} шалгалт`}
+					className={cn(
+						"card-pop lift group flex h-full w-full cursor-pointer items-stretch gap-3 overflow-hidden p-3 text-left",
+						isLocked && "border-pop-sun",
+					)}
+				>
+					{/* Start date tile */}
+					<div
+						className={cn(
+							"flex w-16 shrink-0 flex-col items-center justify-center rounded-2xl py-2 text-center",
+							isLocked
+								? "bg-pop-sun-soft text-pop-sun-ink"
+								: "bg-pop-sky-soft text-pop-sky-ink",
+						)}
+					>
+						{start ? (
+							<>
+								<span className="text-[10px] font-extrabold uppercase leading-none">
+									{start.month}
+								</span>
+								<span className="text-2xl font-black leading-tight">
+									{start.day}
+								</span>
+								<span className="text-[11px] font-bold leading-none tabular-nums">
+									{start.time}
+								</span>
+							</>
+						) : (
+							<CalendarClock className="size-6" />
 						)}
 					</div>
-				</div>
-			</button>
+
+					<div className="flex min-w-0 flex-1 flex-col justify-center gap-1">
+						<p className="line-clamp-1 text-[11px] font-bold uppercase tracking-wide text-primary">
+							{exam.lesson_name}
+						</p>
+						<h3 className="line-clamp-2 text-sm font-extrabold leading-snug text-foreground">
+							{exam.title}
+						</h3>
+						<div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] font-bold text-muted-foreground">
+							<span className="inline-flex items-center gap-1">
+								<Clock className="size-3" />
+								{exam.exam_minute} мин
+							</span>
+							<span className="inline-flex items-center gap-1">
+								<FileText className="size-3" />
+								{exam.que_cnt} асуулт
+							</span>
+							{isLocked && (
+								<span className="inline-flex items-center gap-1 text-pop-sun-ink">
+									<Lock className="size-3" />
+									Төлбөртэй
+								</span>
+							)}
+						</div>
+						{startsIn !== null && (
+							<p className="text-[11px] font-extrabold text-pop-sky-ink">
+								Эхлэхэд {formatRemaining(startsIn)}
+							</p>
+						)}
+					</div>
+					<ChevronRight className="size-5 shrink-0 self-center text-muted-foreground transition-transform group-hover:translate-x-0.5" />
+				</button>
+			)}
+
+			{variant === "row" && (
+				<button
+					type="button"
+					onClick={openSheet}
+					aria-label={`${exam.title} шалгалт`}
+					className="group flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-accent/50"
+				>
+					<span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-muted text-muted-foreground">
+						{isLocked ? (
+							<Lock className="size-4" />
+						) : (
+							<FileText className="size-4" />
+						)}
+					</span>
+					<div className="min-w-0 flex-1">
+						<p className="truncate text-sm font-bold text-foreground/80">
+							{exam.title}
+						</p>
+						<p className="truncate text-xs font-semibold text-muted-foreground">
+							{exam.lesson_name} · {formatDate(exam.enddate)}
+						</p>
+					</div>
+					<span className="hidden shrink-0 text-xs font-bold text-muted-foreground sm:inline">
+						{exam.que_cnt} асуулт · {exam.exam_minute} мин
+					</span>
+					<ChevronRight className="size-4 shrink-0 text-muted-foreground" />
+				</button>
+			)}
+
+			{/* Detail sheet */}
+			<Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
+				<SheetContent
+					side={isMobile ? "bottom" : "right"}
+					className={cn(
+						"gap-0 border-border p-0",
+						isMobile
+							? "max-h-[90dvh] rounded-t-3xl border-t-2"
+							: "w-full border-l-2 sm:max-w-md",
+					)}
+				>
+					{isMobile && (
+						<div className="mx-auto mt-3 h-1.5 w-12 shrink-0 rounded-full bg-border" />
+					)}
+					<div className="flex-1 overflow-y-auto">
+						<SheetHeader className="gap-3 p-5 pb-3">
+							<div
+								className={cn(
+									"flex items-center justify-between gap-3 rounded-2xl p-3 pr-10",
+									isLocked ? "bg-pop-sun-soft text-pop-sun-ink" : flagConfig.banner,
+								)}
+							>
+								{statusBadge}
+								{isLocked ? (
+									<Lock className="size-6 shrink-0" strokeWidth={2.5} />
+								) : (
+									<FileText className="size-6 shrink-0" strokeWidth={2.5} />
+								)}
+							</div>
+							<p className="text-xs font-bold uppercase tracking-wide text-primary">
+								{exam.lesson_name}
+							</p>
+							<SheetTitle className="text-xl font-black leading-snug">
+								{exam.title}
+							</SheetTitle>
+							<SheetDescription className="sr-only">
+								{exam.lesson_name} · {exam.teach_name}
+							</SheetDescription>
+						</SheetHeader>
+
+						<div className="space-y-4 px-5 pb-5">
+							{/* Stat tiles */}
+							<div className="grid grid-cols-2 gap-2">
+								<div className="rounded-2xl bg-pop-sky-soft p-3">
+									<p className="text-2xl font-black text-pop-sky-ink">
+										{exam.exam_minute}
+									</p>
+									<p className="text-[11px] font-bold uppercase tracking-wide text-pop-sky-ink/80">
+										минут
+									</p>
+								</div>
+								<div className="rounded-2xl bg-pop-violet-soft p-3">
+									<p className="text-2xl font-black text-pop-violet-ink">
+										{exam.que_cnt}
+									</p>
+									<p className="text-[11px] font-bold uppercase tracking-wide text-pop-violet-ink/80">
+										асуулт
+									</p>
+								</div>
+							</div>
+
+							{(endsIn !== null || startsIn !== null) && (
+								<div
+									className={cn(
+										"flex items-center gap-3 rounded-2xl p-3",
+										startsIn !== null
+											? "bg-pop-sky-soft text-pop-sky-ink"
+											: "bg-pop-mint-soft text-pop-mint-ink",
+									)}
+								>
+									<Hourglass className="size-5 shrink-0" strokeWidth={2.5} />
+									<p className="text-sm font-extrabold">
+										{startsIn !== null
+											? `Эхлэхэд ${formatRemaining(startsIn)}`
+											: `Дуусахад ${formatRemaining(endsIn ?? 0)}`}
+									</p>
+								</div>
+							)}
+
+							{/* Info rows */}
+							<div className="divide-y-2 divide-border overflow-hidden rounded-2xl border-2 border-border bg-card">
+								<InfoRow
+									icon={<User className="size-4" />}
+									tone="bg-pop-pink-soft text-pop-pink-ink"
+									label="Багш"
+									value={exam.teach_name}
+								/>
+								<InfoRow
+									icon={<BookOpen className="size-4" />}
+									tone="bg-primary/10 text-primary"
+									label="Хичээл"
+									value={exam.lesson_name}
+								/>
+								<InfoRow
+									icon={<CalendarClock className="size-4" />}
+									tone="bg-pop-mint-soft text-pop-mint-ink"
+									label="Эхлэх огноо"
+									value={exam.ognoo}
+								/>
+								<InfoRow
+									icon={<CalendarX className="size-4" />}
+									tone="bg-pop-coral-soft text-pop-coral-ink"
+									label="Дуусах огноо"
+									value={formatDate(exam.enddate)}
+								/>
+								<InfoRow
+									icon={<Wallet className="size-4" />}
+									tone="bg-pop-sun-soft text-pop-sun-ink"
+									label={exam.ispaydescr || "Төлбөр"}
+									value={
+										isPaid
+											? `${exam.amount ?? 0}₮ · ${
+													exam.ispurchaseddescr ||
+													(isPurchased ? "Төлөгдсөн" : "Төлөгдөөгүй")
+												}`
+											: exam.ispurchaseddescr || "—"
+									}
+								/>
+								{exam.plan_name && (
+									<InfoRow
+										icon={<Info className="size-4" />}
+										tone="bg-pop-sky-soft text-pop-sky-ink"
+										label="Төлөвлөгөө"
+										value={exam.plan_name}
+									/>
+								)}
+							</div>
+
+							{exam.help && (
+								<div className="rounded-2xl border-2 border-dashed border-border bg-muted/50 p-4">
+									<p className="mb-1 flex items-center gap-1.5 text-xs font-extrabold uppercase tracking-wide text-muted-foreground">
+										<Info className="size-3.5" />
+										Тайлбар
+									</p>
+									<p className="whitespace-pre-line text-sm font-semibold text-foreground/90">
+										{exam.help}
+									</p>
+								</div>
+							)}
+						</div>
+					</div>
+
+					<SheetFooter className="border-t-2 border-border bg-card p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
+						{showPayButton && (
+							<p className="text-center text-xs font-semibold text-muted-foreground">
+								QPay төлбөрийн QR код үүсгэх
+							</p>
+						)}
+						{showPayButton ? (
+							<Button
+								onClick={handlePayFromSheet}
+								disabled={isCreatingInvoice}
+								size="lg"
+								className="w-full bg-pop-sun text-foreground shadow-[0_4px_0_0_color-mix(in_oklch,var(--pop-sun)_65%,black)] hover:bg-pop-sun/90 active:shadow-[0_1px_0_0_color-mix(in_oklch,var(--pop-sun)_65%,black)]"
+							>
+								{isCreatingInvoice ? (
+									"Уншиж байна..."
+								) : (
+									<>
+										<CreditCard className="size-4" />
+										Төлбөр төлөх
+									</>
+								)}
+							</Button>
+						) : canTakeExam ? (
+							<Button size="lg" className="w-full" onClick={handleStartFromSheet}>
+								<Play className="size-4" />
+								Шалгалт эхлүүлэх
+							</Button>
+						) : (
+							<Button size="lg" variant="secondary" className="w-full" disabled>
+								<flagConfig.Icon className="size-4" />
+								{isExpired ? exam.flag_name || flagConfig.label : flagConfig.label}
+							</Button>
+						)}
+					</SheetFooter>
+				</SheetContent>
+			</Sheet>
 
 			<ExamRulesDialog
 				open={rulesDialogOpen}
@@ -312,5 +638,36 @@ export default function ExamCard({
 				isMobile={false}
 			/>
 		</motion.div>
+	);
+}
+
+function InfoRow({
+	icon,
+	tone,
+	label,
+	value,
+}: {
+	icon: ReactNode;
+	tone: string;
+	label: string;
+	value: ReactNode;
+}) {
+	return (
+		<div className="flex items-center gap-3 px-3 py-2.5">
+			<span
+				className={cn(
+					"flex size-8 shrink-0 items-center justify-center rounded-xl",
+					tone,
+				)}
+			>
+				{icon}
+			</span>
+			<span className="shrink-0 text-xs font-bold text-muted-foreground">
+				{label}
+			</span>
+			<span className="ml-auto min-w-0 truncate text-right text-sm font-extrabold text-foreground">
+				{value}
+			</span>
+		</div>
 	);
 }

@@ -93,28 +93,28 @@ export default function ExamTimePage({ params }: ExamTimePageProps) {
 
 	return (
 		<div className="py-6 max-w-7xl mx-auto space-y-8">
-			<header className="flex flex-col md:flex-row items-start md:items-center justify-between mb-8 gap-4 border-b pb-6 text-foreground">
-				<div className="flex items-start gap-4 w-full">
-					<IBackButton className="mt-1" />
-					<div>
-						<div className="text-2xl font-bold tracking-tight flex items-center gap-3 ">
-							<div className="bg-primary/10 p-2 rounded-lg text-primary">
-								<CalendarRange size={26} />
-							</div>
+			<header className="flex flex-wrap items-end justify-between gap-4 text-foreground">
+				<div className="flex min-w-0 items-center gap-3 md:gap-4">
+					<IBackButton className="shrink-0" />
+					<div className="flex size-14 shrink-0 items-center justify-center rounded-2xl bg-pop-violet-soft text-pop-violet-ink shadow-[0_4px_0_0_color-mix(in_oklch,var(--pop-violet)_35%,transparent)]">
+						<CalendarRange className="size-7" strokeWidth={2.5} />
+					</div>
+					<div className="min-w-0">
+						<div className="flex items-center gap-3">
 							{isInfoLoading ? (
-								<Skeleton className="h-8 w-64" />
+								<Skeleton className="h-8 w-64 rounded-xl" />
 							) : (
-								<h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
+								<h1 className="text-2xl font-black tracking-tight text-foreground md:text-3xl">
 									{examInfo?.name || "Шалгалтын мэдээлэл"}
 								</h1>
 							)}
 						</div>
 
-						<div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground mt-2">
-							<span className="flex items-center gap-1.5">
-								<Clock size={14} className="text-blue-500" />
+						<div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground">
+							<span className="inline-flex items-center gap-1.5 rounded-full bg-pop-sky-soft px-3 py-1 text-xs font-bold text-pop-sky-ink">
+								<Clock size={14} strokeWidth={2.5} />
 								Үргэлжлэх хугацаа:{" "}
-								<span className="font-semibold text-foreground">
+								<span className="font-extrabold">
 									{examInfo?.duration || 0} минут
 								</span>
 							</span>
@@ -122,7 +122,7 @@ export default function ExamTimePage({ params }: ExamTimePageProps) {
 					</div>
 				</div>
 
-				<div className="flex items-center gap-2  lg:w-auto">
+				<div className="flex items-center gap-2 lg:w-auto">
 					<TooltipProvider>
 						<Tooltip>
 							<TooltipTrigger asChild>
@@ -138,7 +138,7 @@ export default function ExamTimePage({ params }: ExamTimePageProps) {
 											</div>
 										) : (
 											<div className="flex items-center gap-2">
-												<Download /> Материал татах
+												<Download strokeWidth={2.5} /> Материал татах
 											</div>
 										)}
 									</Button>
