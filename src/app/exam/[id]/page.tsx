@@ -802,6 +802,13 @@ export default function ExamPage() {
 			{/* ───────── Body ───────── */}
 			<div className="mx-auto flex w-full max-w-7xl flex-1 gap-8 px-3 sm:px-6 xl:grid xl:grid-cols-[minmax(0,1fr)_16rem] xl:px-8">
 				<div className="flex min-w-0 flex-1 flex-col">
+					{/* Утсан дээрх бичвэрийн хэмжээ (том дэлгэцэд header-т байна) */}
+					<div className="mx-auto flex w-full max-w-3xl items-center justify-end gap-2 pt-3 sm:hidden">
+						<span className="text-xs font-bold text-muted-foreground">
+							Бичвэр
+						</span>
+						<TextSizeControl textScale={textScale} />
+					</div>
 					<main
 						className="mx-auto w-full max-w-3xl flex-1 py-3"
 						style={{ zoom: textScale.scale }}

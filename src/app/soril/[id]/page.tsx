@@ -689,7 +689,15 @@ export default function SorilPage() {
 				</div>
 			</header>
 
-			<div className="mx-auto max-w-[1400px] px-3 pt-3 pb-32 sm:px-6 xl:grid xl:grid-cols-[minmax(0,1fr)_17rem] xl:gap-8">
+			<div
+				className={`mx-auto max-w-[1400px] px-3 pt-3 sm:px-6 xl:grid xl:grid-cols-[minmax(0,1fr)_17rem] xl:gap-8 ${viewMode === "card" ? "pb-32" : "pb-10"}`}
+			>
+				<div className="mx-auto mb-3 flex w-full max-w-3xl items-center justify-end gap-2 md:hidden">
+					<span className="text-xs font-bold text-muted-foreground">
+						Бичвэр
+					</span>
+					<TextSizeControl textScale={textScale} />
+				</div>
 				<main
 					className="mx-auto w-full min-w-0 max-w-3xl"
 					style={{ zoom: textScale.scale }}
@@ -760,55 +768,44 @@ export default function SorilPage() {
 				</aside>
 			</div>
 
-			{/* ── Sticky bottom action bar ── */}
-			<div className="fixed inset-x-0 bottom-0 z-30 border-t-2 border-border bg-card">
-				<div className="mx-auto flex max-w-3xl gap-3 px-3 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
-					{viewMode === "card" ? (
-						<>
-							<Button
-								onClick={goToPreviousQuestion}
-								disabled={currentQuestionIndex === 0}
-								variant="outline"
-								size="lg"
-								className="h-12 flex-1 text-base"
-							>
-								<ChevronLeft className="size-5" strokeWidth={2.75} />
-								Өмнөх
-							</Button>
-							{isLastQuestion ? (
-								<Button
-									onClick={openReview}
-									variant="success"
-									size="lg"
-									className="h-12 flex-1 text-base"
-								>
-									<ClipboardCheck className="size-5" strokeWidth={2.5} />
-									Шалгах
-								</Button>
-							) : (
-								<Button
-									onClick={goToNextQuestion}
-									size="lg"
-									className="h-12 flex-1 text-base"
-								>
-									Дараах
-									<ChevronRight className="size-5" strokeWidth={2.75} />
-								</Button>
-							)}
-						</>
-					) : (
+			{/* ── Sticky bottom action bar (карт горимд л) ──
+			    Жагсаалт горимд «Шалгах» нь header болон хажуугийн самбарт байна */}
+			{viewMode === "card" && (
+				<div className="fixed inset-x-0 bottom-0 z-30 border-t-2 border-border bg-card">
+					<div className="mx-auto flex max-w-3xl gap-3 px-3 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
 						<Button
-							onClick={openReview}
-							variant="success"
+							onClick={goToPreviousQuestion}
+							disabled={currentQuestionIndex === 0}
+							variant="outline"
 							size="lg"
 							className="h-12 flex-1 text-base"
 						>
-							<ClipboardCheck className="size-5" strokeWidth={2.5} />
-							Шалгах
+							<ChevronLeft className="size-5" strokeWidth={2.75} />
+							Өмнөх
 						</Button>
-					)}
+						{isLastQuestion ? (
+							<Button
+								onClick={openReview}
+								variant="success"
+								size="lg"
+								className="h-12 flex-1 text-base"
+							>
+								<ClipboardCheck className="size-5" strokeWidth={2.5} />
+								Шалгах
+							</Button>
+						) : (
+							<Button
+								onClick={goToNextQuestion}
+								size="lg"
+								className="h-12 flex-1 text-base"
+							>
+								Дараах
+								<ChevronRight className="size-5" strokeWidth={2.75} />
+							</Button>
+						)}
+					</div>
 				</div>
-			</div>
+			)}
 
 			{/* ── Navigator sheet ── */}
 			<Sheet
