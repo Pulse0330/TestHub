@@ -30,7 +30,9 @@ export function LessonSidebar({
 }: LessonSidebarProps) {
 	const completedCount = contents.filter((c) => c.stu_worked === 1).length;
 	const percent =
-		contents.length > 0 ? Math.round((completedCount / contents.length) * 100) : 0;
+		contents.length > 0
+			? Math.round((completedCount / contents.length) * 100)
+			: 0;
 
 	return (
 		<Card className="gap-0 py-0 overflow-hidden flex flex-col h-full max-h-full">

@@ -14,6 +14,7 @@ import {
 import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { getFilteredContnView, getTestFilter } from "@/lib/api";
+import { queryKeys } from "@/lib/queryKeys";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/stores/useAuthStore";
 import type { CourseListResponse } from "@/types/course/courseList";
@@ -115,7 +116,7 @@ const CourseListPage = () => {
 		isError,
 		error,
 	} = useQuery<CourseListResponse>({
-		queryKey: ["filteredCourseList", userId, selectedLessonId],
+		queryKey: queryKeys.courses.filtered(userId, selectedLessonId),
 		queryFn: () => getFilteredContnView(userId || 0, selectedLessonId),
 		enabled: !!userId,
 		staleTime: 0,
@@ -185,7 +186,10 @@ const CourseListPage = () => {
 			<div className="min-h-[60vh] flex items-center justify-center px-4">
 				<div className="text-center space-y-3 max-w-md animate-pop-in">
 					<div className="mx-auto mb-4 flex size-24 items-center justify-center rounded-full bg-destructive/10">
-						<AlertCircle className="size-12 text-destructive" strokeWidth={2.5} />
+						<AlertCircle
+							className="size-12 text-destructive"
+							strokeWidth={2.5}
+						/>
 					</div>
 					<h2 className="text-xl font-black text-destructive">Алдаа гарлаа</h2>
 					<p className="font-semibold text-muted-foreground">
@@ -289,7 +293,10 @@ const CourseListPage = () => {
 				{courses.length === 0 && (
 					<div className="card-pop text-center py-12 px-6 space-y-2 animate-pop-in">
 						<div className="mx-auto mb-5 flex size-24 items-center justify-center rounded-full bg-pop-pink-soft animate-float">
-							<BookOpen className="size-12 text-pop-pink-ink" strokeWidth={2.25} />
+							<BookOpen
+								className="size-12 text-pop-pink-ink"
+								strokeWidth={2.25}
+							/>
 						</div>
 						<p className="text-xl font-black text-foreground">
 							Хичээл олдсонгүй
@@ -335,10 +342,9 @@ const LibraryToolbar = ({
 			)}
 		</div>
 
-		<div
-			role="group"
+		<fieldset
 			aria-label="Харагдац"
-			className="flex items-center gap-1 rounded-xl border-2 border-border bg-card p-1"
+			className="m-0 flex min-w-0 items-center gap-1 rounded-xl border-2 border-border bg-card p-1"
 		>
 			{(
 				[
@@ -363,7 +369,7 @@ const LibraryToolbar = ({
 					<Icon className="size-4" strokeWidth={2.5} />
 				</button>
 			))}
-		</div>
+		</fieldset>
 	</header>
 );
 
@@ -408,7 +414,9 @@ const SubjectShelf = ({
 							"group flex shrink-0 items-center gap-2.5 rounded-2xl border-2 py-2 pl-2 pr-4 text-sm font-extrabold transition-all duration-150 whitespace-nowrap",
 							active
 								? cn(
-										color ? color.solid : "bg-primary text-primary-foreground border-primary",
+										color
+											? color.solid
+											: "bg-primary text-primary-foreground border-primary",
 										"shadow-[0_3px_0_0_color-mix(in_oklch,var(--foreground)_25%,transparent)] -translate-y-0.5",
 									)
 								: "border-border bg-card text-foreground shadow-[0_3px_0_0_var(--border)] hover:-translate-y-0.5 active:translate-y-0.5",

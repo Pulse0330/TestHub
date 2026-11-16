@@ -1,0 +1,10 @@
+# Repo дотор бүх текст файлыг LF-ээр хадгална (Windows-ийн core.autocrlf-оос үл хамааран)
+* text=auto eol=lf
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pdf binary
+*.woff binary
+*.woff2 binary

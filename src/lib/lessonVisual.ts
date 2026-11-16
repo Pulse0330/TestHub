@@ -20,11 +20,15 @@ export interface LessonVisual {
 	hoverBorder: string;
 }
 
-const TONES: Record<LessonTone, Omit<LessonVisual, "emoji" | "tone" | "flag">> = {
+const TONES: Record<
+	LessonTone,
+	Omit<LessonVisual, "emoji" | "tone" | "flag">
+> = {
 	violet: {
 		soft: "bg-pop-violet-soft text-pop-violet-ink",
 		solid: "bg-pop-violet text-white border-pop-violet",
-		shadow: "shadow-[0_4px_0_0_color-mix(in_oklch,var(--pop-violet)_60%,black)]",
+		shadow:
+			"shadow-[0_4px_0_0_color-mix(in_oklch,var(--pop-violet)_60%,black)]",
 		hoverBorder: "hover:border-pop-violet/60",
 	},
 	sky: {
@@ -59,7 +63,14 @@ const TONES: Record<LessonTone, Omit<LessonVisual, "emoji" | "tone" | "flag">> =
 	},
 };
 
-const ROTATION: LessonTone[] = ["violet", "sky", "mint", "sun", "coral", "pink"];
+const ROTATION: LessonTone[] = [
+	"violet",
+	"sky",
+	"mint",
+	"sun",
+	"coral",
+	"pink",
+];
 
 // [түлхүүр үгс (жижиг үсгээр), emoji, өнгө]
 const RULES: Array<[string[], string, LessonTone, FlagCode?]> = [
@@ -87,10 +98,14 @@ const RULES: Array<[string[], string, LessonTone, FlagCode?]> = [
 	[["эрүүл мэнд"], "🩺", "coral"],
 ];
 
-export function getLessonVisual(name: string | null | undefined, id = 0): LessonVisual {
+export function getLessonVisual(
+	name: string | null | undefined,
+	id = 0,
+): LessonVisual {
 	const n = (name ?? "").toLowerCase();
 	for (const [keys, emoji, tone, flag] of RULES) {
-		if (keys.some((k) => n.includes(k))) return { emoji, flag, tone, ...TONES[tone] };
+		if (keys.some((k) => n.includes(k)))
+			return { emoji, flag, tone, ...TONES[tone] };
 	}
 	const tone = ROTATION[Math.abs(id) % ROTATION.length];
 	return { emoji: "📚", tone, ...TONES[tone] };

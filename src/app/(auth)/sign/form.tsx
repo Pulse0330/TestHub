@@ -45,7 +45,7 @@ const formSchema = z
 	.object({
 		phone: z
 			.string()
-			.min(8, { message: "Утасны дугаар 8 оронтой байх ёстой." })
+			.length(8, { message: "Утасны дугаар 8 оронтой байх ёстой." })
 			.regex(/^[0-9]+$/, { message: "Зөвхөн тоо оруулна уу." }),
 		lastname: z.string().min(1, { message: "Овог оруулна уу." }),
 		firstname: z.string().min(1, { message: "Нэр оруулна уу." }),
@@ -214,20 +214,35 @@ export function SignForm({ onClose }: SignFormProps) {
 	return (
 		<AuthShell>
 			{onClose && (
-				<button type="button" onClick={onClose} className={AUTH_CLOSE_BUTTON_CLASS} aria-label="Хаах">
+				<button
+					type="button"
+					onClick={onClose}
+					className={AUTH_CLOSE_BUTTON_CLASS}
+					aria-label="Хаах"
+				>
 					<X className="size-4" strokeWidth={2.5} />
 				</button>
 			)}
 
 			<div className="px-6 pt-6 pr-14 pb-2 sm:px-8 sm:pt-8 sm:pr-14">
-				<Image src="/image/asd.png" alt="EXMO" width={110} height={36} className="mb-5 hidden h-8 w-auto md:block" />
+				<Image
+					src="/image/asd.png"
+					alt="EXMO"
+					width={110}
+					height={36}
+					className="mb-5 hidden h-8 w-auto md:block"
+				/>
 				<div className="flex items-center gap-3">
 					<div className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-pop-mint-soft text-2xl shadow-[0_4px_0_0_color-mix(in_oklch,var(--pop-mint)_35%,transparent)]">
 						<span aria-hidden="true">🚀</span>
 					</div>
 					<div className="min-w-0">
-						<h2 className="text-2xl font-black tracking-tight text-foreground">Бүртгүүлэх</h2>
-						<p className="text-sm font-semibold text-muted-foreground">Шинэ бүртгэл үүсгэх</p>
+						<h2 className="text-2xl font-black tracking-tight text-foreground">
+							Бүртгүүлэх
+						</h2>
+						<p className="text-sm font-semibold text-muted-foreground">
+							Шинэ бүртгэл үүсгэх
+						</p>
 					</div>
 				</div>
 			</div>
@@ -240,7 +255,9 @@ export function SignForm({ onClose }: SignFormProps) {
 							name="phone"
 							render={({ field }) => (
 								<FormItem>
-									<FormLabel className="text-sm font-bold text-foreground">Утасны дугаар</FormLabel>
+									<FormLabel className="text-sm font-bold text-foreground">
+										Утасны дугаар
+									</FormLabel>
 									<div className="relative">
 										<FormControl>
 											<Input
@@ -252,7 +269,10 @@ export function SignForm({ onClose }: SignFormProps) {
 												className="peer pl-11 text-base tracking-wider"
 											/>
 										</FormControl>
-										<Phone className={AUTH_INPUT_ICON_CLASS} strokeWidth={2.5} />
+										<Phone
+											className={AUTH_INPUT_ICON_CLASS}
+											strokeWidth={2.5}
+										/>
 									</div>
 									<FormMessage />
 								</FormItem>
@@ -351,7 +371,9 @@ export function SignForm({ onClose }: SignFormProps) {
 										name="lastname"
 										render={({ field }) => (
 											<FormItem>
-												<FormLabel className="text-sm font-bold text-foreground">Овог</FormLabel>
+												<FormLabel className="text-sm font-bold text-foreground">
+													Овог
+												</FormLabel>
 												<div className="relative">
 													<FormControl>
 														<Input
@@ -361,7 +383,10 @@ export function SignForm({ onClose }: SignFormProps) {
 															className="peer pl-11"
 														/>
 													</FormControl>
-													<Users className={AUTH_INPUT_ICON_CLASS} strokeWidth={2.5} />
+													<Users
+														className={AUTH_INPUT_ICON_CLASS}
+														strokeWidth={2.5}
+													/>
 												</div>
 												<FormMessage />
 											</FormItem>
@@ -372,7 +397,9 @@ export function SignForm({ onClose }: SignFormProps) {
 										name="firstname"
 										render={({ field }) => (
 											<FormItem>
-												<FormLabel className="text-sm font-bold text-foreground">Нэр</FormLabel>
+												<FormLabel className="text-sm font-bold text-foreground">
+													Нэр
+												</FormLabel>
 												<div className="relative">
 													<FormControl>
 														<Input
@@ -382,7 +409,10 @@ export function SignForm({ onClose }: SignFormProps) {
 															className="peer pl-11"
 														/>
 													</FormControl>
-													<User className={AUTH_INPUT_ICON_CLASS} strokeWidth={2.5} />
+													<User
+														className={AUTH_INPUT_ICON_CLASS}
+														strokeWidth={2.5}
+													/>
 												</div>
 												<FormMessage />
 											</FormItem>
@@ -394,7 +424,9 @@ export function SignForm({ onClose }: SignFormProps) {
 									name="email"
 									render={({ field }) => (
 										<FormItem>
-											<FormLabel className="text-sm font-bold text-foreground">Имэйл хаяг</FormLabel>
+											<FormLabel className="text-sm font-bold text-foreground">
+												Имэйл хаяг
+											</FormLabel>
 											<div className="relative">
 												<FormControl>
 													<Input
@@ -405,7 +437,10 @@ export function SignForm({ onClose }: SignFormProps) {
 														className="peer pl-11"
 													/>
 												</FormControl>
-												<Mail className={AUTH_INPUT_ICON_CLASS} strokeWidth={2.5} />
+												<Mail
+													className={AUTH_INPUT_ICON_CLASS}
+													strokeWidth={2.5}
+												/>
 											</div>
 											<FormMessage />
 										</FormItem>
@@ -434,7 +469,9 @@ export function SignForm({ onClose }: SignFormProps) {
 										name="password"
 										render={({ field }) => (
 											<FormItem>
-												<FormLabel className="text-sm font-bold text-foreground">Нууц үг</FormLabel>
+												<FormLabel className="text-sm font-bold text-foreground">
+													Нууц үг
+												</FormLabel>
 												<div className="relative">
 													<FormControl>
 														<Input
@@ -445,7 +482,10 @@ export function SignForm({ onClose }: SignFormProps) {
 															className="peer pl-11"
 														/>
 													</FormControl>
-													<Lock className={AUTH_INPUT_ICON_CLASS} strokeWidth={2.5} />
+													<Lock
+														className={AUTH_INPUT_ICON_CLASS}
+														strokeWidth={2.5}
+													/>
 												</div>
 												<FormMessage />
 											</FormItem>
@@ -456,7 +496,9 @@ export function SignForm({ onClose }: SignFormProps) {
 										name="confirmPassword"
 										render={({ field }) => (
 											<FormItem>
-												<FormLabel className="text-sm font-bold text-foreground">Давтах</FormLabel>
+												<FormLabel className="text-sm font-bold text-foreground">
+													Давтах
+												</FormLabel>
 												<div className="relative">
 													<FormControl>
 														<Input
@@ -467,7 +509,10 @@ export function SignForm({ onClose }: SignFormProps) {
 															className="peer pl-11"
 														/>
 													</FormControl>
-													<KeyRound className={AUTH_INPUT_ICON_CLASS} strokeWidth={2.5} />
+													<KeyRound
+														className={AUTH_INPUT_ICON_CLASS}
+														strokeWidth={2.5}
+													/>
 												</div>
 												<FormMessage />
 											</FormItem>
@@ -499,12 +544,17 @@ export function SignForm({ onClose }: SignFormProps) {
 						<span className="w-full border-t-2 border-dashed border-border" />
 					</div>
 					<div className="relative flex justify-center text-xs uppercase">
-						<span className="bg-card px-3 font-extrabold tracking-wider text-muted-foreground">Эсвэл</span>
+						<span className="bg-card px-3 font-extrabold tracking-wider text-muted-foreground">
+							Эсвэл
+						</span>
 					</div>
 				</div>
 				<p className="text-center text-sm font-semibold text-muted-foreground">
 					Бүртгэлтэй юу?{" "}
-					<Link href="/login" className="font-extrabold text-primary hover:underline">
+					<Link
+						href="/login"
+						className="font-extrabold text-primary hover:underline"
+					>
 						Нэвтрэх
 					</Link>
 				</p>

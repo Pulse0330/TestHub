@@ -13,17 +13,7 @@ export async function proxy(request: NextRequest) {
 		"/guide.pdf",
 	];
 
-	// Token байгаа ч байхгүй ч үргэлж нэвтрэх боломжтой routes
-	// (шинэ хэрэглэгч бүртгүүлэх, шалгалтанд бүртгүүлэх)
-	const alwaysAllowRoutes = ["/mnUserCreate"];
-
 	const isPublicRoute = publicRoutes.some((r) => pathname.startsWith(r));
-	const isAlwaysAllow = alwaysAllowRoutes.some((r) => pathname.startsWith(r));
-
-	// Үргэлж зөвшөөрөх — token шаардахгүй
-	if (isAlwaysAllow) {
-		return NextResponse.next();
-	}
 
 	// Token байхгүй бол login руу
 	if (!token) {

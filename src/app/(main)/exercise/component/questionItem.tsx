@@ -120,8 +120,7 @@ const QuestionItem = memo(function QuestionItem({
 
 	const typeConfig = QUESTION_TYPE_CONFIG[questionType];
 	const typeName = typeConfig?.name || `Тодорхойгүй (${questionType})`;
-	const typeColor =
-		typeConfig?.color || "bg-muted text-muted-foreground";
+	const typeColor = typeConfig?.color || "bg-muted text-muted-foreground";
 
 	const showAnswerFeedback =
 		((questionType === 1 || questionType === 2 || questionType === 4) &&
@@ -219,8 +218,7 @@ const QuestionItem = memo(function QuestionItem({
 					/>
 					<div className="mt-3 flex flex-wrap items-center gap-2">
 						<span className="text-xs sm:text-sm font-bold text-pop-sun-ink bg-pop-sun-soft px-3 py-1 rounded-full">
-							⭐{" "}
-							Оноо: {question.que_onoo}
+							⭐ Оноо: {question.que_onoo}
 						</span>
 						<span
 							className={`text-xs sm:text-sm font-bold px-3 py-1 rounded-full ${typeColor}`}

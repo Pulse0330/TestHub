@@ -20,6 +20,8 @@ interface SingleSelectQuestionProps {
 	answers: AnswerData[];
 	selectedAnswer?: number | null;
 	onAnswerChange?: (questionId: number, answerId: number) => void; // ✅ null хасав — parent шийдэх
+	/** true үед сонголт өөрчлөх боломжгүй (цаг дууссан г.м.) */
+	disabled?: boolean;
 }
 
 function SingleSelectQuestion({
@@ -28,6 +30,7 @@ function SingleSelectQuestion({
 	answers,
 	selectedAnswer,
 	onAnswerChange,
+	disabled = false,
 }: SingleSelectQuestionProps) {
 	// ✅ Ref — стale closure-аас хамгаалах
 	const selectedAnswerRef = useRef(selectedAnswer);
@@ -35,12 +38,12 @@ function SingleSelectQuestion({
 
 	const handleSelect = useCallback(
 		(answerId: number) => {
-			if (!onAnswerChange) return;
+			if (!onAnswerChange || disabled) return;
 			// ✅ Ref-ээс уншина — үргэлж шинэ утга
 			if (selectedAnswerRef.current === answerId) return; // toggle хийхгүй — parent шийдэх
 			onAnswerChange(questionId, answerId);
 		},
-		[questionId, onAnswerChange], // ✅ selectedAnswer dependency хасагдсан
+		[questionId, onAnswerChange, disabled], // ✅ selectedAnswer dependency хасагдсан
 	);
 
 	return (
@@ -74,7 +77,8 @@ function SingleSelectQuestion({
 							<button
 								type="button"
 								onClick={() => handleSelect(option.answer_id)}
-								className="flex w-full cursor-pointer items-start gap-3 border-0 bg-transparent p-3.5 text-left font-bold sm:p-4"
+								disabled={disabled}
+								className="flex w-full cursor-pointer items-start gap-3 border-0 bg-transparent p-3.5 text-left font-bold disabled:cursor-not-allowed sm:p-4"
 								// ✅ Давхар дарахаас хамгаалах
 								aria-pressed={isSelected}
 							>
@@ -131,5 +135,6 @@ export default memo(
 		prev.selectedAnswer === next.selectedAnswer &&
 		prev.questionId === next.questionId &&
 		prev.answers === next.answers &&
-		prev.onAnswerChange === next.onAnswerChange,
+		prev.onAnswerChange === next.onAnswerChange &&
+		prev.disabled === next.disabled,
 );

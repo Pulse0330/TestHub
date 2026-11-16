@@ -1,6 +1,6 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import {
 	ArrowLeft,
 	ArrowRight,
@@ -12,6 +12,7 @@ import {
 import { useParams, useRouter } from "next/navigation";
 import { memo, useCallback, useEffect, useMemo, useState } from "react";
 import StyledBackButton from "@/components/backButton";
+import ExamRulesDialog from "@/components/examRuleDialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -22,6 +23,7 @@ import {
 	SheetTitle,
 } from "@/components/ui/sheet";
 import { getContentView } from "@/lib/api";
+import { queryKeys } from "@/lib/queryKeys";
 import { useAuthStore } from "@/stores/useAuthStore";
 import type { ContentViewResponse } from "@/types/course/contentView";
 import { Homework } from "./homework";
@@ -93,13 +95,13 @@ export default function CoursePage() {
 	const params = useParams();
 	const [currentLessonIndex, setCurrentLessonIndex] = useState<number>(0);
 	const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false);
-	const queryClient = useQueryClient();
+	const [pendingExamId, setPendingExamId] = useState<number | null>(null);
 
 	const content_id = Number(params.id);
 	const { userId } = useAuthStore();
 
 	const { data, isPending, isError, error } = useQuery<ContentViewResponse>({
-		queryKey: ["contentView", content_id, userId],
+		queryKey: queryKeys.courses.content(content_id, userId),
 		queryFn: () => getContentView(content_id, userId || 0),
 		enabled: !!content_id && !!userId,
 		staleTime: 5 * 60 * 1000,
@@ -124,69 +126,7 @@ export default function CoursePage() {
 		return () => clearTimeout(timeoutId);
 	}, [currentLessonIndex]);
 
-	// Close sidebar when lesson changes on mobile
-	useEffect(() => {
-		setIsSidebarOpen(false);
-	}, []);
-
-	// Mark lesson as complete mutation optimized
-	const markCompleteMutation = useMutation({
-		mutationFn: async (_lessonId: number) => {
-			return { success: true };
-		},
-		onMutate: async (lessonId) => {
-			await queryClient.cancelQueries({
-				queryKey: ["contentView", content_id, userId],
-			});
-
-			const previousData = queryClient.getQueryData<ContentViewResponse>([
-				"contentView",
-				content_id,
-				userId,
-			]);
-
-			if (previousData?.RetData) {
-				queryClient.setQueryData<ContentViewResponse>(
-					["contentView", content_id, userId],
-					{
-						...previousData,
-						RetData: previousData.RetData.map((item) =>
-							item.content_id === lessonId ? { ...item, stu_worked: 1 } : item,
-						),
-					},
-				);
-			}
-
-			return { previousData };
-		},
-		onError: (_err, _lessonId, context) => {
-			if (context?.previousData) {
-				queryClient.setQueryData(
-					["contentView", content_id, userId],
-					context.previousData,
-				);
-			}
-		},
-		onSettled: () => {
-			queryClient.invalidateQueries({
-				queryKey: ["contentView", content_id, userId],
-			});
-		},
-	});
-
 	// Memoized callbacks
-	const handleMarkComplete = useCallback(() => {
-		if (
-			data?.RetData?.[currentLessonIndex] &&
-			data.RetData[currentLessonIndex].stu_worked !== 1
-		) {
-			markCompleteMutation.mutate(data.RetData[currentLessonIndex].content_id);
-		}
-		if (data?.RetData && currentLessonIndex < data.RetData.length - 1) {
-			setCurrentLessonIndex(currentLessonIndex + 1);
-		}
-	}, [currentLessonIndex, data?.RetData, markCompleteMutation]);
-
 	const handlePrevious = useCallback(() => {
 		if (currentLessonIndex > 0) {
 			setCurrentLessonIndex(currentLessonIndex - 1);
@@ -199,12 +139,18 @@ export default function CoursePage() {
 		}
 	}, [currentLessonIndex, data?.RetData]);
 
-	const handleStartExam = useCallback(
-		(examId: number) => {
-			router.push(`/exam/${examId}`);
-		},
-		[router],
-	);
+	// Шалгалт эхлүүлэхээс өмнө дүрмийн dialog-оор баталгаажуулна
+	const handleStartExam = useCallback((examId: number) => {
+		setPendingExamId(examId);
+	}, []);
+
+	const handleRulesConfirm = useCallback(() => {
+		if (pendingExamId !== null) router.push(`/exam/${pendingExamId}`);
+	}, [router, pendingExamId]);
+
+	const handleRulesOpenChange = useCallback((open: boolean) => {
+		if (!open) setPendingExamId(null);
+	}, []);
 
 	const handleFinish = useCallback(() => {
 		router.push("/Lists/courseList");
@@ -233,7 +179,13 @@ export default function CoursePage() {
 	// ← → товчоор өмнөх / дараах хичээл рүү шилжих
 	useEffect(() => {
 		const onKeyDown = (e: KeyboardEvent) => {
-			if (e.defaultPrevented || e.altKey || e.ctrlKey || e.metaKey || e.shiftKey)
+			if (
+				e.defaultPrevented ||
+				e.altKey ||
+				e.ctrlKey ||
+				e.metaKey ||
+				e.shiftKey
+			)
 				return;
 			const target = e.target as HTMLElement | null;
 			if (
@@ -381,7 +333,6 @@ export default function CoursePage() {
 										lessonIndex={currentLessonIndex}
 										totalLessons={contents.length}
 										isCompleted={isCompleted}
-										onMarkComplete={handleMarkComplete}
 										onPrevious={handlePrevious}
 										onNext={handleNext}
 										onFinish={handleFinish}
@@ -420,20 +371,6 @@ export default function CoursePage() {
 								</span>
 
 								<div className="ml-auto flex min-w-0 items-center gap-2">
-									{!isHomework && !isCompleted && (
-										<Button
-											onClick={handleMarkComplete}
-											variant="success"
-											className="min-w-0"
-										>
-											<CheckCircle2 className="h-4 w-4" />
-											<span className="truncate">
-												Дууссан
-												<span className="hidden sm:inline"> гэж тэмдэглэх</span>
-											</span>
-										</Button>
-									)}
-
 									{!isLastLesson && (
 										<Button onClick={handleNext} className="shrink-0">
 											<span>
@@ -456,6 +393,12 @@ export default function CoursePage() {
 					</main>
 				</div>
 			</div>
+
+			<ExamRulesDialog
+				open={pendingExamId !== null}
+				onOpenChange={handleRulesOpenChange}
+				onConfirm={handleRulesConfirm}
+			/>
 		</div>
 	);
 }

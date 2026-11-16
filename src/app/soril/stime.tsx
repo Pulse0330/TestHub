@@ -1,40 +1,44 @@
 "use client";
 
 import { Clock } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { memo, useEffect, useState } from "react";
+import { useServerTime } from "@/hooks/useServerTime";
+import { computeElapsedSeconds } from "../exam/component/examTime";
 
 interface ExamTimerProps {
-	onElapsedChange?: (seconds: number) => void;
+	/** Сорил эхэлсэн серверийн огноо. Байхгүй бол хуудас нээгдсэнээс тоолно. */
+	startedDate?: string | null;
+	/** Хуудас ачаалсан цаг (ms) — startedDate байхгүй үеийн эхлэл. */
+	fallbackStartMs: number;
 	/** Жижиг (утасны top bar) хувилбар */
 	compact?: boolean;
 }
 
-export default function ExamTimer({
-	onElapsedChange,
+/**
+ * Үргэлжилсэн хугацааг харуулна. Тоолуурын state зөвхөн энэ компонент
+ * дотор байна (хуудсыг секунд бүр re-render хийхгүй). Утгыг starteddate +
+ * серверийн цагаас тооцдог тул background tab-д хоцрохгүй, reload хийхэд
+ * 0-оос эхлэхгүй.
+ */
+function ExamTimer({
+	startedDate,
+	fallbackStartMs,
 	compact = false,
 }: ExamTimerProps) {
-	const [seconds, setSeconds] = useState(0);
-	const onElapsedChangeRef = useRef(onElapsedChange);
+	const { currentTime } = useServerTime();
+	const [localNow, setLocalNow] = useState(() => Date.now());
 
-	// ✅ Ref-г update хийх
 	useEffect(() => {
-		onElapsedChangeRef.current = onElapsedChange;
-	}, [onElapsedChange]);
-
-	// ✅ Timer effect
-	useEffect(() => {
-		const interval = setInterval(() => {
-			setSeconds((prev) => prev + 1);
-		}, 1000);
+		const interval = setInterval(() => setLocalNow(Date.now()), 1000);
 		return () => clearInterval(interval);
 	}, []);
 
-	// ✅ ШИНЭ: Секунд өөрчлөгдөх бүрт callback дуудах (тусдаа effect)
-	useEffect(() => {
-		if (seconds > 0) {
-			onElapsedChangeRef.current?.(seconds);
-		}
-	}, [seconds]); // ✅ seconds өөрчлөгдөх бүрт л дуудагдана
+	const seconds = computeElapsedSeconds({
+		startedDate,
+		serverNowMs: currentTime?.getTime() ?? null,
+		localNowMs: localNow,
+		fallbackStartMs,
+	});
 
 	const hrs = Math.floor(seconds / 3600);
 	const mins = Math.floor((seconds % 3600) / 60);
@@ -83,3 +87,5 @@ export default function ExamTimer({
 		</div>
 	);
 }
+
+export default memo(ExamTimer);

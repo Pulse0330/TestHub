@@ -1,6 +1,6 @@
 "use client";
 
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
 	AlertCircle,
 	Camera,
@@ -27,6 +27,7 @@ import {
 	SelectTrigger,
 } from "@/components/ui/select";
 import { getUserUpdateProfile } from "@/lib/api";
+import { queryKeys } from "@/lib/queryKeys";
 import { uploadImage } from "@/utils/upload";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -56,6 +57,33 @@ interface ClassItem {
 	class_name: string;
 	studentgroupid: string;
 	sort: number;
+}
+
+interface SelectedSchool {
+	name: string;
+	db: string;
+	serverip: string;
+}
+
+const NO_PREFILL = {
+	aimag: false,
+	district: false,
+	school: false,
+	class: false,
+};
+const ALL_PREFILL = { aimag: true, district: true, school: true, class: true };
+
+/** Нэрээр (эхлээд яг, дараа нь том/жижиг үсэг үл харгалзан) хайх */
+function findByName<T>(
+	list: T[],
+	getName: (item: T) => string,
+	name: string,
+): T | undefined {
+	const target = name.trim().toLowerCase();
+	return (
+		list.find((item) => getName(item) === name) ??
+		list.find((item) => getName(item)?.trim().toLowerCase() === target)
+	);
 }
 
 interface UserData {
@@ -195,9 +223,7 @@ function SelectField({
 			<div className="min-w-0 flex-1">
 				<p className="mb-1.5 flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-muted-foreground">
 					{label}
-					{loading && (
-						<Loader2 className="size-3 animate-spin text-primary" />
-					)}
+					{loading && <Loader2 className="size-3 animate-spin text-primary" />}
 				</p>
 				{disabled && !value ? (
 					<p className="text-sm font-bold text-foreground">
@@ -254,7 +280,9 @@ function InfoTile({
 	className?: string;
 }) {
 	return (
-		<div className={`flex items-start gap-3 rounded-2xl bg-muted p-4 ${className}`}>
+		<div
+			className={`flex items-start gap-3 rounded-2xl bg-muted p-4 ${className}`}
+		>
 			<IconChip tone={tone}>{icon}</IconChip>
 			<div className="min-w-0 flex-1">
 				<p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
@@ -281,33 +309,33 @@ export function ProfileContent({ user, userId }: ProfileContentProps) {
 	const [isUploadingImage, setIsUploadingImage] = useState(false);
 	const [uploadedImageUrl, setUploadedImageUrl] = useState<string>("");
 	const [locationError, setLocationError] = useState("");
+	const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-	// ─── Dropdown lists ───────────────────────────────────────────────────────
-	const [aimagList, setAimagList] = useState<AimagItem[]>([]);
-	const aimagListRef = useRef<AimagItem[]>([]);
-	const pendingAimagIdRef = useRef<string>("");
-	const [districtList, setDistrictList] = useState<DistrictItem[]>([]);
-	const [schoolList, setSchoolList] = useState<SchoolItem[]>([]);
-	const [classList, setClassList] = useState<ClassItem[]>([]);
+	// Unmount үед toast timer-ийг цэвэрлэнэ
+	useEffect(
+		() => () => {
+			if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+		},
+		[],
+	);
 
-	const [aimagLoading, setAimagLoading] = useState(false);
-	const [districtLoading, setDistrictLoading] = useState(false);
-	const [schoolLoading, setSchoolLoading] = useState(false);
-	const [classLoading, setClassLoading] = useState(false);
+	// Preview-ийн blob URL-ийг солигдох/unmount үед чөлөөлнө
+	useEffect(() => {
+		if (!imagePreview.startsWith("blob:")) return;
+		return () => URL.revokeObjectURL(imagePreview);
+	}, [imagePreview]);
 
 	// ─── Хэрэглэгчийн сонголт ────────────────────────────────────────────────
 	const [selectedAimag, setSelectedAimag] = useState("");
 	const [selectedDistrict, setSelectedDistrict] = useState("");
-	const [selectedSchool, setSelectedSchool] = useState("");
-	const selectedSchoolDbRef = useRef("");
-	const selectedSchoolServerIpRef = useRef("");
+	const [selectedSchoolInfo, setSelectedSchoolInfo] =
+		useState<SelectedSchool | null>(null);
+	const selectedSchool = selectedSchoolInfo?.name ?? "";
 	const [selectedClass, setSelectedClass] = useState("");
 
-	const pendingDistrictIdRef = useRef<string>("");
-	const pendingSchoolNameRef = useRef<string>("");
-	const pendingSchoolDbRef = useRef<string>("");
-	const pendingSchoolServerIpRef = useRef<string>("");
-	const pendingClassIdRef = useRef<string>("");
+	// Edit горимд орох үед хэрэглэгчийн одоогийн байршлыг автоматаар сонгох
+	// алхмууд. Хэрэглэгч гараар сонговол доод түвшний prefill цуцлагдана.
+	const prefillRef = useRef({ ...NO_PREFILL });
 
 	const [editForm, setEditForm] = useState({
 		lastname: user.lastname || "",
@@ -323,77 +351,70 @@ export function ProfileContent({ user, userId }: ProfileContentProps) {
 		userRef.current = user;
 	}, [user]);
 
-	useEffect(() => {
-		if (pendingAimagIdRef.current && aimagList.length > 0) {
-			const id = pendingAimagIdRef.current;
-			pendingAimagIdRef.current = "";
-			if (aimagList.some((a) => a.mID.toString() === id)) {
-				setSelectedAimag(id);
-			}
-		}
-	}, [aimagList]);
+	// ─── Dropdown lists (parent id-аар key хийсэн dependent query) ─────────────
+	// Key нь parent сонголтоос хамаардаг тул хуучин хариу шинэ сонголтыг
+	// дарж бичих (race) боломжгүй.
+	const aimagQuery = useQuery({
+		queryKey: queryKeys.profile.aimags,
+		queryFn: async (): Promise<AimagItem[]> => (await apiAimag()).RetData ?? [],
+		enabled: isEditing,
+		staleTime: Number.POSITIVE_INFINITY,
+	});
+	const aimagList: AimagItem[] = aimagQuery.data ?? [];
+	const aimagLoading = aimagQuery.isFetching;
+	const selectedAimagItem = aimagList.find(
+		(a) => a.mID.toString() === selectedAimag,
+	);
+	const aimagId = selectedAimagItem?.mID;
 
-	useEffect(() => {
-		if (pendingDistrictIdRef.current && districtList.length > 0) {
-			const id = pendingDistrictIdRef.current;
-			pendingDistrictIdRef.current = "";
-			if (districtList.some((d) => d.id.toString() === id)) {
-				setSelectedDistrict(id);
-			}
-		}
-	}, [districtList]);
+	const districtQuery = useQuery({
+		queryKey: queryKeys.profile.districts(aimagId),
+		queryFn: async (): Promise<DistrictItem[]> =>
+			(await apiDistrict(aimagId ?? 0)).RetData ?? [],
+		enabled: isEditing && !!aimagId,
+		staleTime: Number.POSITIVE_INFINITY,
+	});
+	const districtList: DistrictItem[] = (aimagId && districtQuery.data) || [];
+	const districtLoading = districtQuery.isFetching;
+	const districtId = selectedDistrict ? Number(selectedDistrict) : undefined;
 
-	const schoolListLengthRef = useRef(0);
-	useEffect(() => {
-		if (schoolList.length === schoolListLengthRef.current) return;
-		schoolListLengthRef.current = schoolList.length;
-		if (pendingSchoolNameRef.current) {
-			const name = pendingSchoolNameRef.current;
-			const db = pendingSchoolDbRef.current;
-			const ip = pendingSchoolServerIpRef.current;
-			pendingSchoolNameRef.current = "";
-			pendingSchoolDbRef.current = "";
-			pendingSchoolServerIpRef.current = "";
-			setSelectedSchool(name);
-			selectedSchoolDbRef.current = db;
-			selectedSchoolServerIpRef.current = ip;
-		}
-	}, [schoolList]);
+	const schoolQuery = useQuery({
+		queryKey: queryKeys.profile.schools(aimagId, districtId),
+		queryFn: async (): Promise<SchoolItem[]> =>
+			(await apiSchool(aimagId ?? 0, districtId ?? 0)).RetData ?? [],
+		enabled: isEditing && !!aimagId && !!districtId,
+		staleTime: Number.POSITIVE_INFINITY,
+	});
+	const schoolList: SchoolItem[] =
+		(aimagId && districtId && schoolQuery.data) || [];
+	const schoolLoading = schoolQuery.isFetching;
 
-	useEffect(() => {
-		if (pendingClassIdRef.current && classList.length > 0) {
-			const id = pendingClassIdRef.current;
-			pendingClassIdRef.current = "";
-			if (classList.some((c) => c.studentgroupid === id)) {
-				setSelectedClass(id);
-			}
-		}
-	}, [classList]);
+	const schoolDb = selectedSchoolInfo?.db ?? "";
+	const schoolIp = selectedSchoolInfo?.serverip ?? "";
+	const classQuery = useQuery({
+		queryKey: queryKeys.profile.classes(schoolDb, schoolIp),
+		queryFn: async (): Promise<ClassItem[]> =>
+			((await apiClass(schoolDb, schoolIp)).RetData ?? []).filter(
+				(c: ClassItem) => c.studentgroupid && c.studentgroupid !== "0",
+			),
+		enabled: isEditing && !!schoolDb,
+		staleTime: Number.POSITIVE_INFINITY,
+	});
+	const classList: ClassItem[] = (schoolDb && classQuery.data) || [];
+	const classLoading = classQuery.isFetching;
 
 	// ─── Edit горим ──────────────────────────────────────────────────────────
 	useEffect(() => {
+		setSelectedAimag("");
+		setSelectedDistrict("");
+		setSelectedSchoolInfo(null);
+		setSelectedClass("");
+		prefillRef.current = isEditing ? { ...ALL_PREFILL } : { ...NO_PREFILL };
 		if (!isEditing) {
 			setEditForm((prev) => ({ ...prev, password: "", confirmPassword: "" }));
-			setSelectedAimag("");
-			setSelectedDistrict("");
-			setSelectedSchool("");
-			setSelectedClass("");
-			selectedSchoolDbRef.current = "";
-			pendingAimagIdRef.current = "";
-			selectedSchoolServerIpRef.current = "";
-			pendingDistrictIdRef.current = "";
-			pendingSchoolNameRef.current = "";
-			pendingSchoolDbRef.current = "";
-			pendingSchoolServerIpRef.current = "";
-			pendingClassIdRef.current = "";
-			setDistrictList([]);
-			setSchoolList([]);
-			setClassList([]);
 			return;
 		}
-
 		const u = userRef.current;
-
 		setEditForm({
 			lastname: u.lastname || "",
 			firstname: u.firstname || "",
@@ -402,222 +423,118 @@ export function ProfileContent({ user, userId }: ProfileContentProps) {
 			password: "",
 			confirmPassword: "",
 		});
-
-		const cachedList = aimagListRef.current;
-		if (cachedList.length > 0) {
-			setAimagList(cachedList);
-		}
-
-		// ── comma operator-г async IIFE-ээр орлуулав ──────────────────────────
-		const aimagPromise: Promise<AimagItem[]> =
-			cachedList.length > 0
-				? Promise.resolve(cachedList)
-				: (async () => {
-						setAimagLoading(true);
-						try {
-							const d = await apiAimag();
-							const list: AimagItem[] = d.RetData ?? [];
-							setAimagList(list);
-							aimagListRef.current = list;
-							return list;
-						} catch {
-							return [] as AimagItem[];
-						} finally {
-							setAimagLoading(false);
-						}
-					})();
-
-		aimagPromise.then((list) => {
-			if (!u.aimag_name) return;
-
-			const aimag =
-				list.find((a) => a.mName === u.aimag_name) ??
-				list.find(
-					(a) =>
-						a.mName.trim().toLowerCase() === u.aimag_name?.trim().toLowerCase(),
-				);
-			if (!aimag) return;
-			setSelectedAimag(aimag.mID.toString());
-			pendingAimagIdRef.current = aimag.mID.toString();
-
-			setDistrictLoading(true);
-			apiDistrict(aimag.mID)
-				.then((dd) => {
-					const dlist: DistrictItem[] = dd.RetData ?? [];
-
-					const symIdStr = String(u.sym_id ?? "").trim();
-					const district =
-						(symIdStr
-							? dlist.find((dv) => String(dv.id) === symIdStr)
-							: undefined) ??
-						dlist.find((dv) => dv.name === u.sym_name) ??
-						dlist.find(
-							(dv) =>
-								dv.name.trim().toLowerCase() ===
-								u.sym_name?.trim().toLowerCase(),
-						);
-
-					if (district) {
-						pendingDistrictIdRef.current = district.id.toString();
-					}
-
-					setDistrictList(dlist);
-
-					if (!district) return;
-
-					setSchoolLoading(true);
-					apiSchool(aimag.mID, district.id)
-						.then((sd) => {
-							const slist: SchoolItem[] = sd.RetData ?? [];
-
-							const school =
-								slist.find((s) => s.sName === u.sch_name) ??
-								slist.find(
-									(s) =>
-										s.sName.trim().toLowerCase() ===
-										u.sch_name?.trim().toLowerCase(),
-								);
-
-							if (school) {
-								pendingSchoolNameRef.current = school.sName;
-								pendingSchoolDbRef.current = school.dbname;
-								pendingSchoolServerIpRef.current = school.serverip || "";
-							} else if (u.sch_name) {
-								pendingSchoolNameRef.current = u.sch_name;
-								pendingSchoolDbRef.current = u.schooldb ?? "";
-								pendingSchoolServerIpRef.current = "";
-							}
-
-							setSchoolList(slist);
-
-							const targetDb = school?.dbname ?? (u.schooldb || "");
-							const targetIp = school?.serverip ?? "";
-							if (!targetDb) return;
-
-							setClassLoading(true);
-							apiClass(targetDb, targetIp)
-								.then((cd) => {
-									console.log("Бүх анги:", cd.RetData);
-									const clist = (cd.RetData ?? []).filter(
-										(c: ClassItem) =>
-											c.studentgroupid && c.studentgroupid !== "0",
-									);
-
-									const userGroupId = String(u.studentgroupid ?? "").trim();
-									const matched = clist.find(
-										(c: ClassItem) =>
-											userGroupId &&
-											String(c.studentgroupid).trim() === userGroupId,
-									);
-
-									if (matched) {
-										pendingClassIdRef.current = matched.studentgroupid;
-									}
-
-									setClassList(clist);
-								})
-								.catch(() => setClassList([]))
-								.finally(() => setClassLoading(false));
-						})
-						.catch(() => setSchoolList([]))
-						.finally(() => setSchoolLoading(false));
-				})
-				.catch(() => setDistrictList([]))
-				.finally(() => setDistrictLoading(false));
-		});
 	}, [isEditing]);
 
-	// ─── Хэрэглэгч өөрчлөхөд ─────────────────────────────────────────────────
-	const onAimag = useCallback(
-		async (val: string) => {
-			setSelectedAimag(val);
-			setSelectedDistrict("");
-			setSelectedSchool("");
-			setSelectedClass("");
-			selectedSchoolDbRef.current = "";
-			selectedSchoolServerIpRef.current = "";
-			pendingDistrictIdRef.current = "";
-			pendingSchoolNameRef.current = "";
-			pendingClassIdRef.current = "";
-			setDistrictList([]);
-			setSchoolList([]);
-			setClassList([]);
-			if (!val) return;
-			const a = aimagList.find((x) => x.mID.toString() === val);
-			if (!a) return;
-			setDistrictLoading(true);
-			try {
-				const d = await apiDistrict(a.mID);
-				setDistrictList(d.RetData ?? []);
-			} catch {
-				setDistrictList([]);
-			} finally {
-				setDistrictLoading(false);
-			}
-		},
-		[aimagList],
-	);
+	// Prefill: аймаг
+	useEffect(() => {
+		if (!isEditing || !prefillRef.current.aimag || !aimagQuery.data) return;
+		prefillRef.current.aimag = false;
+		const name = userRef.current.aimag_name;
+		const aimag = name
+			? findByName(aimagQuery.data, (a) => a.mName, name)
+			: undefined;
+		if (aimag) setSelectedAimag(aimag.mID.toString());
+		else prefillRef.current = { ...NO_PREFILL };
+	}, [isEditing, aimagQuery.data]);
 
-	const onDistrict = useCallback(
-		async (val: string) => {
-			setSelectedDistrict(val);
-			setSelectedSchool("");
-			setSelectedClass("");
-			selectedSchoolDbRef.current = "";
-			selectedSchoolServerIpRef.current = "";
-			pendingSchoolNameRef.current = "";
-			pendingClassIdRef.current = "";
-			setSchoolList([]);
-			setClassList([]);
-			if (!val) return;
-			const currentAimag = aimagList.find(
-				(x) => x.mID.toString() === selectedAimag,
-			);
-			if (!currentAimag) return;
-			setSchoolLoading(true);
-			try {
-				const d = await apiSchool(currentAimag.mID, Number(val));
-				setSchoolList(d.RetData ?? []);
-			} catch {
-				setSchoolList([]);
-			} finally {
-				setSchoolLoading(false);
-			}
-		},
-		[selectedAimag, aimagList],
-	);
+	// Prefill: сум / дүүрэг
+	useEffect(() => {
+		if (!prefillRef.current.district || !aimagId || !districtQuery.data) return;
+		prefillRef.current.district = false;
+		const u = userRef.current;
+		const symIdStr = String(u.sym_id ?? "").trim();
+		const district =
+			(symIdStr
+				? districtQuery.data.find((d) => String(d.id) === symIdStr)
+				: undefined) ??
+			(u.sym_name
+				? findByName(districtQuery.data, (d) => d.name, u.sym_name)
+				: undefined);
+		if (district) {
+			setSelectedDistrict(district.id.toString());
+		} else {
+			prefillRef.current.school = false;
+			prefillRef.current.class = false;
+		}
+	}, [aimagId, districtQuery.data]);
+
+	// Prefill: сургууль
+	useEffect(() => {
+		if (!prefillRef.current.school || !districtId || !schoolQuery.data) return;
+		prefillRef.current.school = false;
+		const u = userRef.current;
+		const school = u.sch_name
+			? findByName(schoolQuery.data, (s) => s.sName, u.sch_name)
+			: undefined;
+		if (school) {
+			setSelectedSchoolInfo({
+				name: school.sName,
+				db: school.dbname,
+				serverip: school.serverip || "",
+			});
+		} else if (u.sch_name) {
+			// Жагсаалтад байхгүй ч хэрэглэгчийн хадгалсан сургуулийг үлдээнэ
+			setSelectedSchoolInfo({
+				name: u.sch_name,
+				db: u.schooldb ?? "",
+				serverip: "",
+			});
+		} else {
+			prefillRef.current.class = false;
+		}
+	}, [districtId, schoolQuery.data]);
+
+	// Prefill: анги
+	useEffect(() => {
+		if (!prefillRef.current.class || !schoolDb || !classQuery.data) return;
+		prefillRef.current.class = false;
+		const userGroupId = String(userRef.current.studentgroupid ?? "").trim();
+		const matched = userGroupId
+			? classQuery.data.find(
+					(c) => String(c.studentgroupid).trim() === userGroupId,
+				)
+			: undefined;
+		if (matched) setSelectedClass(matched.studentgroupid);
+	}, [schoolDb, classQuery.data]);
+
+	// ─── Хэрэглэгч өөрчлөхөд ─────────────────────────────────────────────────
+	const onAimag = useCallback((val: string) => {
+		prefillRef.current = { ...NO_PREFILL };
+		setSelectedAimag(val);
+		setSelectedDistrict("");
+		setSelectedSchoolInfo(null);
+		setSelectedClass("");
+	}, []);
+
+	const onDistrict = useCallback((val: string) => {
+		prefillRef.current = { ...NO_PREFILL };
+		setSelectedDistrict(val);
+		setSelectedSchoolInfo(null);
+		setSelectedClass("");
+	}, []);
 
 	const onSchool = useCallback(
-		async (val: string) => {
-			setSelectedSchool(val);
+		(val: string) => {
+			prefillRef.current = { ...NO_PREFILL };
 			setSelectedClass("");
-			setClassList([]);
-			selectedSchoolDbRef.current = "";
-			selectedSchoolServerIpRef.current = "";
-			pendingClassIdRef.current = "";
-
 			const schoolData = schoolList.find((s) => s.sName === val);
-			if (!schoolData) return;
-
-			selectedSchoolDbRef.current = schoolData.dbname;
-			selectedSchoolServerIpRef.current = schoolData.serverip || "";
-
-			setClassLoading(true);
-			try {
-				const d = await apiClass(schoolData.dbname, schoolData.serverip);
-				setClassList(
-					(d.RetData ?? []).filter(
-						(c: ClassItem) => c.studentgroupid && c.studentgroupid !== "0",
-					),
-				);
-			} catch {
-				setClassList([]);
-			} finally {
-				setClassLoading(false);
-			}
+			setSelectedSchoolInfo(
+				schoolData
+					? {
+							name: schoolData.sName,
+							db: schoolData.dbname,
+							serverip: schoolData.serverip || "",
+						}
+					: null,
+			);
 		},
 		[schoolList],
 	);
+
+	const onClass = useCallback((val: string) => {
+		prefillRef.current = { ...NO_PREFILL };
+		setSelectedClass(val);
+	}, []);
 
 	// ─── Mutation ─────────────────────────────────────────────────────────────
 	const updateMutation = useMutation({
@@ -659,9 +576,12 @@ export function ProfileContent({ user, userId }: ProfileContentProps) {
 			);
 		},
 		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: ["userProfilePage", userId] });
+			queryClient.invalidateQueries({
+				queryKey: queryKeys.profile.page(userId),
+			});
 			setShowToast(true);
-			setTimeout(() => setShowToast(false), 3000);
+			if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+			toastTimerRef.current = setTimeout(() => setShowToast(false), 3000);
 			setSelectedImage(null);
 			setImagePreview("");
 			setUploadedImageUrl("");
@@ -680,7 +600,9 @@ export function ProfileContent({ user, userId }: ProfileContentProps) {
 				const img = new Image();
 				const canvas = document.createElement("canvas");
 				const ctx = canvas.getContext("2d");
+				const sourceUrl = URL.createObjectURL(file);
 				img.onload = () => {
+					URL.revokeObjectURL(sourceUrl);
 					let { width, height } = img;
 					if (width > maxWidth || height > maxHeight) {
 						const ratio = Math.min(maxWidth / width, maxHeight / height);
@@ -699,8 +621,11 @@ export function ProfileContent({ user, userId }: ProfileContentProps) {
 						quality,
 					);
 				};
-				img.onerror = () => reject(new Error("Зураг уншихад алдаа гарлаа"));
-				img.src = URL.createObjectURL(file);
+				img.onerror = () => {
+					URL.revokeObjectURL(sourceUrl);
+					reject(new Error("Зураг уншихад алдаа гарлаа"));
+				};
+				img.src = sourceUrl;
 			});
 		},
 		[],
@@ -784,12 +709,9 @@ export function ProfileContent({ user, userId }: ProfileContentProps) {
 						"";
 		}
 
-		const selectedAimagItem = aimagList.find(
-			(a) => a.mID.toString() === selectedAimag,
-		);
 		const aimagName = selectedAimagItem?.mName ?? "";
-		const aimagId = selectedAimagItem?.mID ?? 0;
-		if (!aimagName || aimagId === 0) {
+		const submitAimagId = selectedAimagItem?.mID ?? 0;
+		if (!aimagName || submitAimagId === 0) {
 			setLocationError("Аймаг / Нийслэл сонгоно уу");
 			return;
 		}
@@ -808,7 +730,6 @@ export function ProfileContent({ user, userId }: ProfileContentProps) {
 			setLocationError("Сургууль сонгоно уу");
 			return;
 		}
-		const schoolDb = selectedSchoolDbRef.current;
 		if (!schoolDb) {
 			alert("Сургуулийн мэдээлэл алдаатай байна. Дахин сонгоно уу");
 			return;
@@ -830,7 +751,7 @@ export function ProfileContent({ user, userId }: ProfileContentProps) {
 			lastname: editForm.lastname || user.lastname,
 			phone: editForm.Phone,
 			email: editForm.email || user.email,
-			aimag_id: aimagId,
+			aimag_id: submitAimagId,
 			aimagname: aimagName,
 			sym_id: symId,
 			symname: symName,
@@ -865,7 +786,9 @@ export function ProfileContent({ user, userId }: ProfileContentProps) {
 						</span>
 						<div className="flex-1">
 							<p className="text-sm font-black">Амжилттай!</p>
-							<p className="text-xs font-semibold opacity-90">Мэдээлэл шинэчлэгдлээ</p>
+							<p className="text-xs font-semibold opacity-90">
+								Мэдээлэл шинэчлэгдлээ
+							</p>
 						</div>
 						<Button
 							onClick={() => setShowToast(false)}
@@ -1006,14 +929,26 @@ export function ProfileContent({ user, userId }: ProfileContentProps) {
 						{/* ── Left Column ── */}
 						<div className="lg:col-span-1">
 							<div className="card-pop space-y-3 p-5 sm:p-6">
-								<InfoTile tone="violet" icon={<User2 strokeWidth={2.5} />} label="Нэр">
+								<InfoTile
+									tone="violet"
+									icon={<User2 strokeWidth={2.5} />}
+									label="Нэр"
+								>
 									{user.lastname} {user.firstname}
 								</InfoTile>
-								<InfoTile tone="mint" icon={<Mail strokeWidth={2.5} />} label="Имэйл">
+								<InfoTile
+									tone="mint"
+									icon={<Mail strokeWidth={2.5} />}
+									label="Имэйл"
+								>
 									<span className="break-all">{user.email}</span>
 								</InfoTile>
 								{user.Phone && (
-									<InfoTile tone="sky" icon={<Phone strokeWidth={2.5} />} label="Утас">
+									<InfoTile
+										tone="sky"
+										icon={<Phone strokeWidth={2.5} />}
+										label="Утас"
+									>
 										{user.Phone}
 									</InfoTile>
 								)}
@@ -1026,7 +961,11 @@ export function ProfileContent({ user, userId }: ProfileContentProps) {
 								<div className="space-y-6">
 									{/* Card 1: Утас + Нууц үг */}
 									<div className="card-pop p-5 sm:p-6">
-										<SectionTitle tone="coral" icon={<Lock strokeWidth={2.5} />} title="Утас ба нууц үг" />
+										<SectionTitle
+											tone="coral"
+											icon={<Lock strokeWidth={2.5} />}
+											title="Утас ба нууц үг"
+										/>
 										<div className="space-y-4">
 											<div
 												className={`flex items-start gap-3 rounded-2xl p-4 ${phoneError ? "bg-destructive/10" : "bg-muted"}`}
@@ -1040,8 +979,8 @@ export function ProfileContent({ user, userId }: ProfileContentProps) {
 														<span className="text-destructive">*</span>
 													</p>
 													<p className="mt-0.5 text-xs font-semibold text-muted-foreground">
-														Одоо ашиглаж байгаа утасны дугаараа оруулна уу.
-														Энэ дугаараар нууц үг сэргээх боломжтой
+														Одоо ашиглаж байгаа утасны дугаараа оруулна уу. Энэ
+														дугаараар нууц үг сэргээх боломжтой
 													</p>
 													<Input
 														type="tel"
@@ -1129,9 +1068,15 @@ export function ProfileContent({ user, userId }: ProfileContentProps) {
 
 									{/* Card 2: Байршил мэдээлэл */}
 									<div className="card-pop p-5 sm:p-6">
-										<SectionTitle tone="mint" icon={<MapPin strokeWidth={2.5} />} title="Байршил мэдээлэл" />
+										<SectionTitle
+											tone="mint"
+											icon={<MapPin strokeWidth={2.5} />}
+											title="Байршил мэдээлэл"
+										/>
 										<div className="mb-5 flex items-start gap-3 rounded-2xl bg-pop-sun-soft p-3.5 text-pop-sun-ink">
-											<span aria-hidden className="text-lg leading-none">💡</span>
+											<span aria-hidden className="text-lg leading-none">
+												💡
+											</span>
 											<p className="text-xs font-semibold leading-relaxed">
 												Та өөрийн мэдээлэлээ үнэн зөв оруулсан үед таны шалгалт
 												идэвхтэй харагдах тул{" "}
@@ -1164,7 +1109,10 @@ export function ProfileContent({ user, userId }: ProfileContentProps) {
 												disabled={false}
 												loading={aimagLoading}
 												icon={
-													<MapPin className="text-pop-mint-ink" strokeWidth={2.5} />
+													<MapPin
+														className="text-pop-mint-ink"
+														strokeWidth={2.5}
+													/>
 												}
 											/>
 											<SelectField
@@ -1187,7 +1135,10 @@ export function ProfileContent({ user, userId }: ProfileContentProps) {
 												disabled={!selectedAimag}
 												loading={districtLoading}
 												icon={
-													<MapPin className="text-pop-sky-ink" strokeWidth={2.5} />
+													<MapPin
+														className="text-pop-sky-ink"
+														strokeWidth={2.5}
+													/>
 												}
 											/>
 											<SelectField
@@ -1207,7 +1158,10 @@ export function ProfileContent({ user, userId }: ProfileContentProps) {
 												disabled={!selectedDistrict}
 												loading={schoolLoading}
 												icon={
-													<School className="text-pop-violet-ink" strokeWidth={2.5} />
+													<School
+														className="text-pop-violet-ink"
+														strokeWidth={2.5}
+													/>
 												}
 											/>
 											{!isTeacher && (
@@ -1225,11 +1179,14 @@ export function ProfileContent({ user, userId }: ProfileContentProps) {
 														label: c.class_name,
 													}))}
 													value={selectedClass}
-													onValueChange={setSelectedClass}
+													onValueChange={onClass}
 													disabled={!selectedSchool}
 													loading={classLoading}
 													icon={
-														<School className="text-pop-pink-ink" strokeWidth={2.5} />
+														<School
+															className="text-pop-pink-ink"
+															strokeWidth={2.5}
+														/>
 													}
 												/>
 											)}
@@ -1242,19 +1199,39 @@ export function ProfileContent({ user, userId }: ProfileContentProps) {
 							{!isEditing && (
 								<div className="space-y-6">
 									<div className="card-pop p-5 sm:p-6">
-										<SectionTitle tone="violet" icon={<User2 strokeWidth={2.5} />} title="Хувийн мэдээлэл" />
+										<SectionTitle
+											tone="violet"
+											icon={<User2 strokeWidth={2.5} />}
+											title="Хувийн мэдээлэл"
+										/>
 										<div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-											<InfoTile tone="violet" icon={<User2 strokeWidth={2.5} />} label="Овог">
+											<InfoTile
+												tone="violet"
+												icon={<User2 strokeWidth={2.5} />}
+												label="Овог"
+											>
 												{user.lastname}
 											</InfoTile>
-											<InfoTile tone="pink" icon={<User2 strokeWidth={2.5} />} label="Нэр">
+											<InfoTile
+												tone="pink"
+												icon={<User2 strokeWidth={2.5} />}
+												label="Нэр"
+											>
 												{user.firstname}
 											</InfoTile>
-											<InfoTile tone="mint" icon={<Mail strokeWidth={2.5} />} label="Имэйл">
+											<InfoTile
+												tone="mint"
+												icon={<Mail strokeWidth={2.5} />}
+												label="Имэйл"
+											>
 												<span className="break-all">{user.email}</span>
 											</InfoTile>
 											{user.Phone && (
-												<InfoTile tone="sky" icon={<Phone strokeWidth={2.5} />} label="Утас">
+												<InfoTile
+													tone="sky"
+													icon={<Phone strokeWidth={2.5} />}
+													label="Утас"
+												>
 													{user.Phone}
 												</InfoTile>
 											)}
@@ -1262,23 +1239,39 @@ export function ProfileContent({ user, userId }: ProfileContentProps) {
 									</div>
 
 									<div className="card-pop p-5 sm:p-6">
-										<SectionTitle tone="mint" icon={<MapPin strokeWidth={2.5} />} title="Байршил мэдээлэл" />
+										<SectionTitle
+											tone="mint"
+											icon={<MapPin strokeWidth={2.5} />}
+											title="Байршил мэдээлэл"
+										/>
 										<div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-											<InfoTile tone="mint" icon={<MapPin strokeWidth={2.5} />} label="Аймаг/Нийслэл">
+											<InfoTile
+												tone="mint"
+												icon={<MapPin strokeWidth={2.5} />}
+												label="Аймаг/Нийслэл"
+											>
 												{user.aimag_name || (
 													<span className="font-semibold text-muted-foreground">
 														—
 													</span>
 												)}
 											</InfoTile>
-											<InfoTile tone="sky" icon={<MapPin strokeWidth={2.5} />} label="Сум/Дүүрэг">
+											<InfoTile
+												tone="sky"
+												icon={<MapPin strokeWidth={2.5} />}
+												label="Сум/Дүүрэг"
+											>
 												{user.sym_name || (
 													<span className="font-semibold text-muted-foreground">
 														—
 													</span>
 												)}
 											</InfoTile>
-											<InfoTile tone="violet" icon={<School strokeWidth={2.5} />} label="Сургууль">
+											<InfoTile
+												tone="violet"
+												icon={<School strokeWidth={2.5} />}
+												label="Сургууль"
+											>
 												{user.sch_name || (
 													<span className="font-semibold text-muted-foreground">
 														—
@@ -1286,7 +1279,11 @@ export function ProfileContent({ user, userId }: ProfileContentProps) {
 												)}
 											</InfoTile>
 											{!isTeacher && (
-												<InfoTile tone="sun" icon={<School strokeWidth={2.5} />} label="Анги">
+												<InfoTile
+													tone="sun"
+													icon={<School strokeWidth={2.5} />}
+													label="Анги"
+												>
 													{user.studentgroupname || (
 														<span className="font-semibold text-muted-foreground">
 															—

@@ -19,7 +19,6 @@ import type { ExamResponseMoreApiResponse } from "@/types/exam/examResultMore";
 import type { TestFilterResponse } from "@/types/exercise/testFilter";
 import type { ExamFinishResponse } from "@/types/exercise/testGetFill";
 import type { GetTestGroupResponse } from "@/types/exercise/testGroup";
-import type { ApiResponseWithNullData } from "@/types/exercise/testSaved";
 import type {
 	TestSavedMixedItem,
 	TestSavedMixedResponse,
@@ -39,24 +38,11 @@ import type {
 	User,
 } from "@/types/login/loginToken/loginToken";
 import type { RegisterSysUserResponse } from "@/types/login/sign/register";
-import type {} from "@/types/login/sign/registerChoose/aimag";
-import type {} from "@/types/login/sign/registerChoose/duureg";
-import type {} from "@/types/login/sign/registerChoose/sum";
-import type {} from "@/types/login/sign/registerChoose/surguuli";
-import type { ExamVariantsResponse } from "@/types/mnExam/examVariants";
-import type { ExamAttendanceResponse } from "@/types/mnExam/mnExamAttendance";
-import type { mnExamFinishResponse } from "@/types/mnExam/mnExamFinish";
-import type { mnExamVariantResponse } from "@/types/mnExam/mnExamList";
-import type { mnExamUserCheckResponseType } from "@/types/mnExam/mnExamUserCheck";
-import type { ExamPrintListResponse } from "@/types/mnExam/mnPrint";
-import type { MNUserCheckResponse } from "@/types/mnExam/mnUserCheck";
 import type { getplaninfoCourseData } from "@/types/paymentCourse/getplaninfo";
-import type { QPayInvoiceResponse } from "@/types/Qpay/qpayinvoice";
 import type { ApiSorillistsResponse } from "@/types/soril/sorilLists";
 import type { SorilresultListResponseType } from "@/types/soril/sorilResultLists";
 import type { UserProfileResponseType } from "@/types/user";
 import type { userUpdateResponse } from "@/types/userUpdate";
-import api1 from "./axios1";
 //-------------------------------Auth---------------------------------//
 
 // ===== LoginToken request =====
@@ -222,16 +208,6 @@ export const getServerDate = async (): Promise<string> => {
 };
 
 //-------------------------------Exam---------------------------------//
-// ===== Get Examlists  =====
-export const getExamlists = async (
-	userId: number,
-): Promise<ApiExamlistsResponse> => {
-	const { data } = await api.post<ApiExamlistsResponse>("/getexamlists", {
-		user_id: userId,
-		optype: 0,
-	});
-	return data;
-};
 //===== Get Examresultlists =====
 export const getexamresultlists = async (
 	userId: number,
@@ -256,47 +232,8 @@ export const getExamById = async (
 	});
 	return data;
 };
-// ===== Exam New request =====
-export const getNewExamFill = async (
-	userId: number,
-	variant_id: number,
-	examId: number,
-	examDateId: number,
-	examRegId: number,
-): Promise<ApiExamResponse> => {
-	const { data } = await api1.post<ApiExamResponse>("/api_getexamfill", {
-		variant_id: variant_id,
-		exam_id: examId,
-		exam_date_id: examDateId,
-		exam_reg_id: examRegId,
-		userid: userId,
-	});
-	return data;
-};
 
 // ===== Soril New request =====
-
-export const getExamVariants = async (
-	userId: number,
-): Promise<ExamVariantsResponse> => {
-	const { data } = await api1.post<ExamVariantsResponse>("/list", {
-		procname: "api_exam_variants",
-		userid: userId,
-	});
-	return data;
-};
-//=====Миний шалгалтын мэдээлэл========
-export const getmnExamUserCheck = async (
-	examinee_number: string,
-	userId: number,
-): Promise<mnExamUserCheckResponseType> => {
-	const { data } = await api1.post<mnExamUserCheckResponseType>("/list", {
-		procname: "api_my_exam_info",
-		examinee_number,
-		userid: userId,
-	});
-	return data;
-};
 
 // ===== Exam choosed  =====
 export const saveExamAnswer = async (
@@ -317,53 +254,6 @@ export const saveExamAnswer = async (
 		exam_id: examId,
 		user_id: userId,
 	});
-	return data;
-};
-// ===== mnExam choosed  =====
-export const savemnExamAnswer = async (
-	userId: number,
-	examId: number,
-	questionId: number,
-	answerId: number,
-	queTypeId: number,
-	answer: string = "",
-	rowNum: number,
-	exam_date_id: number,
-	exam_reg_id: number,
-): Promise<ExamAnswerResponse> => {
-	const { data } = await api.post<ExamAnswerResponse>("/apiexamchoosedanswer", {
-		que_type_id: queTypeId,
-		question_id: questionId,
-		answer_id: answerId,
-		answer: answer,
-		row_num: rowNum,
-		exam_id: examId,
-		user_id: userId,
-		exam_date_id: exam_date_id,
-		exam_reg_id: exam_reg_id,
-	});
-	return data;
-};
-// ===== mnExam delete  =====
-export const deletemnExamAnswer = async (
-	userId: number,
-	examId: number,
-	questionId: number,
-	answerId: number,
-	exam_reg_id: number,
-	exam_date_id: number,
-): Promise<ExamChoosedAnswerDeleteResponse> => {
-	const { data } = await api.post<ExamChoosedAnswerDeleteResponse>(
-		"/apiexamdeletedanswer",
-		{
-			user_id: userId,
-			exam_id: examId,
-			question_id: questionId,
-			answer_id: answerId,
-			exam_date_id: exam_date_id,
-			exam_reg_id: exam_reg_id,
-		},
-	);
 	return data;
 };
 // ===== Exam choosedanswer delete   =====
@@ -471,16 +361,6 @@ export const getexamFinishFiltertLists = async (
 	return data;
 };
 //-------------------------------Soril---------------------------------//
-// ===== Get Sorillists  =====
-export const getSorillists = async (
-	userId: number,
-): Promise<ApiSorillistsResponse> => {
-	const { data } = await api.post<ApiSorillistsResponse>("/webgetexamlists", {
-		user_id: userId,
-		optype: 1,
-	});
-	return data;
-};
 
 // ===== Get sorilFilteredlists  =====
 export const getSorilFilteredlists = async (
@@ -492,19 +372,6 @@ export const getSorilFilteredlists = async (
 		lesson_id: lesson_id,
 		optype: 1,
 	});
-	return data;
-};
-//===== Get Sorilresultlists =====
-export const getSorilresultlists = async (
-	userId: number,
-): Promise<SorilresultListResponseType> => {
-	const { data } = await api.post<SorilresultListResponseType>(
-		"/getexamresultlists",
-		{
-			exam_type: 3,
-			user_id: userId,
-		},
-	);
 	return data;
 };
 //===== Get SorilFilterdresultlists =====
@@ -524,28 +391,6 @@ export const getSorilFilterdresultlists = async (
 };
 //-------------------------------Test---------------------------------//
 
-// ===== Get testGroup =====
-export const getTestGroup = async (
-	userId: number,
-): Promise<GetTestGroupResponse> => {
-	const { data } = await api.post<GetTestGroupResponse>("/gettestgroup", {
-		user_id: userId,
-	});
-	return data;
-};
-// ===== Get testSaved =====
-export const getTestSaved = async (
-	test_cnt: number,
-	rlesson_id: number,
-	userId: number,
-): Promise<ApiResponseWithNullData> => {
-	const { data } = await api.post<ApiResponseWithNullData>("/testsaved", {
-		user_id: userId,
-		test_cnt,
-		rlesson_id,
-	});
-	return data;
-};
 // ===== Get testGetFill =====
 export const gettTestFill = async (
 	userId: number,
@@ -592,14 +437,6 @@ export const getTestFiltered = async (
 };
 
 //-------------------------------Course---------------------------------//
-export const getCourseList = async (
-	userId: number,
-): Promise<CourseListResponse> => {
-	const { data } = await api.post<CourseListResponse>("/getcourse", {
-		user_id: userId,
-	});
-	return data;
-};
 
 // ===== Get ContentView =====
 export const getContentView = async (
@@ -629,100 +466,6 @@ export const getPaymentCourseList = async (
 ): Promise<getplaninfoCourseData> => {
 	const { data } = await api.post<getplaninfoCourseData>("/getplaninfo", {
 		user_id: userId,
-	});
-	return data;
-};
-//------------------------------- QPAY ---------------------------------//
-export const getQPayInvoice = async (
-	amount: string,
-	userId: string,
-	orderId: string,
-	billId: string,
-	classroomId: string,
-	topics: number[],
-): Promise<QPayInvoiceResponse> => {
-	const { data } = await api.post<QPayInvoiceResponse>(
-		"https://backend.skuul.mn/api/api_get_qpayinvoice",
-		{
-			amount,
-			userid: userId,
-			device_token: "",
-			orderid: orderId,
-			bilid: billId,
-			classroom_id: classroomId,
-			urls: topics.map((id) => ({ topic_id: id.toString() })),
-		},
-	);
-
-	return data;
-};
-//------------------------------- МХБШ ---------------------------------//
-
-export const getMNPrint = async (params: {
-	userId: number;
-	examineeNumber: string;
-	examDateId?: number;
-}): Promise<ExamPrintListResponse> => {
-	const { data } = await api1.post<ExamPrintListResponse>("/list", {
-		procname: "api_my_exam_page_print",
-		examinee_number: params.examineeNumber,
-		exam_date_id: params.examDateId ?? 0,
-		userid: params.userId,
-		conn: "skuul",
-	});
-	return data;
-};
-
-export const getMNExamVariants = async (
-	userId: number,
-	examinee_number: string,
-): Promise<mnExamVariantResponse> => {
-	const { data } = await api1.post<mnExamVariantResponse>("/list", {
-		procname: "api_exam_date_variants",
-		userid: userId,
-		examinee_number,
-	});
-	return data;
-};
-
-export const getMNExamFinish = async (
-	exam_register_id: number,
-	variant_id: number,
-	exam_id: number,
-	exam_date_id: number,
-): Promise<mnExamFinishResponse> => {
-	const { data } = await api1.post<mnExamFinishResponse>(
-		"/examregistrationsanswers",
-		{
-			exam_register_id: exam_register_id,
-			exam_id: exam_id,
-			exam_date_id: exam_date_id,
-			variant_id: variant_id,
-		},
-	);
-	return data;
-};
-export const getMNExamAttendace = async (
-	exam_registration_id: number | null,
-	status: string,
-	start_time: string,
-	end_time: string,
-	userid: number,
-): Promise<ExamAttendanceResponse> => {
-	const { data } = await api1.post<ExamAttendanceResponse>("/examattendance", {
-		exam_registration_id: exam_registration_id,
-		status: status,
-		start_time: start_time,
-		end_time: end_time,
-		userid: userid,
-	});
-	return data;
-};
-export const getMNuserCheck = async (
-	regnumber: string,
-): Promise<MNUserCheckResponse> => {
-	const { data } = await api1.post<MNUserCheckResponse>("/myexaminees", {
-		regnumber,
 	});
 	return data;
 };

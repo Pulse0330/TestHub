@@ -37,11 +37,6 @@ export async function POST(request: NextRequest) {
 			},
 		};
 
-		console.log("=== QPay Check Request ===");
-		console.log("User ID:", userid);
-		console.log("Invoice ID:", invoice_id);
-		console.log("===========================");
-
 		const response = await fetch("https://ottapp.ecm.mn/api/get_qpaycheckweb", {
 			method: "POST",
 			headers: {
@@ -56,11 +51,6 @@ export async function POST(request: NextRequest) {
 
 		const data = await response.json();
 
-		console.log("=== QPay Check Response ===");
-		console.log("Response:", data);
-		console.log("Payment Status:", data.RetResponse.ResponseType);
-		console.log("============================");
-
 		return NextResponse.json(data);
 	} catch (error) {
 		console.error("QPay Check Error:", error);
@@ -68,10 +58,7 @@ export async function POST(request: NextRequest) {
 		return NextResponse.json(
 			{
 				RetResponse: {
-					ResponseMessage:
-						error instanceof Error
-							? error.message
-							: "Төлбөрийн статус шалгахад алдаа гарлаа",
+					ResponseMessage: "Төлбөрийн статус шалгахад алдаа гарлаа",
 					StatusCode: "500",
 					ResponseCode: "99",
 					ResponseType: false,

@@ -164,7 +164,10 @@ export function Homework({ content, onStartExam }: HomeworkProps) {
 				{content.help && (
 					<div className="rounded-2xl border-2 border-pop-sky/40 bg-pop-sky-soft p-4">
 						<div className="flex items-start gap-3">
-							<AlertCircle className="h-5 w-5 text-pop-sky-ink shrink-0 mt-0.5" strokeWidth={2.5} />
+							<AlertCircle
+								className="h-5 w-5 text-pop-sky-ink shrink-0 mt-0.5"
+								strokeWidth={2.5}
+							/>
 							<div>
 								<p className="font-extrabold text-sm text-pop-sky-ink mb-1">
 									Анхааруулга

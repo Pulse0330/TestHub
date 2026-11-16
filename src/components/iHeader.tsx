@@ -1,6 +1,5 @@
 "use client";
 import { useQueryClient } from "@tanstack/react-query";
-import Cookies from "js-cookie";
 import {
 	BarChart3,
 	BookOpen,
@@ -39,6 +38,7 @@ import {
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ThemeSwitch } from "@/components/ui/ui-theme";
+import { clearSession } from "@/lib/auth";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/stores/useAuthStore";
 
@@ -84,7 +84,11 @@ export const NAV: Section[] = [
 		icon: Target,
 		tone: "bg-pop-sun text-[oklch(0.3_0.08_70)]",
 		links: [
-			{ href: "/Lists/sorilList", label: "Сорилын жагсаалт", icon: ClipboardList },
+			{
+				href: "/Lists/sorilList",
+				label: "Сорилын жагсаалт",
+				icon: ClipboardList,
+			},
 			{ href: "/Lists/sorilResult", label: "Сорилын үр дүн", icon: TrendingUp },
 		],
 	},
@@ -94,7 +98,9 @@ export const NAV: Section[] = [
 		short: "Дасгал",
 		icon: Dumbbell,
 		tone: "bg-pop-mint text-white",
-		links: [{ href: "/Lists/exerciseList", label: "Дасгал ажил", icon: Dumbbell }],
+		links: [
+			{ href: "/Lists/exerciseList", label: "Дасгал ажил", icon: Dumbbell },
+		],
 	},
 	{
 		key: "course",
@@ -104,7 +110,11 @@ export const NAV: Section[] = [
 		tone: "bg-pop-pink text-white",
 		links: [
 			{ href: "/Lists/courseList", label: "Хичээл", icon: School },
-			{ href: "/Lists/paymentCoureList", label: "Төлбөртэй хичээл", icon: CreditCard },
+			{
+				href: "/Lists/paymentCoureList",
+				label: "Төлбөртэй хичээл",
+				icon: CreditCard,
+			},
 		],
 	},
 ];
@@ -130,7 +140,10 @@ const UserAvatar: React.FC<{
 				alt={userName}
 				width={dim}
 				height={dim}
-				className={cn("flex-shrink-0 rounded-full object-cover ring-2 ring-pop-violet/40 ring-offset-2 ring-offset-card", cls)}
+				className={cn(
+					"flex-shrink-0 rounded-full object-cover ring-2 ring-pop-violet/40 ring-offset-2 ring-offset-card",
+					cls,
+				)}
 			/>
 		);
 	}
@@ -162,13 +175,20 @@ const Logo = () => (
 				/>
 			</span>
 		</span>
-		<span className="text-xl font-black tracking-tight text-gradient">EXMO</span>
+		<span className="text-xl font-black tracking-tight text-gradient">
+			EXMO
+		</span>
 	</Link>
 );
 
 // ── User menu (shared desktop/mobile) ────────────────────────────
 const UserMenu: React.FC<{
-	userInfo: { userName: string; userImage: string; schoolName: string; userEmail: string };
+	userInfo: {
+		userName: string;
+		userImage: string;
+		schoolName: string;
+		userEmail: string;
+	};
 	onLogout: () => void;
 	compact?: boolean;
 }> = ({ userInfo, onLogout, compact }) => {
@@ -181,10 +201,16 @@ const UserMenu: React.FC<{
 					aria-label="Хэрэглэгчийн цэс"
 					className={cn(
 						"flex items-center gap-2.5 rounded-full transition-colors",
-						compact ? "p-0.5" : "border-2 border-border bg-card py-1 pr-3 pl-1 hover:bg-accent",
+						compact
+							? "p-0.5"
+							: "border-2 border-border bg-card py-1 pr-3 pl-1 hover:bg-accent",
 					)}
 				>
-					<UserAvatar userImage={userInfo.userImage} userName={userInfo.userName} size="sm" />
+					<UserAvatar
+						userImage={userInfo.userImage}
+						userName={userInfo.userName}
+						size="sm"
+					/>
 					{!compact && (
 						<>
 							<span className="hidden max-w-32 truncate text-sm font-extrabold xl:block">
@@ -197,9 +223,14 @@ const UserMenu: React.FC<{
 			</DropdownMenuTrigger>
 			<DropdownMenuContent align="end" sideOffset={10} className="w-64 p-2">
 				<div className="mb-2 flex items-center gap-3 rounded-xl bg-muted p-3">
-					<UserAvatar userImage={userInfo.userImage} userName={userInfo.userName} />
+					<UserAvatar
+						userImage={userInfo.userImage}
+						userName={userInfo.userName}
+					/>
 					<div className="min-w-0">
-						<p className="truncate text-sm font-extrabold">{userInfo.userName}</p>
+						<p className="truncate text-sm font-extrabold">
+							{userInfo.userName}
+						</p>
 						{(userInfo.schoolName || userInfo.userEmail) && (
 							<p className="truncate text-xs font-semibold text-muted-foreground">
 								{userInfo.schoolName || userInfo.userEmail}
@@ -215,7 +246,10 @@ const UserMenu: React.FC<{
 					Профайл
 				</DropdownMenuItem>
 				<div className="flex items-center rounded-xl px-1.5 py-1 transition-colors hover:bg-accent">
-					<ThemeSwitch showLabels className="h-9 min-w-0 justify-start gap-3 rounded-xl px-1.5 text-sm font-bold" />
+					<ThemeSwitch
+						showLabels
+						className="h-9 min-w-0 justify-start gap-3 rounded-xl px-1.5 text-sm font-bold"
+					/>
 				</div>
 				<DropdownMenuSeparator className="my-1.5" />
 				<DropdownMenuItem
@@ -247,7 +281,9 @@ export const SectionTabs: React.FC = () => {
 							href={l.href}
 							className={cn(
 								"flex flex-1 items-center justify-center gap-2 rounded-xl px-4 py-2 text-sm font-extrabold whitespace-nowrap transition-all sm:flex-none",
-								active ? section.tone : "text-muted-foreground hover:bg-muted hover:text-foreground",
+								active
+									? section.tone
+									: "text-muted-foreground hover:bg-muted hover:text-foreground",
 							)}
 						>
 							<Icon className="size-4" strokeWidth={2.5} />
@@ -266,7 +302,9 @@ export const Navbar01: React.FC = () => {
 	const router = useRouter();
 	const pathname = usePathname();
 	const queryClient = useQueryClient();
-	const { user, firstname, imgUrl, clearAuth } = useAuthStore();
+	const user = useAuthStore((s) => s.user);
+	const firstname = useAuthStore((s) => s.firstname);
+	const imgUrl = useAuthStore((s) => s.imgUrl);
 	const current = findSection(pathname);
 
 	const userInfo = React.useMemo(
@@ -281,12 +319,7 @@ export const Navbar01: React.FC = () => {
 
 	const handleLogout = async () => {
 		try {
-			for (const c of ["auth-token", "user-id", "firstname", "img-url"]) {
-				Cookies.remove(c, { path: "/" });
-			}
-			clearAuth();
-			localStorage.clear();
-			sessionStorage.clear();
+			clearSession({ wipeStorage: true });
 			queryClient.clear();
 			router.push("/login");
 		} catch {
@@ -326,10 +359,17 @@ export const Navbar01: React.FC = () => {
 
 					<div className="ml-auto flex items-center gap-2">
 						<div className="hidden lg:block">
-							<UserMenu userInfo={userInfo} onLogout={() => setShowLogoutDialog(true)} />
+							<UserMenu
+								userInfo={userInfo}
+								onLogout={() => setShowLogoutDialog(true)}
+							/>
 						</div>
 						<div className="lg:hidden">
-							<UserMenu compact userInfo={userInfo} onLogout={() => setShowLogoutDialog(true)} />
+							<UserMenu
+								compact
+								userInfo={userInfo}
+								onLogout={() => setShowLogoutDialog(true)}
+							/>
 						</div>
 					</div>
 				</div>
@@ -353,7 +393,9 @@ export const Navbar01: React.FC = () => {
 								<span
 									className={cn(
 										"flex h-8 w-14 items-center justify-center rounded-full transition-all",
-										active ? s.tone : "text-muted-foreground group-active:scale-90",
+										active
+											? s.tone
+											: "text-muted-foreground group-active:scale-90",
 									)}
 								>
 									<Icon className="size-5" strokeWidth={2.5} />
@@ -381,7 +423,8 @@ export const Navbar01: React.FC = () => {
 						</div>
 						<AlertDialogTitle>Системээс гарах уу?</AlertDialogTitle>
 						<AlertDialogDescription className="leading-relaxed">
-							Дахин нэвтрэхийн тулд бүртгэлтэй имэйл, нууц үгээ оруулах шаардлагатай.
+							Дахин нэвтрэхийн тулд бүртгэлтэй имэйл, нууц үгээ оруулах
+							шаардлагатай.
 						</AlertDialogDescription>
 					</AlertDialogHeader>
 					<AlertDialogFooter className="mt-2 gap-2 sm:justify-center">

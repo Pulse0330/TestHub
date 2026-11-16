@@ -1,4 +1,4 @@
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import { Check, Clock, Trash2 } from "lucide-react";
 import Image from "next/image";
 import { memo, useCallback, useMemo } from "react";
@@ -126,7 +126,7 @@ function CourseCard({
 	const isShelf = variant === "shelf";
 
 	return (
-		<motion.div
+		<m.div
 			onClick={handleClick}
 			className={cn(
 				"relative h-full",
@@ -163,14 +163,20 @@ function CourseCard({
 					{/* Purchased check */}
 					{isPurchased && (
 						<StatusBadge color="green">
-							<Check className="size-4 text-primary-foreground" strokeWidth={3} />
+							<Check
+								className="size-4 text-primary-foreground"
+								strokeWidth={3}
+							/>
 						</StatusBadge>
 					)}
 
 					{/* Selected check */}
 					{isSelected && !isPurchased && (
 						<StatusBadge color="blue">
-							<Check className="size-4 text-primary-foreground" strokeWidth={3} />
+							<Check
+								className="size-4 text-primary-foreground"
+								strokeWidth={3}
+							/>
 						</StatusBadge>
 					)}
 
@@ -186,8 +192,14 @@ function CourseCard({
 					{/* Expired overlay */}
 					{expiryInfo?.isExpired && (
 						<Overlay>
-							<Clock className="size-5 text-destructive mb-1" strokeWidth={2.5} />
-							<Badge variant="destructive" className="text-[10px] font-extrabold">
+							<Clock
+								className="size-5 text-destructive mb-1"
+								strokeWidth={2.5}
+							/>
+							<Badge
+								variant="destructive"
+								className="text-[10px] font-extrabold"
+							>
 								Дууссан
 							</Badge>
 						</Overlay>
@@ -248,7 +260,7 @@ function CourseCard({
 					</div>
 				</div>
 			</div>
-		</motion.div>
+		</m.div>
 	);
 }
 

@@ -9,12 +9,12 @@ import {
 	type DroppableProvided,
 	type DropResult,
 } from "@hello-pangea/dnd";
-import parse from "html-react-parser";
 import { CheckCircle2, GripVertical, XCircle } from "lucide-react";
 import type React from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { safeParse } from "./safeParse";
 
 interface Answer {
 	answer_id: number;
@@ -132,7 +132,7 @@ const DragAndDrop: React.FC<DragAndDropProps> = ({
 												</span>
 												<div className="flex-1 min-w-0 text-sm sm:text-base">
 													{item.answer_name_html
-														? parse(item.answer_name_html)
+														? safeParse(item.answer_name_html)
 														: ""}
 												</div>
 												{showCorrect && (
@@ -191,15 +191,8 @@ const DragAndDropWrapper: React.FC<DragAndDropWrapperProps> = ({
 			unique.sort((a, b) => (a.refid ?? 0) - (b.refid ?? 0));
 		}
 
-		console.log("=== Ordering Debug ===");
-		console.log("Total answers:", answers.length);
-		console.log("Unique answers:", unique.length);
-		console.log("User answers:", userAnswers);
-		console.log("Correct answers:", correctAnswers);
-		console.log("====================");
-
 		return unique;
-	}, [answers, userAnswers, correctAnswers]);
+	}, [answers]);
 
 	useEffect(() => {
 		const hasChanged =
@@ -332,7 +325,7 @@ const DragAndDropWrapper: React.FC<DragAndDropWrapperProps> = ({
 								</span>
 								<div className="flex-1 min-w-0 text-sm sm:text-base font-bold text-foreground">
 									{answer.answer_name_html
-										? parse(answer.answer_name_html)
+										? safeParse(answer.answer_name_html)
 										: ""}
 								</div>
 								<CheckCircle2

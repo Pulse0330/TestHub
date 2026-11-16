@@ -284,10 +284,7 @@ function AckWarningDialog({ open, onClose }: AckWarningDialogProps) {
 					</div>
 
 					{/* Action button */}
-					<Button
-						onClick={onClose}
-						className="w-full"
-					>
+					<Button onClick={onClose} className="w-full">
 						Ойлголоо, буцах
 					</Button>
 				</div>

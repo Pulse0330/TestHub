@@ -86,7 +86,10 @@ export default function StyledBackButton({
 						)}
 					>
 						{showIcon && (
-							<ArrowLeft className="size-4 transition-all duration-300 group-hover:-translate-x-0.5" strokeWidth={2.5} />
+							<ArrowLeft
+								className="size-4 transition-all duration-300 group-hover:-translate-x-0.5"
+								strokeWidth={2.5}
+							/>
 						)}
 					</div>
 				) : (
@@ -110,7 +113,9 @@ export default function StyledBackButton({
 					</AlertDialogHeader>
 					<AlertDialogFooter className="mt-2 gap-2 sm:justify-center">
 						<AlertDialogCancel className="flex-1">Болих</AlertDialogCancel>
-						<AlertDialogAction onClick={handleConfirm} className="flex-1">Тийм</AlertDialogAction>
+						<AlertDialogAction onClick={handleConfirm} className="flex-1">
+							Тийм
+						</AlertDialogAction>
 					</AlertDialogFooter>
 				</AlertDialogContent>
 			</AlertDialog>

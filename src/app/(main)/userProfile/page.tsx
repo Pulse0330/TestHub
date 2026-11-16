@@ -6,6 +6,7 @@ import UseAnimations from "react-useanimations";
 import loading2 from "react-useanimations/lib/loading2";
 import { Button } from "@/components/ui/button";
 import { getUserProfile } from "@/lib/api";
+import { queryKeys } from "@/lib/queryKeys";
 import { useAuthStore } from "@/stores/useAuthStore";
 import type { UserProfileResponseType } from "@/types/user";
 import { ProfileContent } from "./form";
@@ -15,7 +16,7 @@ export default function UserProfilePage() {
 
 	const { data, isLoading, isError, error, refetch } =
 		useQuery<UserProfileResponseType>({
-			queryKey: ["userProfilePage", userId],
+			queryKey: queryKeys.profile.page(userId),
 			queryFn: () => getUserProfile(userId || 0),
 			enabled: !!userId,
 			retry: 2,
@@ -59,7 +60,9 @@ export default function UserProfilePage() {
 					<p className="text-base font-black text-foreground">
 						Профайл уншиж байна
 					</p>
-					<p className="text-sm font-semibold text-muted-foreground">Түр хүлээнэ үү...</p>
+					<p className="text-sm font-semibold text-muted-foreground">
+						Түр хүлээнэ үү...
+					</p>
 				</div>
 			</div>
 		);

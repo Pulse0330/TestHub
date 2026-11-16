@@ -659,7 +659,6 @@ input[type="number"] {
 	table-layout: auto;
 }
 
-
 .math-content th {
 	background-color: var(--muted);
 	color: var(--foreground);
@@ -671,7 +670,6 @@ input[type="number"] {
 	word-wrap: break-word;
 	overflow-wrap: break-word;
 }
-
 
 .math-content td {
 	padding: 0.75rem 1rem;
@@ -685,11 +683,9 @@ input[type="number"] {
 	box-sizing: border-box;
 }
 
-
 .math-content tbody tr:nth-child(even) {
 	background-color: color-mix(in oklch, var(--muted) 60%, transparent);
 }
-
 
 .math-content tbody tr {
 	transition: background-color 0.2s ease;
@@ -698,7 +694,6 @@ input[type="number"] {
 .math-content tbody tr:hover {
 	background-color: var(--accent);
 }
-
 
 .math-content td strong,
 .math-content th strong {

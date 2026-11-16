@@ -11,7 +11,6 @@ interface SchoolResponse {
 export async function POST(request: NextRequest) {
 	try {
 		const body = await request.json();
-		console.log("=== SCHOOL API: Received body ===", body);
 
 		const requestBody = {
 			aimag_id: body.aimag_id,
@@ -29,21 +28,13 @@ export async function POST(request: NextRequest) {
 			},
 		};
 
-		console.log("=== SCHOOL API: Sending to backend ===", {
-			aimag_id: requestBody.aimag_id,
-			district_id: requestBody.district_id,
-		});
-
 		const response = await fetch("https://backend.skuul.mn/api/school", {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
 			body: JSON.stringify(requestBody),
 		});
 
-		console.log("=== SCHOOL API: Backend response status ===", response.status);
-
 		const data = (await response.json()) as SchoolResponse;
-		console.log("=== SCHOOL API: Backend response data ===", data);
 
 		return NextResponse.json(data);
 	} catch (error) {

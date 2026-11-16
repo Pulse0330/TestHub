@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import {
 	ArrowRight,
 	BookOpen,
@@ -236,7 +236,7 @@ export default function ExamCard({
 	const openSheet = () => setSheetOpen(true);
 
 	return (
-		<motion.div
+		<m.div
 			initial={{ opacity: 0, y: 12 }}
 			animate={{ opacity: 1, y: 0 }}
 			transition={{ duration: 0.3 }}
@@ -471,7 +471,9 @@ export default function ExamCard({
 							<div
 								className={cn(
 									"flex items-center justify-between gap-3 rounded-2xl p-3 pr-10",
-									isLocked ? "bg-pop-sun-soft text-pop-sun-ink" : flagConfig.banner,
+									isLocked
+										? "bg-pop-sun-soft text-pop-sun-ink"
+										: flagConfig.banner,
 								)}
 							>
 								{statusBadge}
@@ -617,14 +619,20 @@ export default function ExamCard({
 								)}
 							</Button>
 						) : canTakeExam ? (
-							<Button size="lg" className="w-full" onClick={handleStartFromSheet}>
+							<Button
+								size="lg"
+								className="w-full"
+								onClick={handleStartFromSheet}
+							>
 								<Play className="size-4" />
 								Шалгалт эхлүүлэх
 							</Button>
 						) : (
 							<Button size="lg" variant="secondary" className="w-full" disabled>
 								<flagConfig.Icon className="size-4" />
-								{isExpired ? exam.flag_name || flagConfig.label : flagConfig.label}
+								{isExpired
+									? exam.flag_name || flagConfig.label
+									: flagConfig.label}
 							</Button>
 						)}
 					</SheetFooter>
@@ -637,7 +645,7 @@ export default function ExamCard({
 				onConfirm={handleRulesConfirm}
 				isMobile={false}
 			/>
-		</motion.div>
+		</m.div>
 	);
 }
 

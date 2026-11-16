@@ -1,7 +1,6 @@
 "use client";
 
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
-import parse from "html-react-parser";
 import { CheckCircle2, ZoomIn } from "lucide-react";
 import Image from "next/image";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -12,6 +11,7 @@ import {
 	DialogTitle,
 	DialogTrigger,
 } from "@/components/ui/dialog";
+import { safeParse } from "./safeParse";
 
 interface AnswerData {
 	answer_id: number;
@@ -70,15 +70,8 @@ export default function MultiSelectQuestion({
 			unique.sort((a, b) => (a.refid ?? 0) - (b.refid ?? 0));
 		}
 
-		console.log("=== Multi Select Debug ===");
-		console.log("Question ID:", questionId);
-		console.log("Total answers:", answers.length);
-		console.log("Unique answers:", unique.length);
-		console.log("Selected:", selectedAnswers);
-		console.log("=========================");
-
 		return unique;
-	}, [answers, questionId, selectedAnswers]);
+	}, [answers]);
 
 	useEffect(() => {
 		const newSelected = Array.isArray(selectedAnswersProp)
@@ -203,7 +196,7 @@ export default function MultiSelectQuestion({
 							</div>
 							{option.answer_name_html && (
 								<p className="text-center text-lg font-bold">
-									{parse(option.answer_name_html)}
+									{safeParse(option.answer_name_html)}
 								</p>
 							)}
 						</div>
@@ -214,7 +207,7 @@ export default function MultiSelectQuestion({
 
 		return (
 			<span className="text-sm sm:text-base font-bold leading-relaxed whitespace-pre-wrap">
-				{option.answer_name_html ? parse(option.answer_name_html) : ""}
+				{option.answer_name_html ? safeParse(option.answer_name_html) : ""}
 			</span>
 		);
 	};
@@ -290,7 +283,9 @@ export default function MultiSelectQuestion({
 								)}
 							</span>
 
-							<div className="flex-1 min-w-0">{renderOptionContent(option)}</div>
+							<div className="flex-1 min-w-0">
+								{renderOptionContent(option)}
+							</div>
 
 							{/* ⭐ Show correct badge in review mode */}
 							{isReviewMode && isCorrect && (

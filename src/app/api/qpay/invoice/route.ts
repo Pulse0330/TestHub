@@ -5,8 +5,6 @@ export async function POST(request: NextRequest) {
 	try {
 		const payload = await request.json();
 
-		console.log("API Route - QPay Request:", payload);
-
 		const data = JSON.stringify({
 			amount: payload.amount,
 			userid: payload.userid,
@@ -40,8 +38,6 @@ export async function POST(request: NextRequest) {
 
 		const response = await axios.request(config);
 
-		console.log("API Route - QPay Response received");
-
 		return NextResponse.json(response.data);
 	} catch (error) {
 		console.error("API Route - QPay Error:", error);
@@ -49,8 +45,7 @@ export async function POST(request: NextRequest) {
 		if (error instanceof AxiosError) {
 			return NextResponse.json(
 				{
-					error: error.message,
-					details: error.response?.data,
+					error: "Нэхэмжлэх үүсгэхэд алдаа гарлаа",
 				},
 				{ status: error.response?.status || 500 },
 			);
@@ -58,8 +53,7 @@ export async function POST(request: NextRequest) {
 
 		return NextResponse.json(
 			{
-				error:
-					error instanceof Error ? error.message : "An unknown error occurred",
+				error: "Нэхэмжлэх үүсгэхэд алдаа гарлаа",
 			},
 			{ status: 500 },
 		);

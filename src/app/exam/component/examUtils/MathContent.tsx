@@ -1,94 +1,6 @@
 "use client";
 import Image from "next/image";
-import { memo, useEffect, useRef } from "react";
-
-// ---- Helpers ----
-interface MathContentProps {
-	html: string;
-}
-
-function cleanHtml(raw: string): string {
-	return (
-		raw
-			.replace(/&nbsp;/g, " ")
-			.replace(/&amp;/g, "&")
-			.replace(/&lt;/g, "<")
-			.replace(/&gt;/g, ">")
-			.replace(/&quot;/g, '"')
-			.replace(/&#39;/g, "'")
-			// MathML дотор Cyrillic О → Latin O
-			.replace(/(<m[a-z]+[^>]*>)\s*О\s*(<\/m[a-z]+>)/g, "$1O$2")
-	);
-}
-
-// ---- MathContent ----
-function MathContent({ html }: MathContentProps) {
-	const mathRef = useRef<HTMLDivElement>(null);
-
-	// biome-ignore lint/correctness/useExhaustiveDependencies: html өөрчлөгдөхөд MathJax дахин render хийх шаардлагатай
-	useEffect(() => {
-		const renderMath = async () => {
-			if (!mathRef.current || !window.MathJax) return;
-			try {
-				if (window.MathJax.typesetClear) {
-					window.MathJax.typesetClear([mathRef.current]);
-				}
-				if (window.MathJax.typesetPromise) {
-					await window.MathJax.typesetPromise([mathRef.current]);
-				}
-
-				const containers = mathRef.current.querySelectorAll("mjx-container");
-				containers.forEach((container: Element) => {
-					const el = container as HTMLElement;
-					const hasMatrix = !!container.querySelector("mjx-mtable, mtable");
-					// MathJax 3 CHTML → "true", SVG → "block"
-					const isDisplayMode =
-						el.getAttribute("display") === "true" ||
-						el.getAttribute("display") === "block";
-
-					if (hasMatrix || isDisplayMode) {
-						el.style.cssText = "";
-						el.style.display = "block";
-						el.style.overflowX = "auto"; // scroll зөвхөн матриц дээр
-						el.style.maxWidth = "100%";
-						el.style.margin = "8px 0";
-					} else {
-						el.style.cssText = "";
-						el.style.display = "inline-flex";
-						el.style.alignItems = "center";
-						el.style.verticalAlign = "middle";
-						el.style.overflow = "visible"; // inline scroll үүсгэхгүй
-						el.style.maxWidth = "100%";
-					}
-				});
-			} catch (err) {
-				console.error("MathJax rendering error:", err);
-			}
-		};
-
-		if (window.MathJax?.startup?.promise) {
-			window.MathJax.startup.promise.then(renderMath);
-		} else {
-			renderMath();
-		}
-	}, [html]); // html өөрчлөгдөхөд дахин render
-
-	return (
-		<div
-			ref={mathRef}
-			dangerouslySetInnerHTML={{ __html: cleanHtml(html) }}
-			className="math-content text-inherit"
-			style={{
-				width: "100%",
-				maxWidth: "100%",
-				overflow: "visible", // wrapper дээр scroll үгүй
-				overflowWrap: "break-word",
-				wordBreak: "break-word",
-				lineHeight: "1.8",
-			}}
-		/>
-	);
-}
+import { MathContent } from "@/components/MathContent";
 
 // ---- Types ----
 interface Answer {
@@ -273,4 +185,4 @@ function QuestionRow({
 
 // ---- Exports ----
 export { MathContent, QuestionRow };
-export default memo(MathContent);
+export default MathContent;

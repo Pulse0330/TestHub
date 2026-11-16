@@ -86,7 +86,9 @@ const ExamMinimap = memo(function ExamMinimap({
 								🧭
 							</div>
 							<div>
-								<h3 className="text-lg font-black text-foreground">Асуултууд</h3>
+								<h3 className="text-lg font-black text-foreground">
+									Асуултууд
+								</h3>
 								<p className="text-sm font-semibold text-muted-foreground">
 									{answeredCount}/{totalCount} хариулсан
 								</p>

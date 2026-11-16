@@ -1,116 +1,105 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { useCallback, useEffect, useRef, useState } from "react";
-import { deleteCookie } from "@/lib/cookie";
+import { useEffect, useRef, useState } from "react";
+import { clearSession, IDLE_TIMEOUT_MS, LAST_ACTIVITY_KEY } from "@/lib/auth";
 import { useAuthStore } from "@/stores/useAuthStore";
 import Portal from "./portal";
 
-const IDLE_TIMEOUT = 60 * 60 * 1000;
+const WARNING_SECONDS = 10;
+/** localStorage-д идэвх бичих давтамж (mousemove бүрд бичихгүй). */
+const ACTIVITY_WRITE_THROTTLE_MS = 5_000;
+const CHECK_INTERVAL_MS = 1_000;
+const ACTIVITY_EVENTS = [
+	"mousemove",
+	"mousedown",
+	"keydown",
+	"touchstart",
+	"scroll",
+	"click",
+] as const;
 
-function clearTimers(
-	idle: React.MutableRefObject<ReturnType<typeof setTimeout> | null>,
-	tick: React.MutableRefObject<ReturnType<typeof setTimeout> | null>,
-) {
-	if (idle.current) clearTimeout(idle.current);
-	if (tick.current) clearTimeout(tick.current);
+function readSharedActivity(): number {
+	try {
+		return Number(localStorage.getItem(LAST_ACTIVITY_KEY)) || 0;
+	} catch {
+		return 0;
+	}
 }
 
+function writeSharedActivity(ts: number) {
+	try {
+		localStorage.setItem(LAST_ACTIVITY_KEY, String(ts));
+	} catch {
+		// private mode гэх мэт — tab-ийн дотоод утга хангалттай
+	}
+}
+
+/**
+ * Идэвхгүй хэрэглэгчийг автоматаар гаргана.
+ * - Бүх tab-ийн идэвхийг localStorage-аар хуваалцана: нэг tab-д ажиллаж
+ *   байхад нөгөө идэвхгүй tab хэрэглэгчийг гаргахгүй.
+ * - Шалгалт өгч байгаа tab (/exam/) өөрөө идэвхтэй гэж тооцогдоно.
+ * - Event бүрд timer дахин үүсгэхгүй — зөвхөн timestamp шинэчилж,
+ *   секундэд нэг удаа шалгана.
+ */
 export default function IdleTimerProvider({
 	children,
 }: {
 	children: React.ReactNode;
 }) {
-	const [showWarning, setShowWarning] = useState(false);
-	const [countdown, setCountdown] = useState(10);
+	const [countdown, setCountdown] = useState<number | null>(null);
 	const pathname = usePathname();
+	const userId = useAuthStore((s) => s.userId);
 
 	const isExcluded = pathname.startsWith("/exam/");
-
-	const idleTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-	const tickTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-	const isWarningVisible = useRef(false);
-	const countRef = useRef(10);
-
-	const doLogout = useCallback(() => {
-		clearTimers(idleTimer, tickTimer);
-		isWarningVisible.current = false;
-		setShowWarning(false);
-
-		try {
-			useAuthStore.getState().clearAuth();
-			localStorage.removeItem("auth-storage");
-			deleteCookie("auth-token");
-			deleteCookie("user-id");
-		} catch (e) {
-			console.error("Logout алдаа:", e);
-		} finally {
-			window.location.href = "/login?session=expired";
-		}
-	}, []);
-
-	const tick = useCallback(() => {
-		countRef.current -= 1;
-		setCountdown(countRef.current);
-
-		if (countRef.current <= 0) {
-			doLogout();
-			return;
-		}
-
-		tickTimer.current = setTimeout(tick, 1000);
-	}, [doLogout]);
-
-	const startCountdown = useCallback(() => {
-		isWarningVisible.current = true;
-		countRef.current = 10;
-		setCountdown(10);
-		setShowWarning(true);
-		tickTimer.current = setTimeout(tick, 1000);
-	}, [tick]);
-
-	const resetTimer = useCallback(() => {
-		if (isWarningVisible.current) {
-			isWarningVisible.current = false;
-			clearTimers(idleTimer, tickTimer);
-			setShowWarning(false);
-			setCountdown(10);
-			countRef.current = 10;
-		} else {
-			if (idleTimer.current) clearTimeout(idleTimer.current);
-		}
-		idleTimer.current = setTimeout(startCountdown, IDLE_TIMEOUT);
-	}, [startCountdown]);
-
-	const _stayLoggedIn = useCallback(() => {
-		isWarningVisible.current = false;
-		clearTimers(idleTimer, tickTimer);
-		setShowWarning(false);
-		setCountdown(10);
-		countRef.current = 10;
-		idleTimer.current = setTimeout(startCountdown, IDLE_TIMEOUT);
-	}, [startCountdown]);
-
-	const { isAuthenticated } = useAuthStore();
+	const lastLocalActivity = useRef(0);
+	const lastWrite = useRef(0);
 
 	useEffect(() => {
-		if (!isAuthenticated() || isExcluded) return;
+		if (!userId) return;
 
-		const events = [
-			"mousemove",
-			"mousedown",
-			"keydown",
-			"touchstart",
-			"scroll",
-			"click",
-		];
-		for (const e of events) window.addEventListener(e, resetTimer);
-		idleTimer.current = setTimeout(startCountdown, IDLE_TIMEOUT);
-		return () => {
-			for (const e of events) window.removeEventListener(e, resetTimer);
-			clearTimers(idleTimer, tickTimer);
+		const markActive = () => {
+			const now = Date.now();
+			lastLocalActivity.current = now;
+			if (now - lastWrite.current >= ACTIVITY_WRITE_THROTTLE_MS) {
+				lastWrite.current = now;
+				writeSharedActivity(now);
+			}
 		};
-	}, [resetTimer, startCountdown, isAuthenticated, isExcluded]);
+
+		markActive();
+		for (const e of ACTIVITY_EVENTS) {
+			window.addEventListener(e, markActive, { passive: true });
+		}
+
+		const interval = setInterval(() => {
+			// Шалгалтын үеэр хэрэглэгчийг идэвхтэй гэж үзнэ
+			if (isExcluded) {
+				markActive();
+				setCountdown(null);
+				return;
+			}
+			const last = Math.max(lastLocalActivity.current, readSharedActivity());
+			const remainingMs = last + IDLE_TIMEOUT_MS - Date.now();
+			if (remainingMs <= 0) {
+				clearInterval(interval);
+				clearSession();
+				window.location.href = "/login?session=expired";
+				return;
+			}
+			const secondsLeft = Math.ceil(remainingMs / 1000);
+			setCountdown(secondsLeft <= WARNING_SECONDS ? secondsLeft : null);
+		}, CHECK_INTERVAL_MS);
+
+		return () => {
+			for (const e of ACTIVITY_EVENTS)
+				window.removeEventListener(e, markActive);
+			clearInterval(interval);
+		};
+	}, [userId, isExcluded]);
+
+	const showWarning = countdown !== null;
 
 	return (
 		<>
@@ -161,7 +150,7 @@ export default function IdleTimerProvider({
 										strokeWidth="6"
 										fill="none"
 										strokeDasharray={`${2 * Math.PI * 34}`}
-										strokeDashoffset={`${2 * Math.PI * 34 * (1 - countdown / 10)}`}
+										strokeDashoffset={`${2 * Math.PI * 34 * (1 - (countdown ?? 0) / WARNING_SECONDS)}`}
 										className="text-pop-sun transition-all duration-1000"
 										strokeLinecap="round"
 									/>

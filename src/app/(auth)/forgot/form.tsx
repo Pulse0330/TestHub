@@ -1,6 +1,4 @@
 "use client";
-import Link from "next/link";
-import Image from "next/image";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
 import axios from "axios";
@@ -16,6 +14,8 @@ import {
 	ShieldCheck,
 	X,
 } from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
 
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -81,9 +81,7 @@ export default function ForgotForm({ onClose }: ForgotFormProps) {
 	const [showPassword, setShowPassword] = useState(false);
 	const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 	const [isWaitingForSMS, setIsWaitingForSMS] = useState(false);
-	const [isVerified, setIsVerified] = useState(
-		process.env.NODE_ENV === "development",
-	);
+	const [isVerified, setIsVerified] = useState(false);
 	const [isChecking, setIsChecking] = useState(false);
 	const [verificationCode, setVerificationCode] = useState("");
 	const [timeLeft, setTimeLeft] = useState(0);
@@ -246,7 +244,10 @@ export default function ForgotForm({ onClose }: ForgotFormProps) {
 								d="M5 13l4 4L19 7"
 							/>
 						</svg>
-						<span aria-hidden="true" className="absolute -top-2 -right-3 animate-float text-2xl">
+						<span
+							aria-hidden="true"
+							className="absolute -top-2 -right-3 animate-float text-2xl"
+						>
 							🎉
 						</span>
 					</div>
@@ -335,7 +336,10 @@ export default function ForgotForm({ onClose }: ForgotFormProps) {
 												}}
 											/>
 										</FormControl>
-										<Phone className={AUTH_INPUT_ICON_CLASS} strokeWidth={2.5} />
+										<Phone
+											className={AUTH_INPUT_ICON_CLASS}
+											strokeWidth={2.5}
+										/>
 									</div>
 									<FormMessage />
 								</FormItem>
@@ -445,7 +449,10 @@ export default function ForgotForm({ onClose }: ForgotFormProps) {
 														className="peer pr-11 pl-11"
 													/>
 												</FormControl>
-												<Lock className={AUTH_INPUT_ICON_CLASS} strokeWidth={2.5} />
+												<Lock
+													className={AUTH_INPUT_ICON_CLASS}
+													strokeWidth={2.5}
+												/>
 												<Button
 													type="button"
 													variant="ghost"
@@ -484,7 +491,10 @@ export default function ForgotForm({ onClose }: ForgotFormProps) {
 														className="peer pr-11 pl-11"
 													/>
 												</FormControl>
-												<KeyRound className={AUTH_INPUT_ICON_CLASS} strokeWidth={2.5} />
+												<KeyRound
+													className={AUTH_INPUT_ICON_CLASS}
+													strokeWidth={2.5}
+												/>
 												<Button
 													type="button"
 													variant="ghost"

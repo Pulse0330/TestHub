@@ -23,6 +23,21 @@ import type { ExamFinishResponse } from "@/types/exercise/testGetFill";
 import type { SelectedAnswer } from "./component/questionItem";
 import QuestionItem from "./component/questionItem";
 
+interface ConvertedQuestionAnswer {
+	answer_id: number;
+	question_id: number;
+	answer_name: string;
+	answer_name_html: ExamFinishResponse["Answers"][number]["answer_name_html"];
+	answer_descr: string;
+	answer_img: string | undefined;
+	answer_type: ExamFinishResponse["Answers"][number]["answer_type"];
+	refid: ExamFinishResponse["Answers"][number]["refid"];
+	ref_child_id: number | null;
+	is_true: boolean;
+}
+
+const EMPTY_QUESTION_ANSWERS: ConvertedQuestionAnswer[] = [];
+
 export default function ExercisePage() {
 	const { userId } = useAuthStore();
 	const router = useRouter();
@@ -56,34 +71,49 @@ export default function ExercisePage() {
 		[selectedAnswers],
 	);
 
-	// answers өөрчлөгдөхөд л дахин тооцно, selectedAnswers өөрчлөгдөхөд биш
-	const getQuestionAnswers = useCallback(
-		(questionId: number) => {
-			const filtered = answers.filter((a) => a.question_id === questionId);
-			const unique = filtered.filter(
-				(answer, index, self) =>
-					index === self.findIndex((a) => a.answer_id === answer.answer_id),
+	// Асуулт бүрийн хариултуудыг answers өөрчлөгдөхөд л нэг удаа (O(n)) бэлдэнэ
+	const answersByQuestion = useMemo(() => {
+		const grouped = new Map<number, Map<number, (typeof answers)[number]>>();
+		for (const a of answers) {
+			let byId = grouped.get(a.question_id);
+			if (!byId) {
+				byId = new Map();
+				grouped.set(a.question_id, byId);
+			}
+			// answer_id давхардвал эхнийхийг үлдээнэ
+			if (!byId.has(a.answer_id)) byId.set(a.answer_id, a);
+		}
+		const result = new Map<number, ConvertedQuestionAnswer[]>();
+		for (const [questionId, byId] of grouped) {
+			result.set(
+				questionId,
+				[...byId.values()]
+					.sort((a, b) => {
+						if (a.refid === undefined || b.refid === undefined) return 0;
+						return a.refid - b.refid;
+					})
+					.map((a) => ({
+						answer_id: a.answer_id,
+						question_id: a.question_id,
+						answer_name: a.answer_name || "",
+						answer_name_html: a.answer_name_html,
+						answer_descr: a.answer_descr || "",
+						answer_img: a.answer_img || undefined,
+						answer_type: a.answer_type,
+						refid: a.refid,
+						ref_child_id:
+							a.ref_child_id !== null ? Number(a.ref_child_id) : null,
+						is_true: a.is_true === 1,
+					})),
 			);
-			return unique
-				.sort((a, b) => {
-					if (a.refid === undefined || b.refid === undefined) return 0;
-					return a.refid - b.refid;
-				})
-				.map((a) => ({
-					answer_id: a.answer_id,
-					question_id: a.question_id,
-					answer_name: a.answer_name || "",
-					answer_name_html: a.answer_name_html,
-					answer_descr: a.answer_descr || "",
-					answer_img: a.answer_img || undefined,
-					answer_type: a.answer_type,
-					refid: a.refid,
-					// CHANGE THIS: Ensure it's a number to match ConvertedAnswer
-					ref_child_id: a.ref_child_id !== null ? Number(a.ref_child_id) : null,
-					is_true: a.is_true === 1,
-				}));
-		},
-		[answers],
+		}
+		return result;
+	}, [answers]);
+
+	const getQuestionAnswers = useCallback(
+		(questionId: number) =>
+			answersByQuestion.get(questionId) ?? EMPTY_QUESTION_ANSWERS,
+		[answersByQuestion],
 	);
 
 	// ─── Answer handlers ────────────────────────────────────────────────────────
@@ -540,8 +570,7 @@ export default function ExercisePage() {
 								className="w-full"
 								onClick={() => {
 									const firstOpen = questions.findIndex(
-										(q) =>
-											questionStatus.get(q.question_id) === "unanswered",
+										(q) => questionStatus.get(q.question_id) === "unanswered",
 									);
 									goTo(firstOpen >= 0 ? firstOpen : 0);
 								}}
@@ -578,14 +607,18 @@ export default function ExercisePage() {
 							<QuestionItem
 								question={currentQuestion}
 								index={safeIndex}
-								questionAnswers={getQuestionAnswers(currentQuestion.question_id)}
+								questionAnswers={getQuestionAnswers(
+									currentQuestion.question_id,
+								)}
 								selected={selectedAnswers.find(
 									(a) => a.questionId === currentQuestion.question_id,
 								)}
 								bodolt={choosedAnswers.find(
 									(c) => c.question_id === currentQuestion.question_id,
 								)}
-								isSubmitted={submittedQuestions.has(currentQuestion.question_id)}
+								isSubmitted={submittedQuestions.has(
+									currentQuestion.question_id,
+								)}
 								onSingleSelect={handleSingleSelect}
 								onMultiSelect={handleMultiSelect}
 								onFillInBlank={handleFillInBlank}

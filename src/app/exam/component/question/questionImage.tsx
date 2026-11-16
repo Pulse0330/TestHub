@@ -188,7 +188,9 @@ const QuestionImage = memo(
 					<Dialog open={isOpen} onOpenChange={handleDialogClose}>
 						<DialogContent className="flex h-[90vh] w-[95vw] max-w-7xl flex-col items-center justify-center p-4">
 							<DialogHeader>
-								<DialogTitle className="text-base font-extrabold">{alt}</DialogTitle>
+								<DialogTitle className="text-base font-extrabold">
+									{alt}
+								</DialogTitle>
 							</DialogHeader>
 
 							<div

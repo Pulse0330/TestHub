@@ -5,8 +5,6 @@ import {
 	AlertCircle,
 	CheckCircle2,
 	ChevronDown,
-	CreditCard,
-	Lock,
 	RotateCw,
 	Search,
 	Sparkles,
@@ -15,17 +13,15 @@ import {
 import { useRouter } from "next/navigation";
 import { type ReactNode, useCallback, useMemo, useState } from "react";
 import LessonFilter from "@/components/LessonFilter";
-import { Button } from "@/components/ui/button";
 import {
-	Dialog,
-	DialogContent,
-	DialogDescription,
-	DialogHeader,
-	DialogTitle,
-} from "@/components/ui/dialog";
+	type SorilDetail,
+	SorilDetailDialog,
+} from "@/components/SorilDetailDialog";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getSorilFilteredlists, getTestFilter } from "@/lib/api";
+import { queryKeys } from "@/lib/queryKeys";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/stores/useAuthStore";
 import type {
@@ -62,10 +58,7 @@ export default function Sorillists() {
 	// States
 	const [activeTab, setActiveTab] = useState<Tab>("all");
 	const [selectedLessonId, setSelectedLessonId] = useState<number>(0);
-	const [showPaymentDialog, setShowPaymentDialog] = useState(false);
-	const [selectedSoril, setSelectedSoril] = useState<SorillistsData | null>(
-		null,
-	);
+	const [detailSoril, setDetailSoril] = useState<SorillistsData | null>(null);
 	const [searchTerm, setSearchTerm] = useState("");
 	const [showDone, setShowDone] = useState(false);
 
@@ -79,7 +72,7 @@ export default function Sorillists() {
 	});
 
 	const { data: queryData, isPending } = useQuery<ApiSorillistsResponse>({
-		queryKey: ["sorillists", userId, selectedLessonId],
+		queryKey: queryKeys.sorils.list(userId, selectedLessonId),
 		queryFn: () => getSorilFilteredlists(userId || 0, selectedLessonId),
 		enabled: !!userId,
 	});
@@ -118,35 +111,27 @@ export default function Sorillists() {
 		return { inProgress, fresh, done };
 	}, [filteredData]);
 
-	// Handlers
-	const handleSorilClick = useCallback(
-		(soril: SorillistsData) => {
-			console.log("Clicked soril:", JSON.stringify(soril, null, 2)); // ← нэм
-			const isLocked =
-				soril.isguitset !== 1 &&
-				soril.isopensoril !== 1 &&
-				soril.ispay === 1 &&
-				soril.paid === 0;
+	// Handlers — карт дээр дарахад дэлгэрэнгүй dialog нээгдэнэ (эхлүүлэх/төлөх баталгаажуулалт)
+	const handleSorilClick = useCallback((soril: SorillistsData) => {
+		setDetailSoril(soril);
+	}, []);
 
-			if (isLocked) {
-				setSelectedSoril(soril);
-				setShowPaymentDialog(true);
-				return;
-			}
+	const handleDetailOpenChange = useCallback((open: boolean) => {
+		if (!open) setDetailSoril(null);
+	}, []);
+
+	const handleStart = useCallback(
+		(soril: SorilDetail) => {
+			setDetailSoril(null);
 			router.push(`/soril/${soril.exam_id}`);
 		},
 		[router],
 	);
 
-	const handlePaymentConfirm = useCallback(() => {
-		setShowPaymentDialog(false);
+	const handlePay = useCallback(() => {
+		setDetailSoril(null);
 		router.push("/Lists/paymentCoureList");
 	}, [router]);
-
-	const handlePaymentCancel = useCallback(() => {
-		setShowPaymentDialog(false);
-		setSelectedSoril(null);
-	}, []);
 
 	const selectedLessonName = lessons.find(
 		(l) => l.lesson_id === selectedLessonId,
@@ -216,7 +201,8 @@ export default function Sorillists() {
 					<div className="mb-5 inline-flex w-fit max-w-full items-center gap-2 rounded-full bg-pop-sun-soft px-4 py-1.5 text-sm font-semibold text-pop-sun-ink">
 						<AlertCircle size={16} className="shrink-0" />
 						<span className="min-w-0">
-							<strong className="font-black">{filteredData.length}</strong> сорил
+							<strong className="font-black">{filteredData.length}</strong>{" "}
+							сорил
 							{selectedLessonId !== 0 && (
 								<>
 									{" "}
@@ -321,43 +307,12 @@ export default function Sorillists() {
 				)}
 			</div>
 
-			{/* Payment Dialog */}
-			<Dialog open={showPaymentDialog} onOpenChange={setShowPaymentDialog}>
-				<DialogContent className="rounded-3xl border-2 sm:max-w-md">
-					<DialogHeader>
-						<DialogTitle className="flex items-center gap-3 text-xl font-black">
-							<span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-pop-sun-soft text-pop-sun-ink">
-								<Lock className="size-5" strokeWidth={2.5} />
-							</span>
-							Төлбөртэй сорил
-						</DialogTitle>
-						<DialogDescription asChild>
-							<div className="pt-4 space-y-2">
-								<span className="block font-extrabold text-foreground">
-									{selectedSoril?.soril_name}
-								</span>
-								<span className="block font-semibold">
-									Энэхүү сорил төлбөртэй юм. Үргэлжлүүлэхийн тулд төлбөр төлөх
-									шаардлагатай.
-								</span>
-							</div>
-						</DialogDescription>
-					</DialogHeader>
-					<div className="flex flex-row flex-wrap justify-end gap-2 pt-4">
-						<Button
-							type="button"
-							variant="outline"
-							onClick={handlePaymentCancel}
-						>
-							Цуцлах
-						</Button>
-						<Button type="button" onClick={handlePaymentConfirm}>
-							<CreditCard />
-							Төлбөр төлөх
-						</Button>
-					</div>
-				</DialogContent>
-			</Dialog>
+			<SorilDetailDialog
+				soril={detailSoril}
+				onOpenChange={handleDetailOpenChange}
+				onStart={handleStart}
+				onPay={handlePay}
+			/>
 		</div>
 	);
 }

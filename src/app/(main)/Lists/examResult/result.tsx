@@ -24,6 +24,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getExamResults } from "@/lib/api";
+import { queryKeys } from "@/lib/queryKeys";
 import type { ExamResultsResponse } from "@/types/exam/examResult";
 
 interface ExamAnswersDialogProps {
@@ -39,7 +40,7 @@ export default function ExamAnswersDialog({
 	onOpenChange,
 }: ExamAnswersDialogProps) {
 	const { data, isLoading, isError, error } = useQuery<ExamResultsResponse>({
-		queryKey: ["examResults", testId],
+		queryKey: queryKeys.results.summary(testId),
 		queryFn: () => getExamResults(testId),
 		enabled: open && !!testId,
 	});
@@ -73,10 +74,22 @@ export default function ExamAnswersDialog({
 	// Онооны өнгө: өндөр = success, дунд = warning, бага = destructive
 	const scoreTone = (perc: number) =>
 		perc >= 75
-			? { stroke: "var(--success)", text: "text-success", bar: "[&>[data-slot=progress-indicator]]:bg-success" }
+			? {
+					stroke: "var(--success)",
+					text: "text-success",
+					bar: "[&>[data-slot=progress-indicator]]:bg-success",
+				}
 			: perc >= 50
-				? { stroke: "var(--warning)", text: "text-pop-sun-ink", bar: "[&>[data-slot=progress-indicator]]:bg-warning" }
-				: { stroke: "var(--destructive)", text: "text-destructive", bar: "[&>[data-slot=progress-indicator]]:bg-destructive" };
+				? {
+						stroke: "var(--warning)",
+						text: "text-pop-sun-ink",
+						bar: "[&>[data-slot=progress-indicator]]:bg-warning",
+					}
+				: {
+						stroke: "var(--destructive)",
+						text: "text-destructive",
+						bar: "[&>[data-slot=progress-indicator]]:bg-destructive",
+					};
 
 	return (
 		<Dialog open={open} onOpenChange={onOpenChange}>
@@ -120,7 +133,9 @@ export default function ExamAnswersDialog({
 								<div className="mx-auto mb-4 flex size-20 items-center justify-center rounded-full bg-pop-violet-soft text-pop-violet-ink">
 									<FileText className="size-10" strokeWidth={2.5} />
 								</div>
-								<p className="font-bold text-muted-foreground">Үр дүн олдсонгүй</p>
+								<p className="font-bold text-muted-foreground">
+									Үр дүн олдсонгүй
+								</p>
 							</div>
 						) : (
 							<div className="space-y-6">
@@ -138,7 +153,14 @@ export default function ExamAnswersDialog({
 													className="size-40 -rotate-90"
 													aria-hidden="true"
 												>
-													<circle cx="80" cy="80" r={r} fill="none" stroke="var(--muted)" strokeWidth="14" />
+													<circle
+														cx="80"
+														cy="80"
+														r={r}
+														fill="none"
+														stroke="var(--muted)"
+														strokeWidth="14"
+													/>
 													<circle
 														cx="80"
 														cy="80"
@@ -148,12 +170,16 @@ export default function ExamAnswersDialog({
 														strokeWidth="14"
 														strokeLinecap="round"
 														strokeDasharray={c}
-														strokeDashoffset={c - (Math.max(0, Math.min(100, perc)) / 100) * c}
+														strokeDashoffset={
+															c - (Math.max(0, Math.min(100, perc)) / 100) * c
+														}
 														className="transition-[stroke-dashoffset] duration-700 ease-out"
 													/>
 												</svg>
 												<div className="absolute inset-0 flex flex-col items-center justify-center">
-													<span className={`text-3xl font-black tabular-nums ${tone.text}`}>
+													<span
+														className={`text-3xl font-black tabular-nums ${tone.text}`}
+													>
 														{result.point_perc?.toFixed(1)}%
 													</span>
 													<span className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
@@ -184,7 +210,9 @@ export default function ExamAnswersDialog({
 								<div className="grid grid-cols-2 gap-3 md:grid-cols-4">
 									<div className="rounded-2xl bg-pop-violet-soft p-4 text-center text-pop-violet-ink">
 										<Award className="mx-auto mb-2 size-6" strokeWidth={2.5} />
-										<div className="text-2xl font-black tabular-nums">{result.point}</div>
+										<div className="text-2xl font-black tabular-nums">
+											{result.point}
+										</div>
 										<div className="text-xs font-bold uppercase tracking-wide">
 											Авсан оноо
 										</div>
@@ -204,7 +232,10 @@ export default function ExamAnswersDialog({
 									</div>
 
 									<div className="rounded-2xl bg-pop-mint-soft p-4 text-center text-pop-mint-ink">
-										<CheckCircle2 className="mx-auto mb-2 size-6" strokeWidth={2.5} />
+										<CheckCircle2
+											className="mx-auto mb-2 size-6"
+											strokeWidth={2.5}
+										/>
 										<div className="text-2xl font-black tabular-nums">
 											{result.correct_ttl}
 										</div>
@@ -214,7 +245,10 @@ export default function ExamAnswersDialog({
 									</div>
 
 									<div className="rounded-2xl bg-pop-coral-soft p-4 text-center text-pop-coral-ink">
-										<XCircle className="mx-auto mb-2 size-6" strokeWidth={2.5} />
+										<XCircle
+											className="mx-auto mb-2 size-6"
+											strokeWidth={2.5}
+										/>
 										<div className="text-2xl font-black tabular-nums">
 											{result.wrong_ttl}
 										</div>
@@ -248,7 +282,9 @@ export default function ExamAnswersDialog({
 											</div>
 											<Progress
 												value={(result.point / result.ttl_point) * 100}
-												className={scoreTone((result.point / result.ttl_point) * 100).bar}
+												className={
+													scoreTone((result.point / result.ttl_point) * 100).bar
+												}
 											/>
 										</div>
 

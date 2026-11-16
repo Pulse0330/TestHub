@@ -66,7 +66,10 @@ export default function RankModal({
 						{isLoading ? (
 							<div className="space-y-3">
 								{[0, 1, 2, 3, 4, 5, 6, 7].map((id) => (
-									<Skeleton key={`skeleton-${id}`} className="h-20 w-full rounded-2xl" />
+									<Skeleton
+										key={`skeleton-${id}`}
+										className="h-20 w-full rounded-2xl"
+									/>
 								))}
 							</div>
 						) : leaderboard.length === 0 ? (
@@ -74,7 +77,9 @@ export default function RankModal({
 								<div className="mx-auto mb-3 flex size-20 items-center justify-center rounded-full bg-pop-sun-soft text-pop-sun-ink">
 									<Trophy className="size-10" strokeWidth={2.5} />
 								</div>
-								<p className="font-bold text-muted-foreground">Мэдээлэл байхгүй байна</p>
+								<p className="font-bold text-muted-foreground">
+									Мэдээлэл байхгүй байна
+								</p>
 							</div>
 						) : (
 							<div className="space-y-2">
@@ -123,12 +128,10 @@ export default function RankModal({
 											{/* User Info */}
 											<div className="flex-1 min-w-0">
 												<div className="flex items-center gap-2 mb-0.5">
-													<p className="truncate font-extrabold">{item.fname}</p>
-													{isCurrentUser && (
-														<Badge variant="default">
-															Та
-														</Badge>
-													)}
+													<p className="truncate font-extrabold">
+														{item.fname}
+													</p>
+													{isCurrentUser && <Badge variant="default">Та</Badge>}
 												</div>
 												{item.sch_name && (
 													<p className="truncate text-sm font-semibold text-muted-foreground">
@@ -139,8 +142,12 @@ export default function RankModal({
 
 											{/* Score */}
 											<div className="text-right shrink-0">
-												<p className="text-xl font-black tabular-nums text-primary">{item.point}</p>
-												<p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">оноо</p>
+												<p className="text-xl font-black tabular-nums text-primary">
+													{item.point}
+												</p>
+												<p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
+													оноо
+												</p>
 											</div>
 										</div>
 									);

@@ -16,8 +16,10 @@ import LessonFilter from "@/components/LessonFilter";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import QPayDialog from "@/features/qpay";
 import { useServerTime } from "@/hooks/useServerTime";
 import { getexamfiltertlists, getTestFilter } from "@/lib/api";
+import { queryKeys } from "@/lib/queryKeys";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/stores/useAuthStore";
 import type {
@@ -26,7 +28,6 @@ import type {
 } from "@/types/exam/examList";
 import type { QPayInvoiceResponse } from "@/types/Qpay/qpayinvoice";
 import ExamCard, { parseExamDate } from "./examcard";
-import QPayDialog from "./qpayDialog";
 
 interface Lesson {
 	lesson_id: number;
@@ -52,7 +53,10 @@ const isExpiredExam = (exam: ExamlistsData) =>
 	exam.flag === 3 || exam.flag_name === "Хугацаа дууссан";
 
 /** Status from flags first, refined by server time vs. ognoo/enddate. */
-const getExamStatus = (exam: ExamlistsData, nowMs: number | null): ExamStatus => {
+const getExamStatus = (
+	exam: ExamlistsData,
+	nowMs: number | null,
+): ExamStatus => {
 	if (isExpiredExam(exam) || exam.flag >= 2) return "ended";
 	const endMs = parseExamDate(exam.enddate);
 	if (nowMs !== null && endMs !== null && endMs < nowMs) return "ended";
@@ -83,7 +87,7 @@ export default function ExamListPage() {
 		isPending,
 		refetch,
 	} = useQuery<ApiExamlistsResponse>({
-		queryKey: ["examlists", userId, selectedLessonId],
+		queryKey: queryKeys.exams.list(userId, selectedLessonId),
 		queryFn: () => getexamfiltertlists(userId || 0, selectedLessonId),
 		enabled: !!userId,
 	});
@@ -341,6 +345,7 @@ export default function ExamListPage() {
 				qpayData={qpayData}
 				userId={userId}
 				onPaymentSuccess={handlePaymentSuccess}
+				successMessage="Таны төлбөр амжилттай төлөгдлөө. Та шалгалт өгөх боломжтой боллоо."
 			/>
 		</TooltipProvider>
 	);

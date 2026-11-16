@@ -1,6 +1,5 @@
 "use client";
 
-import parse from "html-react-parser";
 import {
 	CheckCircle2,
 	Lightbulb,
@@ -20,6 +19,7 @@ import {
 	DialogTitle,
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
+import { safeParse } from "./safeParse";
 
 interface QuestionItem {
 	refid: number;
@@ -244,7 +244,7 @@ export default function MatchingByLine({
 			)}
 			{item.answer_name_html && (
 				<div className="text-sm sm:text-base font-bold text-foreground wrap-break-words">
-					{parse(item.answer_name_html.trim())}
+					{safeParse(item.answer_name_html.trim())}
 				</div>
 			)}
 		</div>

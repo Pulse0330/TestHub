@@ -1,6 +1,5 @@
 "use client";
 
-import parse from "html-react-parser";
 import {
 	HelpCircle,
 	Maximize,
@@ -14,9 +13,16 @@ import Image from "next/image";
 import type React from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import Xarrow, { useXarrow, Xwrapper } from "react-xarrows";
+import { MathContent } from "@/components/MathContent";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
+
+const stripTags = (html: string) =>
+	html
+		.replace(/<[^>]+>/g, "")
+		.replace(/&[^;]+;/g, " ")
+		.trim();
 
 function MatchingZoomImage({
 	src,
@@ -72,7 +78,9 @@ function MatchingZoomImage({
 					className="flex h-[90vh] w-[95vw] max-w-5xl flex-col p-4"
 					onClick={(e) => e.stopPropagation()}
 				>
-					<DialogTitle className="truncate text-sm font-bold">{alt}</DialogTitle>
+					<DialogTitle className="truncate text-sm font-bold">
+						{alt}
+					</DialogTitle>
 					<div
 						role="application"
 						aria-label="Зургийг чирж томруулах"
@@ -183,27 +191,7 @@ function MatchingZoomImage({
 	);
 }
 
-// VisuallyHidden component for accessibility
-const _VisuallyHidden = ({ children }: { children: React.ReactNode }) => (
-	<span
-		style={{
-			position: "absolute",
-			border: 0,
-			width: 1,
-			height: 1,
-			padding: 0,
-			margin: -1,
-			overflow: "hidden",
-			clip: "rect(0, 0, 0, 0)",
-			whiteSpace: "nowrap",
-			wordWrap: "normal",
-		}}
-	>
-		{children}
-	</span>
-);
-
-interface QuestionItem {
+export interface MatchingItem {
 	refid: number;
 	answer_id: number;
 	question_id: number | null;
@@ -215,7 +203,7 @@ interface QuestionItem {
 }
 
 interface MatchingByLineProps {
-	answers: QuestionItem[];
+	answers: MatchingItem[];
 	onMatchChange?: (matches: Record<number, number[]>) => void;
 	readonly?: boolean;
 	userAnswers?: Record<number, number[]>;
@@ -227,10 +215,14 @@ interface Connection {
 	color: string;
 }
 
+const EMPTY_ANSWERS: MatchingItem[] = [];
+const EMPTY_MATCHES: Record<number, number[]> = {};
+
 export default function MatchingByLine({
-	answers = [],
+	answers = EMPTY_ANSWERS,
 	onMatchChange,
-	userAnswers = {},
+	readonly = false,
+	userAnswers = EMPTY_MATCHES,
 }: MatchingByLineProps) {
 	const [connections, setConnections] = useState<Connection[]>([]);
 	const [activeStart, setActiveStart] = useState<string>("");
@@ -238,8 +230,8 @@ export default function MatchingByLine({
 	const [showHelp, setShowHelp] = useState(false);
 	const containerRef = useRef<HTMLDivElement>(null);
 	const updateXarrow = useXarrow();
-	const lastNotifiedRef = useRef<string>("");
-	const onMatchChangeRef = useRef(onMatchChange);
+	/** Parent-аас ирсэн/parent руу илгээсэн сүүлийн утга (JSON) — давтан restore хийхгүй. */
+	const lastSyncedRef = useRef<string>("");
 
 	const colorPalette = useRef<string[]>([
 		"#3b82f6",
@@ -311,10 +303,6 @@ export default function MatchingByLine({
 	);
 
 	useEffect(() => {
-		onMatchChangeRef.current = onMatchChange;
-	}, [onMatchChange]);
-
-	useEffect(() => {
 		const checkMobile = () => setIsMobile(window.innerWidth < 768);
 		checkMobile();
 		window.addEventListener("resize", checkMobile);
@@ -332,8 +320,11 @@ export default function MatchingByLine({
 		return () => window.removeEventListener("resize", updateXarrow);
 	}, [updateXarrow]);
 
+	// Parent-ийн утгаас холболтуудыг сэргээнэ (зөвхөн гаднаас өөрчлөгдсөн үед).
 	useEffect(() => {
-		if (Object.keys(userAnswers).length === 0) return;
+		const key = JSON.stringify(userAnswers);
+		if (key === lastSyncedRef.current) return;
+		lastSyncedRef.current = key;
 
 		const restored: Connection[] = [];
 
@@ -372,15 +363,43 @@ export default function MatchingByLine({
 			.filter((c) => c.start === id || c.end === id)
 			.map((c) => c.color);
 
+	/**
+	 * Холболтыг шинэчилж parent-д мэдэгдэнэ. Зөвхөн хэрэглэгчийн үйлдлээс
+	 * дуудагдана — effect-ээс onMatchChange дуудвал mount үед хоосон `{}`
+	 * илгээгдэж серверийн хариултыг устгадаг байсан.
+	 */
+	const commitConnections = useCallback(
+		(next: Connection[]) => {
+			setConnections(next);
+
+			const matches: Record<number, number[]> = {};
+			for (const c of next) {
+				const startId = Number.parseInt(c.start.replace("q-", ""), 10);
+				const endId = Number.parseInt(c.end.replace("a-", ""), 10);
+				const question = answers.find((a) => a.answer_id === startId);
+				const answer = answers.find((a) => a.answer_id === endId);
+				if (question && answer) {
+					if (!matches[question.refid]) matches[question.refid] = [];
+					matches[question.refid].push(answer.answer_id);
+				}
+			}
+
+			const key = JSON.stringify(matches);
+			if (key === lastSyncedRef.current) return;
+			lastSyncedRef.current = key;
+			onMatchChange?.(matches);
+		},
+		[answers, onMatchChange],
+	);
+
 	const handleItemClick = useCallback(
 		(id: string, isQuestion: boolean) => {
-			if (!isQuestion && !activeStart) {
-				const existingConnections = connections.filter((c) => c.end === id);
+			if (readonly) return;
 
-				if (existingConnections.length > 0) {
-					setConnections((prev) =>
-						prev.filter((c) => !existingConnections.includes(c)),
-					);
+			if (!isQuestion && !activeStart) {
+				const remaining = connections.filter((c) => c.end !== id);
+				if (remaining.length !== connections.length) {
+					commitConnections(remaining);
 				}
 				return;
 			}
@@ -402,14 +421,14 @@ export default function MatchingByLine({
 					);
 
 					if (existingConnection) {
-						setConnections((prev) =>
-							prev.filter((c) => c !== existingConnection),
+						commitConnections(
+							connections.filter((c) => c !== existingConnection),
 						);
 					} else {
-						setConnections((prevConnections) => {
-							const color = getUniqueColor(prevConnections);
-							return [...prevConnections, { start, end, color }];
-						});
+						commitConnections([
+							...connections,
+							{ start, end, color: getUniqueColor(connections) },
+						]);
 					}
 
 					setActiveStart("");
@@ -423,7 +442,7 @@ export default function MatchingByLine({
 				setActiveStart(id);
 			}
 		},
-		[activeStart, connections, getUniqueColor],
+		[activeStart, connections, getUniqueColor, commitConnections, readonly],
 	);
 
 	const interactiveProps = (id: string) => ({
@@ -438,21 +457,22 @@ export default function MatchingByLine({
 		},
 	});
 
-	const renderContent = (item: QuestionItem) => {
+	const renderContent = (item: MatchingItem) => {
 		return (
 			<div className="w-full">
 				{item.answer_img && (
 					<div className="mb-2">
 						<MatchingZoomImage
 							src={item.answer_img}
-							alt={item.answer_name_html || "Зураг"}
+							alt={stripTags(item.answer_name_html || "") || "Зураг"}
 						/>
 					</div>
 				)}
 				{item.answer_name_html && (
-					<div className="text-center text-sm font-bold">
-						{parse(item.answer_name_html.trim())}
-					</div>
+					<MathContent
+						html={item.answer_name_html.trim()}
+						className="text-center text-sm font-bold"
+					/>
 				)}
 				{!item.answer_name_html && !item.answer_img && (
 					<div className="text-center text-sm font-semibold text-muted-foreground">
@@ -468,33 +488,12 @@ export default function MatchingByLine({
 		(a) => a.ref_child_id && a.ref_child_id >= 1,
 	);
 
+	// Холболт өөрчлөгдөхөд сумнуудыг дахин зурна (parent-д мэдэгдэхгүй).
+	// biome-ignore lint/correctness/useExhaustiveDependencies: connections өөрчлөгдөх бүрт layout дахин тооцох шаардлагатай
 	useEffect(() => {
-		if (!onMatchChangeRef.current) return;
-
-		const matches: Record<number, number[]> = {};
-
-		connections.forEach((c) => {
-			const startId = parseInt(c.start.replace("q-", ""), 10);
-			const endId = parseInt(c.end.replace("a-", ""), 10);
-
-			const question = answers.find((a) => a.answer_id === startId);
-			const answer = answers.find((a) => a.answer_id === endId);
-
-			if (question && answer) {
-				if (!matches[question.refid]) {
-					matches[question.refid] = [];
-				}
-				matches[question.refid].push(answer.answer_id);
-			}
-		});
-
-		const str = JSON.stringify(matches);
-		if (lastNotifiedRef.current !== str) {
-			lastNotifiedRef.current = str;
-			onMatchChangeRef.current(matches);
-		}
-		setTimeout(updateXarrow, 0);
-	}, [connections, updateXarrow, answers]);
+		const t = setTimeout(updateXarrow, 0);
+		return () => clearTimeout(t);
+	}, [connections, updateXarrow]);
 
 	return (
 		<>

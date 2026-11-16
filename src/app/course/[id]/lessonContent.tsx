@@ -12,10 +12,9 @@ interface LessonContentProps {
 	isCompleted: boolean;
 	/**
 	 * Navigation handlers. The player page renders these in its sticky
-	 * bottom bar (Өмнөх / Дууссан / Дараах / Бусад хичээл); they stay part
+	 * bottom bar (Өмнөх / Дараах / Бусад хичээл); they stay part
 	 * of the props contract.
 	 */
-	onMarkComplete: () => void;
 	onPrevious: () => void;
 	onNext: () => void;
 	onFinish: () => void;

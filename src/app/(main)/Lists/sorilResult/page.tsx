@@ -20,14 +20,16 @@ import {
 	TooltipProvider,
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { getSorilFilterdresultlists, getTestFilter } from "@/lib/api";
-import { useAuthStore } from "@/stores/useAuthStore";
-import type { SorilresultListResponseType } from "@/types/soril/sorilResultLists";
-import ExamResultCard, {
+import {
 	monthKeyOf,
 	monthLabelOf,
 	ResultSummaryStrip,
-} from "./card";
+} from "@/features/result-list/shared";
+import { getSorilFilterdresultlists, getTestFilter } from "@/lib/api";
+import { queryKeys } from "@/lib/queryKeys";
+import { useAuthStore } from "@/stores/useAuthStore";
+import type { SorilresultListResponseType } from "@/types/soril/sorilResultLists";
+import ExamResultCard from "./card";
 
 interface Lesson {
 	lesson_id: number;
@@ -67,7 +69,7 @@ export default function ExamResultList() {
 
 	// Fetch exam results - uses API filtering based on selected lesson
 	const { data, isLoading } = useQuery<SorilresultListResponseType>({
-		queryKey: ["examResults", userId, selectedLessonId],
+		queryKey: queryKeys.results.sorilList(userId, selectedLessonId),
 		queryFn: async (): Promise<SorilresultListResponseType> => {
 			return getSorilFilterdresultlists(userId || 0, selectedLessonId || 0);
 		},

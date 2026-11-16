@@ -1,10 +1,10 @@
 "use client";
 
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
-import parse from "html-react-parser";
 import { ZoomIn } from "lucide-react";
 import Image from "next/image";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { MathContent } from "@/components/MathContent";
 import { Button } from "@/components/ui/button";
 import {
 	Dialog,
@@ -31,6 +31,14 @@ interface MultiSelectQuestionProps {
 	readOnly?: boolean;
 }
 
+const EMPTY_SELECTION: number[] = [];
+
+const stripTags = (html: string) =>
+	html
+		.replace(/<[^>]+>/g, "")
+		.replace(/&[^;]+;/g, " ")
+		.trim();
+
 const isValidImageUrl = (url: string | null | undefined): boolean => {
 	if (!url || url.trim() === "") return false;
 	return url.startsWith("http") || url.startsWith("/");
@@ -42,7 +50,7 @@ export default function MultiSelectQuestion({
 	questionImage,
 	answers,
 	mode,
-	selectedAnswers: selectedAnswersProp = [],
+	selectedAnswers: selectedAnswersProp = EMPTY_SELECTION,
 	onAnswerChange,
 	readOnly = false,
 }: MultiSelectQuestionProps) {
@@ -160,7 +168,7 @@ export default function MultiSelectQuestion({
 						>
 							<Image
 								src={imageUrl}
-								alt={option.answer_name_html || "Option"}
+								alt={stripTags(option.answer_name_html || "") || "Сонголт"}
 								width={400}
 								height={150}
 								className="w-full h-auto object-contain max-h-[150px]"
@@ -175,16 +183,17 @@ export default function MultiSelectQuestion({
 							<div className="relative w-full h-[70vh] flex items-center justify-center">
 								<Image
 									src={imageUrl}
-									alt={option.answer_name_html || "Option"}
+									alt={stripTags(option.answer_name_html || "") || "Сонголт"}
 									width={1200}
 									height={800}
 									className="max-w-full max-h-full object-contain"
 								/>
 							</div>
 							{option.answer_name_html && (
-								<p className="text-center text-lg font-bold">
-									{parse(option.answer_name_html)}
-								</p>
+								<MathContent
+									html={option.answer_name_html}
+									className="text-center text-lg font-bold"
+								/>
 							)}
 						</div>
 					</DialogContent>
@@ -192,11 +201,12 @@ export default function MultiSelectQuestion({
 			);
 		}
 
-		return (
-			<span className="whitespace-pre-wrap text-sm leading-relaxed sm:text-base">
-				{option.answer_name_html ? parse(option.answer_name_html) : ""}
-			</span>
-		);
+		return option.answer_name_html ? (
+			<MathContent
+				html={option.answer_name_html}
+				className="whitespace-pre-wrap text-sm sm:text-base"
+			/>
+		) : null;
 	};
 
 	return (
@@ -253,7 +263,9 @@ export default function MultiSelectQuestion({
 								)}
 							</span>
 
-							<div className="min-w-0 flex-1">{renderOptionContent(option)}</div>
+							<div className="min-w-0 flex-1">
+								{renderOptionContent(option)}
+							</div>
 						</Button>
 					);
 				})}

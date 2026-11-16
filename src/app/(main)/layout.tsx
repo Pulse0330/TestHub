@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { Navbar01, SectionTabs } from "@/components/iHeader";
+import { MotionProvider } from "./motion-provider";
 
 interface MainLayoutProps {
 	children: ReactNode;
@@ -20,7 +21,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
 			<main className="relative z-10 min-h-screen pt-16 pb-24 lg:pb-10">
 				<div className="mx-auto w-full max-w-7xl px-4 py-6 md:px-6 lg:px-10 lg:py-8">
 					<SectionTabs />
-					{children}
+					<MotionProvider>{children}</MotionProvider>
 				</div>
 			</main>
 		</div>
