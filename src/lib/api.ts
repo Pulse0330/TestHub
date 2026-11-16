@@ -659,3 +659,151 @@ export const uploadImage = async (
 	});
 	return data;
 };
+
+//------------------------------- Integration (гадны системээс URL-аар) ---------------------------------//
+// /exam/:id?dbname=...&userid=...&classroom_id=...&domname=... хэлбэрээр
+// орж ирсэн шалгалт integration.ecm.mn API-г ашиглана. Хариуг одоогийн
+// API-ийн хэлбэрт (RetResponse) хөрвүүлдэг тул шалгалтын хуудас өөрчлөлтгүй ажиллана.
+
+const integrationApi = axios.create({
+	baseURL:
+		process.env.NEXT_PUBLIC_INTEGRATION_API_URL ??
+		"https://integration.ecm.mn/api",
+	headers: { "Content-Type": "application/json" },
+	timeout: 10000,
+});
+
+interface IntegrationBaseResponse {
+	message: string;
+	code: string;
+	status: string;
+	success: boolean;
+}
+
+type IntegrationExamFillResponse = IntegrationBaseResponse &
+	Partial<Omit<ApiExamResponse, "RetResponse">>;
+
+interface IntegrationFinishResponse extends IntegrationBaseResponse {
+	RetData: number | null;
+}
+
+/** Бүх integration хүсэлтэд явдаг DB сонголт. */
+const withIntegrationDb = (dbname: string) => ({
+	cmdname: "integration_ConfigTake",
+	dbnamelist: [{ dbname }],
+});
+
+const toRetResponse = (res: IntegrationBaseResponse) => ({
+	ResponseMessage: res.message,
+	StatusCode: res.code,
+	ResponseCode: res.status,
+	ResponseType: res.success,
+});
+
+export const getIntegrationExamFill = async (
+	dbname: string,
+	userId: number,
+	examId: number,
+	classroomId: number | null,
+): Promise<ApiExamResponse> => {
+	const { data } = await integrationApi.post<IntegrationExamFillResponse>(
+		"/IntegrationExamFill",
+		{
+			...withIntegrationDb(dbname),
+			exam_id: examId,
+			user_id: userId,
+			classroom_id: classroomId ?? 0,
+		},
+	);
+	if (!data.success) {
+		throw new Error(data.message || "Шалгалт ачаалж чадсангүй");
+	}
+	return {
+		RetResponse: toRetResponse(data),
+		ExamInfo: data.ExamInfo ?? [],
+		Questions: data.Questions ?? [],
+		Answers: data.Answers ?? [],
+		ChoosedAnswer: data.ChoosedAnswer ?? [],
+		ChoosedFiles: data.ChoosedFiles ?? [],
+		RetData: data.RetData ?? [],
+	};
+};
+
+export const saveIntegrationExamAnswer = async (
+	dbname: string,
+	userId: number,
+	examId: number,
+	questionId: number,
+	answerId: number,
+	queTypeId: number,
+	answer = "",
+	rowNum = 0,
+): Promise<ExamAnswerResponse> => {
+	const { data } = await integrationApi.post<IntegrationBaseResponse>(
+		"/IntegrationExamChoosedAnswer",
+		{
+			...withIntegrationDb(dbname),
+			que_type_id: queTypeId,
+			question_id: questionId,
+			answer_id: answerId,
+			answer,
+			row_num: rowNum,
+			exam_id: examId,
+			user_id: userId,
+		},
+	);
+	if (!data.success) {
+		throw new Error(data.message || "Хариулт хадгалж чадсангүй");
+	}
+	return {
+		RetResponse: toRetResponse(data),
+		RetData: { success: data.success },
+	};
+};
+
+export const deleteIntegrationExamAnswer = async (
+	dbname: string,
+	userId: number,
+	examId: number,
+	questionId: number,
+	answerId: number,
+): Promise<ExamChoosedAnswerDeleteResponse> => {
+	const { data } = await integrationApi.post<IntegrationBaseResponse>(
+		"/IntegrationExamDeletedAnswer",
+		{
+			...withIntegrationDb(dbname),
+			question_id: questionId,
+			answer_id: answerId,
+			exam_id: examId,
+			user_id: userId,
+		},
+	);
+	if (!data.success) {
+		throw new Error(data.message || "Хариулт устгаж чадсангүй");
+	}
+	return { RetResponse: toRetResponse(data), RetData: null };
+};
+
+/**
+ * Integration шалгалт дуусгах. Амжилтгүй үед алдаа шидэхгүй —
+ * дуудагч RetResponse-оор шалгана.
+ */
+export const finishIntegrationExam = async (
+	dbname: string,
+	payload: FinishExamRequest,
+	classroomId: number | null,
+): Promise<FinishExamResponse> => {
+	const { data } = await integrationApi.post<IntegrationFinishResponse>(
+		"/IntegrationExamFinish",
+		{
+			...withIntegrationDb(dbname),
+			user_id: payload.user_id,
+			exam_id: payload.exam_id,
+			classroom_id: classroomId ?? 0,
+			exam_type: payload.exam_type,
+			start_eid: payload.start_eid,
+			exam_time: payload.exam_time,
+		},
+	);
+	return { RetResponse: toRetResponse(data), RetData: data.RetData ?? 0 };
+};

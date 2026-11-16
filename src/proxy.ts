@@ -15,6 +15,17 @@ export async function proxy(request: NextRequest) {
 
 	const isPublicRoute = publicRoutes.some((r) => pathname.startsWith(r));
 
+	// Гадны системээс URL-аар орж ирсэн шалгалт (dbname, userid) болон
+	// түүний дууссан хуудас — нэвтрэлт шаардахгүй
+	const { searchParams } = request.nextUrl;
+	const isIntegrationExam =
+		pathname.startsWith("/exam/") &&
+		!!searchParams.get("dbname") &&
+		!!searchParams.get("userid");
+	if (isIntegrationExam || pathname === "/exam/finished") {
+		return NextResponse.next();
+	}
+
 	// Token байхгүй бол login руу
 	if (!token) {
 		if (isPublicRoute) {

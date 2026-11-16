@@ -232,10 +232,19 @@ export const parseChoosedAnswers = (
 // Save engine (React-аас хамааралгүй, нэг instance / хуудас)
 // ============================================================
 
+/** Хариулт хадгалах/устгах API (integration горимд өөр endpoint). */
+export interface AnswerSyncApi {
+	saveExamAnswer: typeof saveExamAnswer;
+	deleteExamAnswer: typeof deleteExamAnswer;
+}
+
+const DEFAULT_API: AnswerSyncApi = { saveExamAnswer, deleteExamAnswer };
+
 interface EngineContext {
 	userId: number;
 	examId: number | undefined;
 	type4Ids: Map<number, number>;
+	api: AnswerSyncApi;
 }
 
 interface EngineStatus {
@@ -277,7 +286,7 @@ function createAnswerSyncEngine(
 			: DEFAULT_SAVE_DELAY;
 
 	const persist = async (p: PendingAnswer, ctx: EngineContext) => {
-		const { userId, examId } = ctx;
+		const { userId, examId, api } = ctx;
 		if (!examId) throw new Error("examId байхгүй");
 		const { questionId, answer, queTypeId, rowNum } = p;
 
@@ -296,7 +305,7 @@ function createAnswerSyncEngine(
 		if (toDelete.length > 0) {
 			const results = await Promise.allSettled(
 				toDelete.map((answerId) =>
-					deleteExamAnswer(userId, examId, questionId, answerId),
+					api.deleteExamAnswer(userId, examId, questionId, answerId),
 				),
 			);
 			results.forEach((r, i) => {
@@ -314,7 +323,7 @@ function createAnswerSyncEngine(
 		for (const item of items) ids.add(item.answerId);
 		await Promise.all(
 			items.map((item) =>
-				saveExamAnswer(
+				api.saveExamAnswer(
 					userId,
 					examId,
 					questionId,
@@ -464,6 +473,8 @@ export interface UseAnswerSyncOptions {
 	locked?: boolean;
 	/** Асуултын төрлөөс хамаарах debounce хугацаа (ms). */
 	getSaveDelay?: (queTypeId: number) => number;
+	/** Хадгалах API — өгөхгүй бол системийн API (integration горимд өөр). */
+	api?: AnswerSyncApi;
 }
 
 /**
@@ -478,6 +489,7 @@ export function useAnswerSync({
 	examData,
 	locked = false,
 	getSaveDelay,
+	api = DEFAULT_API,
 }: UseAnswerSyncOptions) {
 	const [selectedAnswers, setSelectedAnswers] = useState<
 		Record<number, AnswerValue>
@@ -511,12 +523,14 @@ export function useAnswerSync({
 		examId: examData?.ExamInfo?.[0]?.id,
 		questionInfo,
 		getSaveDelay,
+		api,
 	});
 	contextRef.current = {
 		userId: userId ?? 0,
 		examId: examData?.ExamInfo?.[0]?.id,
 		questionInfo,
 		getSaveDelay,
+		api,
 	};
 
 	const lockedRef = useRef(locked);
@@ -536,6 +550,7 @@ export function useAnswerSync({
 				userId: contextRef.current.userId,
 				examId: contextRef.current.examId,
 				type4Ids: contextRef.current.questionInfo.type4Ids,
+				api: contextRef.current.api,
 			}),
 			(s) => {
 				setIsSaving(s.isSaving);

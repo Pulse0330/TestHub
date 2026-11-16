@@ -23,6 +23,10 @@ import {
 	useState,
 } from "react";
 import { toast } from "sonner";
+import {
+	leaveIntegrationExam,
+	useExamMode,
+} from "@/app/exam/component/examUtils/integration";
 import { Button } from "@/components/ui/button";
 import {
 	Dialog,
@@ -34,7 +38,7 @@ import {
 	DialogTrigger,
 } from "@/components/ui/dialog";
 import { Progress } from "@/components/ui/progress";
-import { finishExam, getExamResults } from "@/lib/api";
+import { getExamResults } from "@/lib/api";
 import { useAuthStore } from "@/stores/useAuthStore";
 
 interface ExamResultData {
@@ -109,7 +113,10 @@ const FinishExamResultDialog = forwardRef<
 		},
 		ref,
 	) => {
-		const { userId } = useAuthStore();
+		const authUserId = useAuthStore((s) => s.userId);
+		// URL-аар (dbname, userid) орж ирсэн бол integration API ашиглана
+		const { integration, api: examApi } = useExamMode();
+		const userId = integration?.userId ?? authUserId;
 		const router = useRouter();
 		const [open, setOpen] = useState(false);
 		const [finishedTestId, setFinishedTestId] = useState<number | null>(null);
@@ -187,13 +194,34 @@ const FinishExamResultDialog = forwardRef<
 					toast.warning("Зарим хариулт хадгалагдаж амжсангүй.");
 				}
 
-				const res = await finishExam({
+				const res = await examApi.finishExam({
 					exam_id: examId,
 					exam_type: examType,
 					start_eid: startEid,
 					exam_time: getExamTime(),
 					user_id: userId,
 				});
+
+				// Integration: үр дүн харуулахгүй, гадны систем рүү буцна
+				if (integration) {
+					const isSent =
+						res.RetResponse.ResponseCode === "10" ||
+						res.RetResponse.ResponseMessage?.includes("илгээгдсэн");
+					if (isSent) {
+						finishedRef.current = true;
+						onFinished?.();
+						setAutoState("idle");
+						toast.success("✅ Шалгалт амжилттай дууслаа");
+						leaveIntegrationExam(integration);
+						return;
+					}
+					toast.error(
+						res.RetResponse.ResponseMessage ||
+							"Шалгалт дуусгах үед алдаа гарлаа",
+					);
+					if (auto) setAutoState("error");
+					return;
+				}
 
 				if (res.RetResponse.ResponseCode === "10") {
 					finishedRef.current = true;
@@ -537,7 +565,11 @@ const FinishExamResultDialog = forwardRef<
 							<Button
 								variant="default"
 								size="lg"
-								onClick={() => router.push("/Lists/examList")}
+								onClick={() =>
+									integration
+										? leaveIntegrationExam(integration)
+										: router.push("/Lists/examList")
+								}
 								className="w-full"
 							>
 								Гарах

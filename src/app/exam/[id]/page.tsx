@@ -22,6 +22,11 @@ import {
 } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+	formatIntegrationExamTime,
+	leaveIntegrationExam,
+	useExamMode,
+} from "@/app/exam/component/examUtils/integration";
 import FinishExamResultDialog, {
 	type FinishExamDialogHandle,
 } from "@/app/exam/component/finish";
@@ -54,7 +59,6 @@ import {
 	SheetHeader,
 	SheetTitle,
 } from "@/components/ui/sheet";
-import { getExamById } from "@/lib/api";
 import { useAuthStore } from "@/stores/useAuthStore";
 import type { AnswerValue } from "@/types/exam/exam";
 import { AdvancedExamProctor } from "../component/examguard";
@@ -203,7 +207,10 @@ const ExamQuestionCard = memo(function ExamQuestionCard({
 });
 
 export default function ExamPage() {
-	const { userId } = useAuthStore();
+	const authUserId = useAuthStore((s) => s.userId);
+	// URL-аар (dbname, userid) орж ирсэн бол integration API ашиглана
+	const { integration, api: examApi } = useExamMode();
+	const userId = integration?.userId ?? authUserId;
 	const { id } = useParams();
 	const router = useRouter();
 	const queryClient = useQueryClient();
@@ -229,8 +236,8 @@ export default function ExamPage() {
 		isLoading,
 		error,
 	} = useQuery({
-		queryKey: ["exam", userId, id],
-		queryFn: () => getExamById(userId || 0, Number(id)),
+		queryKey: ["exam", integration?.dbname ?? null, userId, id],
+		queryFn: () => examApi.getExamById(userId || 0, Number(id)),
 		enabled: !!userId && !!id,
 		// Шалгалтын явцад дахин татахгүй (focus/reconnect refetch локал
 		// хариултыг дарж бичдэг байсан). gcTime 0 → дахин орох бүрт шинээр татна.
@@ -255,6 +262,7 @@ export default function ExamPage() {
 		examData,
 		locked: isLocked,
 		getSaveDelay: getExamSaveDelay,
+		api: examApi,
 	});
 
 	const examInfo = examData?.ExamInfo?.[0];
@@ -288,19 +296,24 @@ export default function ExamPage() {
 		setIsFinished(true);
 	}, [lock]);
 
-	const getExamTime = useCallback(
-		() =>
-			formatHMS(
-				computeElapsedSeconds({
-					startedDate,
-					serverNowMs: getServerNowMs(queryClient),
-					localNowMs: Date.now(),
-					fallbackStartMs: pageLoadedAt,
-					maxSeconds: examMinutes ? examMinutes * 60 : undefined,
-				}),
-			),
-		[startedDate, examMinutes, queryClient, pageLoadedAt],
-	);
+	const getExamTime = useCallback(() => {
+		const elapsed = computeElapsedSeconds({
+			startedDate,
+			serverNowMs: getServerNowMs(queryClient),
+			localNowMs: Date.now(),
+			fallbackStartMs: pageLoadedAt,
+			maxSeconds: examMinutes ? examMinutes * 60 : undefined,
+		});
+		// Integration API нь "мм:сс", системийн API нь "ЦЦ:мм:сс" хүлээнэ
+		return integration
+			? formatIntegrationExamTime(elapsed)
+			: formatHMS(elapsed);
+	}, [startedDate, examMinutes, queryClient, pageLoadedAt, integration]);
+
+	const handleLeaveExam = useCallback(() => {
+		if (integration) leaveIntegrationExam(integration);
+		else router.push("/Lists/examList");
+	}, [integration, router]);
 
 	const allQuestions = useMemo(() => prepareQuestions(examData), [examData]);
 
@@ -1084,7 +1097,7 @@ export default function ExamPage() {
 					<AlertDialogFooter>
 						<AlertDialogCancel>Болих</AlertDialogCancel>
 						<AlertDialogAction
-							onClick={() => router.push("/Lists/examList")}
+							onClick={handleLeaveExam}
 							className="bg-destructive text-white shadow-[0_4px_0_0_color-mix(in_oklch,var(--destructive)_70%,black)] active:shadow-[0_1px_0_0_color-mix(in_oklch,var(--destructive)_70%,black)]"
 						>
 							Тийм, гарах
