@@ -324,6 +324,14 @@ export const Navbar01: React.FC = () => {
 				<div className="mx-auto flex h-16 max-w-7xl items-center gap-4 px-4 md:px-6 lg:px-10">
 					<Logo />
 
+					{/* Мэндчилгээ — логоны хажууд (lg дээр цэсэнд зай хүрэлцэхгүй тул нуугдана) */}
+					<p className="min-w-0 truncate border-l-2 border-border pl-4 text-sm font-semibold text-muted-foreground lg:hidden xl:block">
+						Сайн уу,{" "}
+						<span className="font-extrabold text-foreground">
+							{userInfo.userName}
+						</span>
+					</p>
+
 					{/* Desktop nav */}
 					<nav className="ml-4 hidden flex-1 items-center gap-1 lg:flex">
 						{NAV.map((s) => {
@@ -347,13 +355,7 @@ export const Navbar01: React.FC = () => {
 						})}
 					</nav>
 
-					<div className="ml-auto flex min-w-0 items-center gap-2.5">
-						<p className="min-w-0 truncate text-right text-sm font-semibold text-muted-foreground">
-							Сайн уу,{" "}
-							<span className="font-extrabold text-foreground">
-								{userInfo.userName}
-							</span>
-						</p>
+					<div className="ml-auto flex shrink-0 items-center gap-2.5">
 						<div className="hidden shrink-0 lg:block">
 							<UserMenu
 								userInfo={userInfo}
