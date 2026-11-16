@@ -60,6 +60,12 @@ interface ForgotFormProps {
 }
 
 export default function ForgotForm({ onClose }: ForgotFormProps) {
+	/** Dialog дотор байвал хуудас солихгүй, зөвхөн dialog-ийг хаана. */
+	const backToLogin = (e: React.MouseEvent) => {
+		if (!onClose) return;
+		e.preventDefault();
+		onClose();
+	};
 	const [isSubmitted, setIsSubmitted] = useState(false);
 	const [showPassword, setShowPassword] = useState(false);
 	const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -235,7 +241,7 @@ export default function ForgotForm({ onClose }: ForgotFormProps) {
 						болно.
 					</p>
 					<Button asChild size="lg" className="mt-6 w-full">
-						<Link href="/login">
+						<Link href="/login" onClick={backToLogin}>
 							<ArrowLeft className="size-5" strokeWidth={2.5} />
 							Нэвтрэх хуудас руу буцах
 						</Link>
@@ -259,13 +265,6 @@ export default function ForgotForm({ onClose }: ForgotFormProps) {
 			)}
 
 			<div className="px-6 pt-6 pr-14 pb-2 sm:px-8 sm:pt-8 sm:pr-14">
-				<Image
-					src="/image/logoLogin.png"
-					alt="Skuul"
-					width={177}
-					height={142}
-					className="mb-5 hidden h-8 w-auto md:block"
-				/>
 				<div className="flex items-center gap-3">
 					<div className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-pop-sun-soft text-2xl shadow-[0_4px_0_0_color-mix(in_oklch,var(--pop-sun)_40%,transparent)]">
 						<span aria-hidden="true">🔑</span>
@@ -524,7 +523,7 @@ export default function ForgotForm({ onClose }: ForgotFormProps) {
 					</div>
 				</div>
 				<Button asChild variant="link" className="w-full">
-					<Link href="/login">
+					<Link href="/login" onClick={backToLogin}>
 						<ArrowLeft className="mr-2 h-4 w-4" />
 						Нэвтрэх хуудас руу буцах
 					</Link>

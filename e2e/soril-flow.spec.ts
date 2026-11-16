@@ -29,8 +29,8 @@ test.describe("soril flow (needs E2E_USERNAME / E2E_PASSWORD)", () => {
 
 		// 1. Log in, asking to come back to the soril list afterwards
 		await page.goto("/login?redirect=/Lists/sorilList");
-		await page.getByRole("button", { name: "Нэвтрэх", exact: true }).click();
-		const loginDialog = page.getByRole("dialog");
+		// Нэвтрэх card эхний дэлгэцэнд шууд харагдана
+		const loginDialog = page.locator("main");
 		await loginDialog.getByPlaceholder("Нэвтрэх нэр").fill(USERNAME ?? "");
 		await loginDialog.getByPlaceholder("••••••••").fill(PASSWORD ?? "");
 		await loginDialog
@@ -66,8 +66,8 @@ test.describe("soril flow (needs E2E_USERNAME / E2E_PASSWORD)", () => {
 
 	test("off-site redirect param is ignored after login", async ({ page }) => {
 		await page.goto("/login?redirect=https://evil.example");
-		await page.getByRole("button", { name: "Нэвтрэх", exact: true }).click();
-		const loginDialog = page.getByRole("dialog");
+		// Нэвтрэх card эхний дэлгэцэнд шууд харагдана
+		const loginDialog = page.locator("main");
 		await loginDialog.getByPlaceholder("Нэвтрэх нэр").fill(USERNAME ?? "");
 		await loginDialog.getByPlaceholder("••••••••").fill(PASSWORD ?? "");
 		await loginDialog

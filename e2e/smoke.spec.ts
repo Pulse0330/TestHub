@@ -19,21 +19,50 @@ test.describe("unauthenticated access", () => {
 		expect(url.searchParams.get("redirect")).toBe("/home");
 	});
 
-	test("login page renders and opens the login form", async ({ page }) => {
+	test("login page shows the login card first", async ({ page }) => {
 		await page.goto("/login");
 
-		await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+		await expect(page.getByRole("heading", { name: "Нэвтрэх" })).toBeVisible();
+		await expect(page.getByPlaceholder("Нэвтрэх нэр")).toBeVisible();
+		await expect(page.getByPlaceholder("••••••••")).toBeVisible();
+	});
 
-		// The nav "Нэвтрэх" (Log in) button opens the login dialog
-		await page.getByRole("button", { name: "Нэвтрэх", exact: true }).click();
+	test("«Дэлгэрэнгүй харах» turns the card into a header and back", async ({
+		page,
+	}) => {
+		await page.goto("/login");
+		await page
+			.getByRole("button", { name: "Дэлгэрэнгүй харах" })
+			.first()
+			.click();
 
-		const dialog = page.getByRole("dialog");
-		await expect(dialog).toBeVisible();
-		await expect(dialog.getByPlaceholder("Нэвтрэх нэр")).toBeVisible();
-		await expect(dialog.getByPlaceholder("••••••••")).toBeVisible();
-		await expect(
-			dialog.getByRole("button", { name: "Нэвтрэх", exact: true }),
-		).toBeVisible();
+		const header = page.locator("header");
+		await expect(header).toBeVisible();
+		await expect(page).toHaveURL(/#about$/);
+		await expect(page.getByPlaceholder("Нэвтрэх нэр")).toHaveCount(0);
+
+		// Header-ийн «Нэвтрэх» → нэвтрэх card буцна
+		await header.getByRole("button", { name: "Нэвтрэх" }).click();
+		await expect(page.getByPlaceholder("Нэвтрэх нэр")).toBeVisible();
+		await expect(page).not.toHaveURL(/#about$/);
+
+		// Хөтчийн Back товч мөн буцаана
+		await page
+			.getByRole("button", { name: "Дэлгэрэнгүй харах" })
+			.first()
+			.click();
+		await expect(page).toHaveURL(/#about$/);
+		await page.goBack();
+		await expect(page.getByPlaceholder("Нэвтрэх нэр")).toBeVisible();
+	});
+
+	test("«Нууц үг мартсан?» opens the reset dialog (no 404 page)", async ({
+		page,
+	}) => {
+		await page.goto("/login");
+		await page.getByRole("button", { name: "Нууц үг мартсан?" }).click();
+		await expect(page.getByRole("dialog")).toBeVisible();
+		expect(new URL(page.url()).pathname).toBe("/login");
 	});
 
 	test("login page with an off-site redirect param still renders", async ({
@@ -44,7 +73,7 @@ test.describe("unauthenticated access", () => {
 		// after a successful login, which needs a real backend — see
 		// soril-flow.spec.ts. Here we only check the page does not navigate away.
 		await page.goto("/login?redirect=https://evil.example");
-		await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+		await expect(page.getByPlaceholder("Нэвтрэх нэр")).toBeVisible();
 		expect(new URL(page.url()).origin).toBe(new URL(baseURL ?? "").origin);
 	});
 });

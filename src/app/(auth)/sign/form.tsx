@@ -14,7 +14,6 @@ import {
 	Users,
 	X,
 } from "lucide-react";
-import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -69,6 +68,12 @@ interface SignFormProps {
 }
 
 export function SignForm({ onClose }: SignFormProps) {
+	/** Dialog дотор байвал хуудас солихгүй, зөвхөн dialog-ийг хаана. */
+	const backToLogin = (e: React.MouseEvent) => {
+		if (!onClose) return;
+		e.preventDefault();
+		onClose();
+	};
 	const router = useRouter();
 	const [isPending, setIsPending] = useState(false);
 	const [isWaitingForSMS, setIsWaitingForSMS] = useState(false);
@@ -172,7 +177,9 @@ export function SignForm({ onClose }: SignFormProps) {
 			);
 			if (data?.RetResponse?.ResponseType) {
 				toast.success("Амжилттай бүртгэгдлээ! Нэвтрэнэ үү.");
-				router.push("/login");
+				// Landing дээр dialog хаахад нэвтрэх card харагдана
+				if (onClose) onClose();
+				else router.push("/login");
 			} else {
 				toast.error(
 					data?.RetResponse?.ResponseMessage || "Бүртгэл үүсгэхэд алдаа гарлаа",
@@ -205,13 +212,6 @@ export function SignForm({ onClose }: SignFormProps) {
 			)}
 
 			<div className="px-6 pt-6 pr-14 pb-2 sm:px-8 sm:pt-8 sm:pr-14">
-				<Image
-					src="/image/logoLogin.png"
-					alt="Skuul"
-					width={177}
-					height={142}
-					className="mb-5 hidden h-8 w-auto md:block"
-				/>
 				<div className="flex items-center gap-3">
 					<div className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-pop-mint-soft text-2xl shadow-[0_4px_0_0_color-mix(in_oklch,var(--pop-mint)_35%,transparent)]">
 						<span aria-hidden="true">🚀</span>
@@ -533,6 +533,7 @@ export function SignForm({ onClose }: SignFormProps) {
 					Бүртгэлтэй юу?{" "}
 					<Link
 						href="/login"
+						onClick={backToLogin}
 						className="font-extrabold text-primary hover:underline"
 					>
 						Нэвтрэх
