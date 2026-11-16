@@ -72,7 +72,7 @@ const ExamMinimap = memo(function ExamMinimap({
 	const squareClass = (answered: boolean, isCurrent: boolean) =>
 		`relative flex aspect-square w-full items-center justify-center rounded-xl text-sm font-black tabular-nums transition-all active:scale-90 ${
 			answered
-				? "bg-primary text-primary-foreground shadow-[0_3px_0_0_var(--primary-shade)] hover:brightness-110"
+				? "bg-primary-soft text-primary-soft-foreground shadow-[0_3px_0_0_var(--primary-shade)] hover:brightness-110"
 				: "bg-muted text-muted-foreground hover:bg-accent hover:text-accent-foreground"
 		} ${isCurrent ? "ring-4 ring-primary/30 ring-offset-2 ring-offset-card" : ""}`;
 

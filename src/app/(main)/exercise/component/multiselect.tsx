@@ -258,7 +258,7 @@ export default function MultiSelectQuestion({
 									hasImage ? "self-start" : ""
 								} ${
 									selected
-										? "border-primary bg-primary text-primary-foreground"
+										? "border-primary bg-primary-soft text-primary-soft-foreground"
 										: shouldHighlight
 											? "border-success bg-success text-primary-foreground"
 											: "border-border bg-muted text-muted-foreground group-hover:border-primary/40 group-hover:text-primary"

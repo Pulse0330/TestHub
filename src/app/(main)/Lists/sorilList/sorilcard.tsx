@@ -122,7 +122,7 @@ export const SorilCard: React.FC<SorilCardProps> = ({
 									"ml-auto flex size-8 shrink-0 items-center justify-center rounded-full transition-all duration-200",
 									isLocked
 										? "bg-pop-sun-soft text-pop-sun-ink group-hover:bg-pop-sun group-hover:text-pop-on"
-										: "bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground",
+										: "bg-primary/10 text-primary group-hover:bg-primary-soft group-hover:text-primary-soft-foreground",
 								)}
 							>
 								{isLocked ? (

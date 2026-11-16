@@ -194,7 +194,7 @@ export const CategoryCard = memo(
 									className={cn(
 										"flex size-7 items-center justify-center rounded-xl border-2 transition-colors",
 										checked
-											? "border-primary bg-primary text-primary-foreground"
+											? "border-primary bg-primary-soft text-primary-soft-foreground"
 											: "border-border bg-card text-transparent",
 									)}
 									aria-hidden="true"

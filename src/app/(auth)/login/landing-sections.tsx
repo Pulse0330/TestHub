@@ -233,7 +233,7 @@ function ExamPreview() {
 								className={cn(
 									"flex size-6 shrink-0 items-center justify-center rounded-lg text-xs font-black",
 									selected
-										? "bg-primary text-primary-foreground"
+										? "bg-primary-soft text-primary-soft-foreground"
 										: "bg-muted text-muted-foreground",
 								)}
 							>

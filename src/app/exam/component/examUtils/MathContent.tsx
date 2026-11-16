@@ -54,7 +54,7 @@ function QuestionRow({
 			{/* ── Question header ── */}
 			<div className="flex flex-row gap-3 mb-3 items-start">
 				<div className="flex flex-col items-center shrink-0 gap-1">
-					<span className="bg-primary text-primary-foreground rounded-full w-7 h-7 flex items-center justify-center text-sm font-bold">
+					<span className="bg-primary-soft text-primary-soft-foreground rounded-full w-7 h-7 flex items-center justify-center text-sm font-bold">
 						{questionNumber}
 					</span>
 					{points !== undefined && (
@@ -95,13 +95,13 @@ function QuestionRow({
 								className={`flex items-start gap-2 px-3 py-2 rounded-md text-sm transition-colors
                   ${
 										isCorrect
-											? "bg-green-100 dark:bg-green-900/30 border border-green-400 text-green-800 dark:text-green-300 font-medium"
+											? "bg-pop-mint-soft border border-pop-mint text-pop-mint-ink font-medium"
 											: "bg-muted/50 hover:bg-muted"
 									}`}
 							>
 								<span
 									className={`shrink-0 font-semibold w-5 text-center pt-0.5
-                    ${isCorrect ? "text-green-600 dark:text-green-400" : "text-muted-foreground"}`}
+                    ${isCorrect ? "text-pop-mint-ink" : "text-muted-foreground"}`}
 								>
 									{label}
 								</span>
@@ -124,9 +124,9 @@ function QuestionRow({
 						{fillBlanks.map((blank) => (
 							<div
 								key={blank.answer_id}
-								className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-md text-sm"
+								className="flex items-center gap-1.5 px-3 py-1.5 bg-pop-sky-soft border border-pop-sky/40 rounded-md text-sm"
 							>
-								<span className="font-bold text-blue-600 dark:text-blue-400 shrink-0">
+								<span className="font-bold text-pop-sky-ink shrink-0">
 									{blank.answer_name}:
 								</span>
 								<MathContent html={blank.answer_name_html} />
@@ -165,9 +165,9 @@ function QuestionRow({
 							{matchAnswers.map((a) => (
 								<div
 									key={a.answer_id}
-									className="flex items-start gap-2 px-3 py-1.5 mb-1 bg-blue-50 dark:bg-blue-900/20 rounded-md text-sm"
+									className="flex items-start gap-2 px-3 py-1.5 mb-1 bg-pop-sky-soft rounded-md text-sm"
 								>
-									<span className="text-blue-500 font-semibold w-5 shrink-0 pt-0.5">
+									<span className="text-pop-sky-ink font-semibold w-5 shrink-0 pt-0.5">
 										{a.refid}.
 									</span>
 									<div className="flex-1 min-w-0 overflow-visible">

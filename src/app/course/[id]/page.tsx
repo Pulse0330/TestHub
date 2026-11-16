@@ -260,7 +260,7 @@ export default function CoursePage() {
 							<div className="mt-1 flex items-center gap-2">
 								<div className="h-1.5 flex-1 max-w-xs overflow-hidden rounded-full bg-muted">
 									<div
-										className="h-full rounded-full bg-gradient-to-r from-pop-violet to-pop-pink transition-all duration-500"
+										className="h-full rounded-full bg-pop-sky transition-all duration-500"
 										style={{
 											width: `${((currentLessonIndex + 1) / contents.length) * 100}%`,
 										}}

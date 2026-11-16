@@ -57,13 +57,16 @@ type Section = {
 	links: SubLink[];
 };
 
+/** Идэвхтэй цэсний нэг өнгө (pastel цэнхэр) — бүх хэсэгт ижил */
+const ACTIVE_TONE = "bg-primary-soft text-primary-soft-foreground";
+
 export const NAV: Section[] = [
 	{
 		key: "home",
 		label: "Нүүр",
 		short: "Нүүр",
 		icon: Home,
-		tone: "bg-pop-violet text-pop-on",
+		tone: ACTIVE_TONE,
 		links: [{ href: "/home", label: "Үндсэн хуудас", icon: Home }],
 	},
 	{
@@ -71,7 +74,7 @@ export const NAV: Section[] = [
 		label: "Шалгалт",
 		short: "Шалгалт",
 		icon: FileText,
-		tone: "bg-pop-sky text-pop-on",
+		tone: ACTIVE_TONE,
 		links: [
 			{ href: "/Lists/examList", label: "Шалгалтын жагсаалт", icon: FileText },
 			{ href: "/Lists/examResult", label: "Шалгалтын үр дүн", icon: BarChart3 },
@@ -82,7 +85,7 @@ export const NAV: Section[] = [
 		label: "Сорил",
 		short: "Сорил",
 		icon: Target,
-		tone: "bg-pop-sun text-[oklch(0.3_0.08_70)]",
+		tone: ACTIVE_TONE,
 		links: [
 			{
 				href: "/Lists/sorilList",
@@ -97,7 +100,7 @@ export const NAV: Section[] = [
 		label: "Дасгал ажил",
 		short: "Дасгал",
 		icon: Dumbbell,
-		tone: "bg-pop-mint text-pop-on",
+		tone: ACTIVE_TONE,
 		links: [
 			{ href: "/Lists/exerciseList", label: "Дасгал ажил", icon: Dumbbell },
 		],
@@ -107,7 +110,7 @@ export const NAV: Section[] = [
 		label: "Цахим сургалт",
 		short: "Хичээл",
 		icon: BookOpen,
-		tone: "bg-pop-pink text-pop-on",
+		tone: ACTIVE_TONE,
 		links: [
 			{ href: "/Lists/courseList", label: "Хичээл", icon: School },
 			{
@@ -333,7 +336,7 @@ export const Navbar01: React.FC = () => {
 									className={cn(
 										"flex items-center gap-2 rounded-full px-4 py-2 text-sm font-extrabold transition-all",
 										active
-											? `${s.tone} shadow-[0_3px_0_0_rgb(0_0_0/0.15)]`
+											? s.tone
 											: "text-muted-foreground hover:bg-muted hover:text-foreground",
 									)}
 								>

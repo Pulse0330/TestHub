@@ -120,7 +120,7 @@ const DragAndDrop: React.FC<DragAndDropProps> = ({
 													className={cn(
 														"shrink-0 size-8 rounded-xl border-2 flex items-center justify-center text-sm font-black",
 														snapshot.isDragging
-															? "border-primary bg-primary text-primary-foreground"
+															? "border-primary bg-primary-soft text-primary-soft-foreground"
 															: isCorrect
 																? "border-success bg-success text-primary-foreground"
 																: showCorrect

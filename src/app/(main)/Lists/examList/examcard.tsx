@@ -233,7 +233,7 @@ export default function ExamCard({
 							"mt-auto inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl text-sm font-bold transition-all",
 							isLocked
 								? "bg-pop-sun text-pop-on shadow-[0_4px_0_0_color-mix(in_oklch,var(--pop-sun)_65%,black)]"
-								: "bg-primary text-primary-foreground shadow-[0_4px_0_0_var(--primary-shade)]",
+								: "bg-primary-soft text-primary-soft-foreground shadow-[0_4px_0_0_var(--primary-shade)]",
 						)}
 					>
 						{isLocked ? (

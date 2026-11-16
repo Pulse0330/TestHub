@@ -167,7 +167,7 @@ export default function Sorillists() {
 										className={cn(
 											"inline-flex h-8 items-center gap-1.5 rounded-full px-3 text-xs font-bold transition-colors",
 											activeTab === t.id
-												? "bg-primary text-primary-foreground"
+												? "bg-primary-soft text-primary-soft-foreground"
 												: "text-muted-foreground hover:text-foreground",
 										)}
 									>

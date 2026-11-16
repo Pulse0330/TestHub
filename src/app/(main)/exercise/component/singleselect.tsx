@@ -101,7 +101,7 @@ function SingleSelectQuestion({
 									? "border-destructive bg-destructive text-primary-foreground"
 									: "border-border bg-muted text-muted-foreground"
 							: isSelected
-								? "border-primary bg-primary text-primary-foreground"
+								? "border-primary bg-primary-soft text-primary-soft-foreground"
 								: "border-border bg-muted text-muted-foreground group-hover:border-primary/40 group-hover:text-primary";
 
 					return (

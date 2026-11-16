@@ -767,7 +767,7 @@ export default function PaymentCoursesPage() {
 						<ShoppingCart className="size-7" strokeWidth={2.5} />
 						<span
 							aria-hidden
-							className="absolute -top-2 -right-2 size-7 bg-primary border-2 border-card rounded-full flex items-center justify-center text-primary-foreground text-xs font-black"
+							className="absolute -top-2 -right-2 size-7 bg-primary-soft border-2 border-card rounded-full flex items-center justify-center text-primary-soft-foreground text-xs font-black"
 						>
 							{selectedIds.size}
 						</span>

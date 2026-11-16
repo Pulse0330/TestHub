@@ -362,7 +362,7 @@ const LibraryToolbar = ({
 					className={cn(
 						"flex size-8 items-center justify-center rounded-lg transition-colors",
 						view === id
-							? "bg-primary text-primary-foreground"
+							? "bg-primary-soft text-primary-soft-foreground"
 							: "text-muted-foreground hover:bg-accent hover:text-foreground",
 					)}
 				>
@@ -416,7 +416,7 @@ const SubjectShelf = ({
 								? cn(
 										color
 											? color.solid
-											: "bg-primary text-primary-foreground border-primary",
+											: "bg-primary-soft text-primary-soft-foreground border-primary",
 										"shadow-[0_3px_0_0_color-mix(in_oklch,var(--foreground)_25%,transparent)] -translate-y-0.5",
 									)
 								: "border-border bg-card text-foreground shadow-[0_3px_0_0_var(--border)] hover:-translate-y-0.5 active:translate-y-0.5",

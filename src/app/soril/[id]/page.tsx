@@ -508,7 +508,7 @@ export default function SorilPage() {
 				aria-pressed={viewMode === "card"}
 				className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-sm font-bold transition-colors ${
 					viewMode === "card"
-						? "bg-primary text-primary-foreground shadow-[0_2px_0_0_var(--primary-shade)]"
+						? "bg-primary-soft text-primary-soft-foreground shadow-[0_2px_0_0_var(--primary-shade)]"
 						: "text-muted-foreground hover:bg-accent hover:text-foreground"
 				}`}
 			>
@@ -521,7 +521,7 @@ export default function SorilPage() {
 				aria-pressed={viewMode === "scroll"}
 				className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-sm font-bold transition-colors ${
 					viewMode === "scroll"
-						? "bg-primary text-primary-foreground shadow-[0_2px_0_0_var(--primary-shade)]"
+						? "bg-primary-soft text-primary-soft-foreground shadow-[0_2px_0_0_var(--primary-shade)]"
 						: "text-muted-foreground hover:bg-accent hover:text-foreground"
 				}`}
 			>

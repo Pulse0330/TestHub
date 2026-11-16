@@ -19,12 +19,12 @@ export const ResultSummaryCard = memo(function ResultSummaryCard({
 	return (
 		<div className="card-pop animate-pop-in overflow-hidden">
 			{/* Толгой хэсэг */}
-			<div className="relative overflow-hidden bg-gradient-to-br from-pop-violet to-pop-pink p-6 text-pop-on md:p-8">
-				<div className="pointer-events-none absolute -right-10 -top-10 size-40 rounded-full bg-primary-foreground/10" />
-				<div className="pointer-events-none absolute -bottom-16 left-1/3 size-48 rounded-full bg-primary-foreground/10" />
+			<div className="relative overflow-hidden bg-[linear-gradient(135deg,var(--pop-sky-soft),var(--pop-violet-soft))] p-6 text-foreground md:p-8">
+				<div className="pointer-events-none absolute -right-10 -top-10 size-40 rounded-full bg-card/40" />
+				<div className="pointer-events-none absolute -bottom-16 left-1/3 size-48 rounded-full bg-card/40" />
 				<div className="relative flex flex-col items-center gap-6 md:flex-row md:justify-between">
 					<div className="flex min-w-0 flex-col items-center gap-4 text-center md:items-start md:text-left">
-						<div className="flex size-14 items-center justify-center rounded-2xl bg-primary-foreground/20 shadow-[0_4px_0_0_color-mix(in_oklch,var(--foreground)_20%,transparent)]">
+						<div className="flex size-14 items-center justify-center rounded-2xl bg-card/80 text-pop-sky-ink">
 							<svg
 								className="size-7"
 								fill="none"
@@ -44,7 +44,7 @@ export const ResultSummaryCard = memo(function ResultSummaryCard({
 							{examSummary.lesson_name}
 						</h2>
 						{dunInfo && (
-							<p className="wrap-break-word rounded-full bg-primary-foreground/20 px-4 py-1.5 text-sm font-extrabold md:text-base">
+							<p className="wrap-break-word rounded-full bg-card/80 px-4 py-1.5 text-sm font-extrabold md:text-base">
 								🏆 {dunInfo.title}
 							</p>
 						)}
@@ -64,7 +64,7 @@ export const ResultSummaryCard = memo(function ResultSummaryCard({
 									r="52"
 									fill="none"
 									strokeWidth="12"
-									className="stroke-primary-foreground/25"
+									className="stroke-foreground/10"
 								/>
 								<circle
 									cx="60"
@@ -73,7 +73,7 @@ export const ResultSummaryCard = memo(function ResultSummaryCard({
 									fill="none"
 									strokeWidth="12"
 									strokeLinecap="round"
-									className="stroke-primary-foreground transition-all duration-700 ease-out"
+									className="stroke-primary transition-all duration-700 ease-out"
 									strokeDasharray={2 * Math.PI * 52}
 									strokeDashoffset={
 										2 *
@@ -108,8 +108,8 @@ export const ResultSummaryCard = memo(function ResultSummaryCard({
 									key={`percent-indicator-${examSummary.test_id}-${i}`}
 									className={`h-1.5 flex-1 rounded-full transition-all duration-500 ${
 										i < Math.floor(examSummary.point_perc / 10)
-											? "bg-primary-foreground"
-											: "bg-primary-foreground/25"
+											? "bg-primary"
+											: "bg-foreground/10"
 									}`}
 									style={{ transitionDelay: `${i * 50}ms` }}
 								/>
@@ -127,7 +127,7 @@ export const ResultSummaryCard = memo(function ResultSummaryCard({
 						<p className="text-xs font-bold uppercase tracking-wide text-pop-violet-ink">
 							Нийт асуулт
 						</p>
-						<div className="flex size-8 shrink-0 items-center justify-center rounded-xl bg-pop-violet text-pop-on">
+						<div className="flex size-8 shrink-0 items-center justify-center rounded-xl bg-pop-violet-soft text-pop-violet-ink">
 							<svg
 								className="size-4"
 								fill="none"
@@ -158,7 +158,7 @@ export const ResultSummaryCard = memo(function ResultSummaryCard({
 						<p className="text-xs font-bold uppercase tracking-wide text-success">
 							Зөв
 						</p>
-						<div className="flex size-8 shrink-0 items-center justify-center rounded-xl bg-success text-primary-foreground">
+						<div className="flex size-8 shrink-0 items-center justify-center rounded-xl bg-pop-mint-soft text-pop-mint-ink">
 							<svg
 								className="size-4"
 								fill="none"
@@ -189,7 +189,7 @@ export const ResultSummaryCard = memo(function ResultSummaryCard({
 						<p className="text-xs font-bold uppercase tracking-wide text-destructive">
 							Буруу
 						</p>
-						<div className="flex size-8 shrink-0 items-center justify-center rounded-xl bg-destructive text-primary-foreground">
+						<div className="flex size-8 shrink-0 items-center justify-center rounded-xl bg-pop-coral-soft text-pop-coral-ink">
 							<svg
 								className="size-4"
 								fill="none"
@@ -264,7 +264,7 @@ export const ResultSummaryCard = memo(function ResultSummaryCard({
 						{/* Progress bar */}
 						<div className="relative h-3 overflow-hidden rounded-full bg-card">
 							<div
-								className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-pop-sky to-pop-violet transition-all duration-700 ease-out"
+								className="absolute inset-y-0 left-0 rounded-full bg-pop-sky transition-all duration-700 ease-out"
 								style={{
 									width: `${examSummary.ttl_point > 0 ? Math.min((examSummary.point / examSummary.ttl_point) * 100, 100) : 0}%`,
 								}}

@@ -263,7 +263,7 @@ const TileHeader = memo(
 					{title}
 				</h2>
 				{count !== undefined && count > 0 && (
-					<span className="shrink-0 rounded-full bg-primary px-2 py-0.5 text-[11px] font-extrabold text-primary-foreground">
+					<span className="shrink-0 rounded-full bg-primary-soft px-2 py-0.5 text-[11px] font-extrabold text-primary-soft-foreground">
 						{count}
 					</span>
 				)}

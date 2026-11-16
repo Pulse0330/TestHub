@@ -41,7 +41,7 @@ export function ProfileHeaderCard({
 	return (
 		<div className="card-pop overflow-hidden animate-pop-in">
 			{/* Colorful banner */}
-			<div className="relative h-28 overflow-hidden bg-gradient-to-br from-pop-violet to-pop-pink sm:h-36">
+			<div className="relative h-28 overflow-hidden bg-[linear-gradient(135deg,var(--pop-sky-soft),var(--pop-violet-soft))] sm:h-36">
 				<div aria-hidden className="pointer-events-none absolute inset-0">
 					<div className="absolute -right-8 -top-10 size-40 rounded-full bg-white/10" />
 					<div className="absolute -bottom-12 left-1/4 size-32 rounded-full bg-white/10" />
@@ -69,7 +69,7 @@ export function ProfileHeaderCard({
 								<>
 									<label
 										htmlFor="image-upload"
-										className="absolute bottom-1 right-1 flex size-10 cursor-pointer items-center justify-center rounded-full border-[3px] border-card bg-primary text-primary-foreground shadow-[0_3px_0_0_var(--primary-shade)] transition-all hover:scale-110"
+										className="absolute bottom-1 right-1 flex size-10 cursor-pointer items-center justify-center rounded-full border-[3px] border-card bg-primary-soft text-primary-soft-foreground shadow-[0_3px_0_0_var(--primary-shade)] transition-all hover:scale-110"
 									>
 										<Camera className="size-5" strokeWidth={2.5} />
 									</label>

@@ -88,7 +88,7 @@ export function LessonSidebar({
 											<div
 												className={`flex size-9 items-center justify-center rounded-xl ${
 													isActive
-														? "bg-primary text-primary-foreground shadow-[0_3px_0_0_var(--primary-shade)]"
+														? "bg-primary-soft text-primary-soft-foreground shadow-[0_3px_0_0_var(--primary-shade)]"
 														: chipColor
 												}`}
 											>

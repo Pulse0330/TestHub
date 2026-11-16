@@ -621,7 +621,7 @@ export default function TestGroupPage() {
 						className={cn(
 							"inline-flex items-center gap-1.5 rounded-full border-2 px-4 py-1.5 text-sm font-bold transition-colors",
 							allPicked
-								? "bg-primary text-primary-foreground border-primary"
+								? "bg-primary-soft text-primary-soft-foreground border-primary"
 								: "bg-card border-border text-foreground hover:border-primary",
 						)}
 					>
@@ -806,7 +806,7 @@ export default function TestGroupPage() {
 	const renderSummaryStep = () => (
 		<div className="mx-auto max-w-2xl space-y-4">
 			<div className="card-pop overflow-hidden animate-pop-in">
-				<div className="bg-gradient-to-br from-pop-violet to-pop-pink p-6 sm:p-8 text-pop-on">
+				<div className="bg-[linear-gradient(135deg,var(--pop-sky-soft),var(--pop-violet-soft))] p-6 sm:p-8 text-foreground">
 					<div className="flex items-center gap-3">
 						<span className="flex size-12 items-center justify-center rounded-2xl bg-card/20 text-2xl">
 							🚀
@@ -1146,7 +1146,7 @@ function WizardStepper({
 									className={cn(
 										"flex size-8 sm:size-9 shrink-0 items-center justify-center rounded-xl border-2 text-sm font-black transition-colors",
 										isActive &&
-											"border-primary bg-primary text-primary-foreground shadow-[0_3px_0_0_var(--primary-shade)]",
+											"border-primary bg-primary-soft text-primary-soft-foreground shadow-[0_3px_0_0_var(--primary-shade)]",
 										isDone &&
 											"border-pop-mint bg-pop-mint-soft text-pop-mint-ink",
 										!isActive &&

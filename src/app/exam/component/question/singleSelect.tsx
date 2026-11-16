@@ -85,7 +85,7 @@ function SingleSelectQuestion({
 								<span
 									className={`flex size-8 shrink-0 items-center justify-center rounded-xl border-2 text-sm font-black transition-all ${
 										isSelected
-											? "border-primary bg-primary text-primary-foreground"
+											? "border-primary bg-primary-soft text-primary-soft-foreground"
 											: "border-border bg-muted text-muted-foreground"
 									}`}
 								>
