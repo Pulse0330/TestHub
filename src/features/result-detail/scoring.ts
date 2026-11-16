@@ -83,32 +83,51 @@ export function isQuestionCorrect(
 			);
 		}
 		case 3:
-			return questionAnswers.every((answer) => {
-				const userInput = findUserInput(userSelectedAnswers, answer.answer_id);
-				return !!userInput && userInput.answer === correctInputValue(answer);
-			});
+			// Хариултын мөр ирээгүй бол зөв гэж тооцохгүй ([].every === true)
+			return (
+				questionAnswers.length > 0 &&
+				questionAnswers.every((answer) => {
+					const userInput = findUserInput(
+						userSelectedAnswers,
+						answer.answer_id,
+					);
+					return !!userInput && userInput.answer === correctInputValue(answer);
+				})
+			);
 		case 4:
 			// Задгай даалгавар — багш үнэлсэн бол бүтэн оноо авсан эсэх
 			return question.unelsen === 1 && question.zad_onoo === question.que_onoo;
 		case 5:
-			return questionAnswers.every((answer) => {
-				const userInput = findUserInput(userSelectedAnswers, answer.answer_id);
-				// Зөв дараалал нь refid-тай тэнцүү байх ёстой
-				return (
-					!!userInput && Number.parseInt(userInput.answer, 10) === answer.refid
-				);
-			});
-		case 6:
-			return matchingAnswersOnly(questionAnswers).every((answerItem) => {
-				const userInput = findUserInput(
-					userSelectedAnswers,
-					answerItem.answer_id,
-				);
-				return (
-					!!userInput &&
-					Number.parseInt(userInput.answer, 10) === answerItem.ref_child_id
-				);
-			});
+			return (
+				questionAnswers.length > 0 &&
+				questionAnswers.every((answer) => {
+					const userInput = findUserInput(
+						userSelectedAnswers,
+						answer.answer_id,
+					);
+					// Зөв дараалал нь refid-тай тэнцүү байх ёстой
+					return (
+						!!userInput &&
+						Number.parseInt(userInput.answer, 10) === answer.refid
+					);
+				})
+			);
+		case 6: {
+			const rows = matchingAnswersOnly(questionAnswers);
+			return (
+				rows.length > 0 &&
+				rows.every((answerItem) => {
+					const userInput = findUserInput(
+						userSelectedAnswers,
+						answerItem.answer_id,
+					);
+					return (
+						!!userInput &&
+						Number.parseInt(userInput.answer, 10) === answerItem.ref_child_id
+					);
+				})
+			);
+		}
 		default:
 			return false;
 	}
