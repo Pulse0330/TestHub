@@ -104,7 +104,7 @@ const SorilQuestionCard = memo(function SorilQuestionCard({
 		: isAnswered && isBookmarked
 			? "border-2 border-pop-sun shadow-[0_4px_0_0_var(--pop-sun)]"
 			: isAnswered
-				? "border-2 border-primary-soft-shade/70 shadow-[0_4px_0_0_color-mix(in_oklch,var(--primary-soft)_55%,transparent)]"
+				? "border-2 border-primary-soft-shade/50 shadow-[0_1px_3px_rgb(0_0_0/0.05)]"
 				: isBookmarked
 					? "border-2 border-pop-sun/70 shadow-[0_4px_0_0_color-mix(in_oklch,var(--pop-sun)_70%,transparent)]"
 					: "border-2 border-border";

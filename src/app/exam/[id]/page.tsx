@@ -142,7 +142,7 @@ const ExamQuestionCard = memo(function ExamQuestionCard({
 		: isAnswered && isBookmarked
 			? "border-warning shadow-[0_4px_0_0_color-mix(in_oklch,var(--warning)_55%,transparent)]"
 			: isAnswered
-				? "border-primary-soft-shade/70 shadow-[0_4px_0_0_color-mix(in_oklch,var(--primary-soft)_55%,transparent)]"
+				? "border-primary-soft-shade/50 shadow-[0_1px_3px_rgb(0_0_0/0.05)]"
 				: isBookmarked
 					? "border-warning/70 shadow-[0_4px_0_0_color-mix(in_oklch,var(--warning)_40%,transparent)]"
 					: "border-border";

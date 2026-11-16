@@ -213,66 +213,69 @@ export default function MultiSelectQuestion({
 		<div className="space-y-4">
 			{renderQuestionContent()}
 
-			<div className="space-y-2.5 sm:space-y-3">
+			<div className="space-y-2.5">
 				<p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
 					Олон хариулт сонгох боломжтой
 				</p>
-				{answers.map((option, idx) => {
-					const selected = isSelected(option.answer_id);
-					const hasImage = isValidImageUrl(option.answer_img);
+				{/* Хариултууд 2 баганаар (утсан дээр 1) */}
+				<div className="grid gap-2.5 sm:grid-cols-2">
+					{answers.map((option, idx) => {
+						const selected = isSelected(option.answer_id);
+						const hasImage = isValidImageUrl(option.answer_img);
 
-					return (
-						<Button
-							key={option.answer_id}
-							onClick={(e) => handleToggle(option.answer_id, e)}
-							variant="outline"
-							disabled={isReviewMode}
-							className={`flex h-auto w-full items-center justify-start gap-3 whitespace-normal rounded-2xl border-2 p-3.5 text-left font-bold transition-all sm:p-4 ${
-								hasImage ? "min-h-[100px]" : "min-h-[56px]"
-							} ${
-								selected
-									? "border-primary/45 bg-primary-soft/40 text-foreground shadow-[0_3px_0_0_var(--primary-soft-shade)] hover:bg-primary-soft/55"
-									: "border-border bg-card text-foreground hover:-translate-y-0.5 hover:border-primary/40 hover:bg-accent/40"
-							} ${isReviewMode ? "cursor-default opacity-70" : ""}`}
-						>
-							<span
-								className={`flex size-8 shrink-0 items-center justify-center rounded-xl border-2 text-sm font-black transition-all ${
-									hasImage ? "self-start" : ""
+						return (
+							<Button
+								key={option.answer_id}
+								onClick={(e) => handleToggle(option.answer_id, e)}
+								variant="outline"
+								disabled={isReviewMode}
+								className={`flex h-full w-full items-center justify-start gap-3 whitespace-normal rounded-2xl border p-3.5 text-left font-semibold shadow-none transition-colors hover:text-foreground active:translate-y-0 active:shadow-none sm:p-4 ${
+									hasImage ? "min-h-[100px]" : "min-h-[56px]"
 								} ${
 									selected
-										? "border-primary-soft-shade bg-primary-soft text-primary-soft-foreground"
-										: "border-border bg-muted text-muted-foreground"
-								}`}
+										? "border-primary/30 bg-primary-soft/25 text-foreground hover:bg-primary-soft/35"
+										: "border-border/70 bg-card hover:border-primary/25 hover:bg-muted/40 text-foreground"
+								} ${isReviewMode ? "cursor-default opacity-70" : ""}`}
 							>
-								{selected ? (
-									<svg
-										className="size-4 text-primary-soft-foreground"
-										fill="none"
-										strokeLinecap="round"
-										strokeLinejoin="round"
-										strokeWidth="3"
-										viewBox="0 0 24 24"
-										stroke="currentColor"
-										aria-hidden="true"
-									>
-										<title>Checkmark</title>
-										<path d="M5 13l4 4L19 7" />
-									</svg>
-								) : (
-									String.fromCharCode(65 + idx)
-								)}
-							</span>
+								<span
+									className={`flex size-8 shrink-0 items-center justify-center rounded-xl border-2 text-sm font-black transition-all ${
+										hasImage ? "self-start" : ""
+									} ${
+										selected
+											? "border-transparent bg-primary-soft/70 text-primary-soft-foreground"
+											: "border-transparent bg-muted text-muted-foreground"
+									}`}
+								>
+									{selected ? (
+										<svg
+											className="size-4 text-primary-soft-foreground"
+											fill="none"
+											strokeLinecap="round"
+											strokeLinejoin="round"
+											strokeWidth="3"
+											viewBox="0 0 24 24"
+											stroke="currentColor"
+											aria-hidden="true"
+										>
+											<title>Checkmark</title>
+											<path d="M5 13l4 4L19 7" />
+										</svg>
+									) : (
+										String.fromCharCode(65 + idx)
+									)}
+								</span>
 
-							<div className="min-w-0 flex-1">
-								{renderOptionContent(option)}
-							</div>
-						</Button>
-					);
-				})}
+								<div className="min-w-0 flex-1">
+									{renderOptionContent(option)}
+								</div>
+							</Button>
+						);
+					})}
+				</div>
 			</div>
 
 			{selectedAnswers.length > 0 && (
-				<div className="inline-flex items-center rounded-full bg-primary/10 px-3 py-1 text-xs font-bold text-primary">
+				<div className="inline-flex items-center rounded-full bg-muted px-3 py-1 text-xs font-bold text-muted-foreground">
 					{selectedAnswers.length} сонголт сонгосон
 				</div>
 			)}

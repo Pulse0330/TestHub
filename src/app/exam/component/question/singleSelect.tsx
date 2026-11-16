@@ -55,76 +55,77 @@ function SingleSelectQuestion({
 					</div>
 				</div>
 			)}
-			<div className="space-y-2.5 sm:space-y-3">
+			<div className="space-y-2.5">
 				<p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
 					Нэг хариулт сонгох боломжтой
 				</p>
-				{answers.map((option, idx) => {
-					const isSelected = selectedAnswer === option.answer_id;
-					const hasContent = option.answer_name_html || option.answer_name;
-					const hasImage = option.answer_img || option.source_img;
-					const imageUrl = option.answer_img || option.source_img;
+				{/* Хариултууд 2 баганаар (утсан дээр 1) */}
+				<div className="grid gap-2.5 sm:grid-cols-2">
+					{answers.map((option, idx) => {
+						const isSelected = selectedAnswer === option.answer_id;
+						const hasContent = option.answer_name_html || option.answer_name;
+						const hasImage = option.answer_img || option.source_img;
+						const imageUrl = option.answer_img || option.source_img;
 
-					return (
-						<div
-							key={option.answer_id}
-							className={`relative w-full overflow-hidden rounded-2xl border-2 transition-all duration-150 ${
-								isSelected
-									? "border-primary/45 bg-primary-soft/40 text-foreground shadow-[0_3px_0_0_var(--primary-soft-shade)]"
-									: "border-border bg-card shadow-[0_3px_0_0_var(--border)] hover:-translate-y-0.5 hover:border-primary/40 hover:bg-accent/40"
-							}`}
-						>
-							<button
-								type="button"
-								onClick={() => handleSelect(option.answer_id)}
-								disabled={disabled}
-								className="flex w-full cursor-pointer items-start gap-3 border-0 bg-transparent p-3.5 text-left font-bold disabled:cursor-not-allowed sm:p-4"
-								// ✅ Давхар дарахаас хамгаалах
-								aria-pressed={isSelected}
+						return (
+							<div
+								key={option.answer_id}
+								className={`relative h-full w-full overflow-hidden rounded-2xl border transition-colors duration-150 ${
+									isSelected
+										? "border-primary/30 bg-primary-soft/25 text-foreground"
+										: "border-border/70 bg-card hover:border-primary/25 hover:bg-muted/40"
+								}`}
 							>
-								<span
-									className={`flex size-8 shrink-0 items-center justify-center rounded-xl border-2 text-sm font-black transition-all ${
-										isSelected
-											? "border-primary-soft-shade bg-primary-soft text-primary-soft-foreground"
-											: "border-border bg-muted text-muted-foreground"
-									}`}
+								<button
+									type="button"
+									onClick={() => handleSelect(option.answer_id)}
+									disabled={disabled}
+									className="flex h-full w-full cursor-pointer items-start gap-3 border-0 bg-transparent p-3.5 text-left font-semibold disabled:cursor-not-allowed sm:p-4"
+									// ✅ Давхар дарахаас хамгаалах
+									aria-pressed={isSelected}
 								>
-									{String.fromCharCode(65 + idx)}
-								</span>
-								<div className="flex min-w-0 flex-1 flex-col gap-3 overflow-hidden pt-0.5">
-									{hasContent && (
-										<div
-											className={`w-full text-left text-sm sm:text-base ${
-												isSelected
-													? "font-bold text-foreground"
-													: "text-foreground"
-											}`}
-											style={{ lineHeight: "1.8" }}
-										>
-											{option.answer_name_html ? (
-												<MathContent html={option.answer_name_html} />
-											) : (
-												<span>{option.answer_name}</span>
-											)}
-										</div>
-									)}
-									{!hasImage && !hasContent && (
-										<span className="text-sm font-semibold italic text-muted-foreground">
-											Хариулт байхгүй
-										</span>
-									)}
-								</div>
-							</button>
-							{hasImage && imageUrl && (
-								<div className="flex justify-center px-3 pb-3 sm:px-4 sm:pb-4">
-									<div className="w-full max-w-xs">
-										<QuestionImage src={imageUrl} alt="Хариултын зураг" />
+									<span
+										className={`flex size-8 shrink-0 items-center justify-center rounded-xl border-2 text-sm font-black transition-all ${
+											isSelected
+												? "border-transparent bg-primary-soft/70 text-primary-soft-foreground"
+												: "border-transparent bg-muted text-muted-foreground"
+										}`}
+									>
+										{String.fromCharCode(65 + idx)}
+									</span>
+									<div className="flex min-w-0 flex-1 flex-col gap-3 overflow-hidden pt-0.5">
+										{hasContent && (
+											<div
+												className={`w-full text-left text-sm sm:text-base ${
+													isSelected ? "text-foreground" : "text-foreground"
+												}`}
+												style={{ lineHeight: "1.8" }}
+											>
+												{option.answer_name_html ? (
+													<MathContent html={option.answer_name_html} />
+												) : (
+													<span>{option.answer_name}</span>
+												)}
+											</div>
+										)}
+										{!hasImage && !hasContent && (
+											<span className="text-sm font-semibold italic text-muted-foreground">
+												Хариулт байхгүй
+											</span>
+										)}
 									</div>
-								</div>
-							)}
-						</div>
-					);
-				})}
+								</button>
+								{hasImage && imageUrl && (
+									<div className="flex justify-center px-3 pb-3 sm:px-4 sm:pb-4">
+										<div className="w-full max-w-xs">
+											<QuestionImage src={imageUrl} alt="Хариултын зураг" />
+										</div>
+									</div>
+								)}
+							</div>
+						);
+					})}
+				</div>
 			</div>
 		</div>
 	);
