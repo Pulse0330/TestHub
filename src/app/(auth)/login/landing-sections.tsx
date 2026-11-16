@@ -211,7 +211,7 @@ function ExamPreview() {
 				</span>
 			</div>
 			<div className="mb-4 h-1.5 overflow-hidden rounded-full bg-muted">
-				<div className="h-full w-[23%] rounded-full bg-primary" />
+				<div className="h-full w-[23%] rounded-full bg-brand-gradient" />
 			</div>
 			<p className="mb-3 text-sm font-bold text-foreground">
 				x² − 5x + 6 = 0 тэгшитгэлийн шийдийг олно уу.
@@ -264,7 +264,7 @@ export function AboutSections({ onLogin, onSign }: AboutSectionsProps) {
 			<Reveal className="grid items-center gap-10 py-10 sm:py-16 lg:grid-cols-2 lg:gap-16">
 				<div>
 					<p className="mb-5 inline-flex items-center gap-2 rounded-full border border-border bg-card px-3.5 py-1.5 text-xs font-bold text-muted-foreground">
-						<span className="size-1.5 rounded-full bg-primary" />
+						<span className="size-1.5 rounded-full bg-secondary" />
 						Шалгалт · Сорил · Дасгал — нэг дор
 					</p>
 					<h1 className="mb-5 text-4xl leading-[1.05] font-black tracking-tighter text-balance text-foreground sm:text-5xl">
