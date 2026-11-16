@@ -100,7 +100,7 @@ const DragAndDrop: React.FC<DragAndDropProps> = ({
 													? "cursor-default"
 													: "cursor-grab hover:border-pop-mint hover:bg-pop-mint-soft/40",
 												snapshot.isDragging &&
-													"cursor-grabbing border-primary bg-primary/10 text-primary shadow-[0_6px_0_0_var(--primary)] ring-4 ring-primary/20",
+													"cursor-grabbing border-primary/45 bg-primary-soft/40 text-foreground shadow-[0_6px_0_0_var(--primary-soft-shade)] ring-4 ring-primary-soft/40",
 												isCorrect &&
 													"border-success bg-success/10 text-foreground shadow-[0_4px_0_0_var(--success)]",
 												showCorrect &&
@@ -120,7 +120,7 @@ const DragAndDrop: React.FC<DragAndDropProps> = ({
 													className={cn(
 														"shrink-0 size-8 rounded-xl border-2 flex items-center justify-center text-sm font-black",
 														snapshot.isDragging
-															? "border-primary bg-primary-soft text-primary-soft-foreground"
+															? "border-primary-soft-shade bg-primary-soft text-primary-soft-foreground"
 															: isCorrect
 																? "border-success bg-success text-primary-foreground"
 																: showCorrect

@@ -41,7 +41,8 @@ export const FilterToolbar = memo(function FilterToolbar({
 		{
 			key: "all",
 			label: "Бүгд",
-			active: "border-primary bg-primary-soft text-primary-soft-foreground",
+			active:
+				"border-primary-soft-shade bg-primary-soft text-primary-soft-foreground",
 			count: totalCount,
 		},
 		{

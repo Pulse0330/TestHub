@@ -105,7 +105,7 @@ const DragAndDrop: React.FC<DragAndDropProps> = ({
 												? "cursor-default"
 												: "cursor-grab active:cursor-grabbing",
 											snapshot.isDragging &&
-												"cursor-grabbing border-primary bg-primary/10 text-primary shadow-[0_6px_0_0_var(--primary)] ring-4 ring-primary/20",
+												"cursor-grabbing border-primary/45 bg-primary-soft/40 text-foreground shadow-[0_6px_0_0_var(--primary-soft-shade)] ring-4 ring-primary-soft/40",
 										)}
 										style={{ ...providedDraggable.draggableProps.style }}
 									>

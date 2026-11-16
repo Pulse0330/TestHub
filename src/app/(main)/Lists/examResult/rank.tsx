@@ -93,7 +93,7 @@ export default function RankModal({
 											key={item.userid}
 											className={`flex items-center gap-3 rounded-2xl border-2 p-3 transition-all hover:bg-accent/50 ${
 												isCurrentUser
-													? "border-primary bg-primary/10 shadow-[0_3px_0_0_var(--primary)]"
+													? "border-primary bg-primary/10 shadow-[0_3px_0_0_var(--primary-soft-shade)]"
 													: medal
 														? "border-pop-sun/50 bg-pop-sun-soft/60"
 														: "border-border bg-card"

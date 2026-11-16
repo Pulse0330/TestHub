@@ -88,7 +88,7 @@ function SingleSelectQuestion({
 									? "border-success/60 bg-success/5 shadow-[0_4px_0_0_color-mix(in_oklch,var(--success)_45%,transparent)]"
 									: "border-border bg-card shadow-[0_4px_0_0_var(--border)]"
 							: isSelected
-								? "border-primary bg-primary/10 text-primary shadow-[0_4px_0_0_var(--primary)]"
+								? "border-primary/45 bg-primary-soft/40 text-foreground shadow-[0_3px_0_0_var(--primary-soft-shade)]"
 								: "border-border bg-card shadow-[0_4px_0_0_var(--border)] hover:border-primary/40 hover:bg-accent/40 hover:-translate-y-0.5";
 
 					const badgeClass =
@@ -101,7 +101,7 @@ function SingleSelectQuestion({
 									? "border-destructive bg-destructive text-primary-foreground"
 									: "border-border bg-muted text-muted-foreground"
 							: isSelected
-								? "border-primary bg-primary-soft text-primary-soft-foreground"
+								? "border-primary-soft-shade bg-primary-soft text-primary-soft-foreground"
 								: "border-border bg-muted text-muted-foreground group-hover:border-primary/40 group-hover:text-primary";
 
 					return (

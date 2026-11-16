@@ -39,6 +39,10 @@ import {
 	QuestionBody,
 } from "@/app/exam/component/QuestionBody";
 import {
+	TextSizeControl,
+	useExamTextScale,
+} from "@/app/exam/component/TextSizeControl";
+import {
 	isAnswerFilled,
 	useAnswerSync,
 } from "@/app/exam/component/useAnswerSync";
@@ -100,7 +104,7 @@ const SorilQuestionCard = memo(function SorilQuestionCard({
 		: isAnswered && isBookmarked
 			? "border-2 border-pop-sun shadow-[0_4px_0_0_var(--pop-sun)]"
 			: isAnswered
-				? "border-2 border-primary shadow-[0_4px_0_0_var(--primary)]"
+				? "border-2 border-primary-soft-shade/70 shadow-[0_4px_0_0_color-mix(in_oklch,var(--primary-soft)_55%,transparent)]"
 				: isBookmarked
 					? "border-2 border-pop-sun/70 shadow-[0_4px_0_0_color-mix(in_oklch,var(--pop-sun)_70%,transparent)]"
 					: "border-2 border-border";
@@ -179,6 +183,7 @@ export default function SorilPage() {
 		useState(false);
 	const finishDialogRef = useRef<FinishExamDialogHandle>(null);
 	const [viewMode, setViewMode] = useState<"scroll" | "card">("card");
+	const textScale = useExamTextScale();
 	/** starteddate байхгүй үед үргэлжилсэн хугацааг тоолох эхлэл. */
 	const [pageLoadedAt] = useState(() => Date.now());
 	const router = useRouter();
@@ -498,36 +503,39 @@ export default function SorilPage() {
 	);
 
 	const viewToggle = (
-		<div className="hidden shrink-0 gap-1 rounded-full border-2 border-border bg-muted p-1 md:flex">
-			<button
-				type="button"
-				onClick={() => {
-					setViewMode("card");
-					window.scrollTo({ top: 0, behavior: "smooth" });
-				}}
-				aria-pressed={viewMode === "card"}
-				className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-sm font-bold transition-colors ${
-					viewMode === "card"
-						? "bg-primary-soft text-primary-soft-foreground shadow-[0_2px_0_0_var(--primary-shade)]"
-						: "text-muted-foreground hover:bg-accent hover:text-foreground"
-				}`}
-			>
-				<LayoutGrid className="w-4 h-4" />
-				Карт
-			</button>
-			<button
-				type="button"
-				onClick={() => setViewMode("scroll")}
-				aria-pressed={viewMode === "scroll"}
-				className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-sm font-bold transition-colors ${
-					viewMode === "scroll"
-						? "bg-primary-soft text-primary-soft-foreground shadow-[0_2px_0_0_var(--primary-shade)]"
-						: "text-muted-foreground hover:bg-accent hover:text-foreground"
-				}`}
-			>
-				<List className="w-4 h-4" />
-				Жагсаалт
-			</button>
+		<div className="hidden shrink-0 items-center gap-2 md:flex">
+			<TextSizeControl textScale={textScale} />
+			<div className="flex shrink-0 gap-1 rounded-full border-2 border-border bg-muted p-1">
+				<button
+					type="button"
+					onClick={() => {
+						setViewMode("card");
+						window.scrollTo({ top: 0, behavior: "smooth" });
+					}}
+					aria-pressed={viewMode === "card"}
+					className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-sm font-bold transition-colors ${
+						viewMode === "card"
+							? "bg-primary-soft text-primary-soft-foreground shadow-[0_2px_0_0_var(--primary-soft-shade)]"
+							: "text-muted-foreground hover:bg-accent hover:text-foreground"
+					}`}
+				>
+					<LayoutGrid className="w-4 h-4" />
+					Карт
+				</button>
+				<button
+					type="button"
+					onClick={() => setViewMode("scroll")}
+					aria-pressed={viewMode === "scroll"}
+					className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-sm font-bold transition-colors ${
+						viewMode === "scroll"
+							? "bg-primary-soft text-primary-soft-foreground shadow-[0_2px_0_0_var(--primary-soft-shade)]"
+							: "text-muted-foreground hover:bg-accent hover:text-foreground"
+					}`}
+				>
+					<List className="w-4 h-4" />
+					Жагсаалт
+				</button>
+			</div>
 		</div>
 	);
 
@@ -664,7 +672,7 @@ export default function SorilPage() {
 												: answered
 													? marked
 														? "bg-pop-sun"
-														: "bg-primary"
+														: "bg-primary-soft-shade"
 													: marked
 														? "bg-pop-sun/45"
 														: "bg-muted"
@@ -682,7 +690,10 @@ export default function SorilPage() {
 			</header>
 
 			<div className="mx-auto max-w-[1400px] px-3 pt-3 pb-32 sm:px-6 xl:grid xl:grid-cols-[minmax(0,1fr)_17rem] xl:gap-8">
-				<main className="mx-auto w-full min-w-0 max-w-3xl">
+				<main
+					className="mx-auto w-full min-w-0 max-w-3xl"
+					style={{ zoom: textScale.scale }}
+				>
 					{examInfo && (
 						<div className="mb-3 px-1 lg:hidden">
 							<ExamHeader examInfo={examInfo} />

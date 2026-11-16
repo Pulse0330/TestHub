@@ -168,7 +168,7 @@ export const CategoryCard = memo(
 					"group card-pop lift rounded-3xl p-4 sm:p-5 text-left relative overflow-hidden w-full h-full animate-pop-in hover:border-pop-mint",
 					hasSelection && "border-pop-mint bg-pop-mint-soft/40",
 					checked &&
-						"border-primary bg-primary/10 shadow-[0_4px_0_0_var(--primary)]",
+						"border-primary/45 bg-primary-soft/40 shadow-[0_4px_0_0_var(--primary-soft-shade)]",
 				)}
 				aria-pressed={isCheckable ? checked : undefined}
 				aria-label={`${category.ulesson_name}, ${category.items.length} бүлэг тест${hasSelection ? `, ${categoryTotalQuestions} асуулт сонгосон` : ""}`}
@@ -194,7 +194,7 @@ export const CategoryCard = memo(
 									className={cn(
 										"flex size-7 items-center justify-center rounded-xl border-2 transition-colors",
 										checked
-											? "border-primary bg-primary-soft text-primary-soft-foreground"
+											? "border-primary-soft-shade bg-primary-soft text-primary-soft-foreground"
 											: "border-border bg-card text-transparent",
 									)}
 									aria-hidden="true"

@@ -70,7 +70,7 @@ function SingleSelectQuestion({
 							key={option.answer_id}
 							className={`relative w-full overflow-hidden rounded-2xl border-2 transition-all duration-150 ${
 								isSelected
-									? "border-primary bg-primary/10 text-primary shadow-[0_4px_0_0_var(--primary)]"
+									? "border-primary/45 bg-primary-soft/40 text-foreground shadow-[0_3px_0_0_var(--primary-soft-shade)]"
 									: "border-border bg-card shadow-[0_3px_0_0_var(--border)] hover:-translate-y-0.5 hover:border-primary/40 hover:bg-accent/40"
 							}`}
 						>
@@ -85,7 +85,7 @@ function SingleSelectQuestion({
 								<span
 									className={`flex size-8 shrink-0 items-center justify-center rounded-xl border-2 text-sm font-black transition-all ${
 										isSelected
-											? "border-primary bg-primary-soft text-primary-soft-foreground"
+											? "border-primary-soft-shade bg-primary-soft text-primary-soft-foreground"
 											: "border-border bg-muted text-muted-foreground"
 									}`}
 								>
@@ -95,7 +95,9 @@ function SingleSelectQuestion({
 									{hasContent && (
 										<div
 											className={`w-full text-left text-sm sm:text-base ${
-												isSelected ? "text-primary" : "text-foreground"
+												isSelected
+													? "font-bold text-foreground"
+													: "text-foreground"
 											}`}
 											style={{ lineHeight: "1.8" }}
 										>

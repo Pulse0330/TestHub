@@ -321,11 +321,11 @@ export const Navbar01: React.FC = () => {
 		<>
 			{/* ── Top bar (desktop + mobile) ── */}
 			<header className="fixed inset-x-0 top-0 z-40 border-b-2 border-border bg-card/90 backdrop-blur-xl">
-				<div className="mx-auto flex h-16 max-w-7xl items-center gap-4 px-4 md:px-6 lg:px-10">
+				<div className="mx-auto flex h-16 max-w-7xl items-center gap-3 px-4 md:px-6 lg:px-6 xl:gap-4 xl:px-10">
 					<Logo />
 
-					{/* Мэндчилгээ — логоны хажууд (lg дээр цэсэнд зай хүрэлцэхгүй тул нуугдана) */}
-					<p className="min-w-0 truncate border-l-2 border-border pl-4 text-sm font-semibold text-muted-foreground lg:hidden xl:block">
+					{/* Мэндчилгээ — логоны хажууд */}
+					<p className="min-w-0 max-w-56 shrink truncate border-l-2 border-border pl-3 text-sm font-semibold text-muted-foreground lg:max-w-40 xl:max-w-64 xl:pl-4">
 						Сайн уу,{" "}
 						<span className="font-extrabold text-foreground">
 							{userInfo.userName}
@@ -333,7 +333,7 @@ export const Navbar01: React.FC = () => {
 					</p>
 
 					{/* Desktop nav */}
-					<nav className="ml-4 hidden flex-1 items-center gap-1 lg:flex">
+					<nav className="hidden flex-1 items-center gap-0.5 lg:ml-1 lg:flex xl:ml-4 xl:gap-1">
 						{NAV.map((s) => {
 							const Icon = s.icon;
 							const active = current?.key === s.key;
@@ -342,13 +342,13 @@ export const Navbar01: React.FC = () => {
 									key={s.key}
 									href={s.links[0].href}
 									className={cn(
-										"flex items-center gap-2 rounded-full px-4 py-2 text-sm font-extrabold transition-all",
+										"flex shrink-0 items-center gap-2 rounded-full px-3 py-2 text-sm font-extrabold whitespace-nowrap transition-all xl:px-4",
 										active
 											? s.tone
 											: "text-muted-foreground hover:bg-muted hover:text-foreground",
 									)}
 								>
-									<Icon className="size-4" strokeWidth={2.5} />
+									<Icon className="size-4 lg:max-xl:hidden" strokeWidth={2.5} />
 									{s.label}
 								</Link>
 							);

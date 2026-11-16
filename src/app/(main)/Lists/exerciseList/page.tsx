@@ -1146,7 +1146,7 @@ function WizardStepper({
 									className={cn(
 										"flex size-8 sm:size-9 shrink-0 items-center justify-center rounded-xl border-2 text-sm font-black transition-colors",
 										isActive &&
-											"border-primary bg-primary-soft text-primary-soft-foreground shadow-[0_3px_0_0_var(--primary-shade)]",
+											"border-primary-soft-shade bg-primary-soft text-primary-soft-foreground shadow-[0_3px_0_0_var(--primary-soft-shade)]",
 										isDone &&
 											"border-pop-mint bg-pop-mint-soft text-pop-mint-ink",
 										!isActive &&

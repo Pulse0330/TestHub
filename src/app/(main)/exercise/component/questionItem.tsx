@@ -198,7 +198,7 @@ const QuestionItem = memo(function QuestionItem({
 		>
 			{/* Question Header */}
 			<div className="flex items-start gap-3 sm:gap-4 mb-4 sm:mb-6">
-				<div className="size-9 sm:size-11 bg-primary-soft text-primary-soft-foreground rounded-2xl flex items-center justify-center shrink-0 font-black text-sm sm:text-lg shadow-[0_3px_0_0_var(--primary-shade)]">
+				<div className="size-9 sm:size-11 bg-primary-soft text-primary-soft-foreground rounded-2xl flex items-center justify-center shrink-0 font-black text-sm sm:text-lg shadow-[0_3px_0_0_var(--primary-soft-shade)]">
 					{index + 1}
 				</div>
 				<div className="flex-1 min-w-0">

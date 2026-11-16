@@ -247,7 +247,7 @@ export default function MultiSelectQuestion({
 								hasImage ? "min-h-[100px]" : "min-h-[56px]"
 							} ${
 								selected
-									? "border-primary bg-primary/10 text-primary shadow-[0_4px_0_0_var(--primary)] hover:bg-primary/15 hover:text-primary"
+									? "border-primary/45 bg-primary-soft/40 text-foreground shadow-[0_3px_0_0_var(--primary-soft-shade)] hover:bg-primary/15 hover:text-primary"
 									: shouldHighlight
 										? "border-success bg-success/10 shadow-[0_4px_0_0_var(--success)]"
 										: "border-border bg-card shadow-[0_4px_0_0_var(--border)] hover:border-primary/40 hover:bg-accent/40 hover:-translate-y-0.5"
@@ -258,7 +258,7 @@ export default function MultiSelectQuestion({
 									hasImage ? "self-start" : ""
 								} ${
 									selected
-										? "border-primary bg-primary-soft text-primary-soft-foreground"
+										? "border-primary-soft-shade bg-primary-soft text-primary-soft-foreground"
 										: shouldHighlight
 											? "border-success bg-success text-primary-foreground"
 											: "border-border bg-muted text-muted-foreground group-hover:border-primary/40 group-hover:text-primary"

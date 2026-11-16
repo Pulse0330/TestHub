@@ -12,9 +12,9 @@ const buttonVariants = cva(
         default:
           "bg-primary-soft text-primary-soft-foreground shadow-[0_4px_0_0_var(--primary-soft-shade)] hover:brightness-[1.04] active:shadow-[0_1px_0_0_var(--primary-soft-shade)]",
         destructive:
-          "bg-destructive text-white shadow-[0_4px_0_0_color-mix(in_oklch,var(--destructive)_70%,black)] hover:brightness-110 active:shadow-[0_1px_0_0_color-mix(in_oklch,var(--destructive)_70%,black)] focus-visible:ring-destructive/30",
+          "bg-pop-coral text-pop-on shadow-[0_4px_0_0_color-mix(in_oklch,var(--pop-coral)_78%,black)] hover:brightness-[1.04] active:shadow-[0_1px_0_0_color-mix(in_oklch,var(--pop-coral)_78%,black)] focus-visible:ring-destructive/30",
         success:
-          "bg-success text-white shadow-[0_4px_0_0_color-mix(in_oklch,var(--success)_70%,black)] hover:brightness-110 active:shadow-[0_1px_0_0_color-mix(in_oklch,var(--success)_70%,black)]",
+          "bg-pop-mint text-pop-on shadow-[0_4px_0_0_color-mix(in_oklch,var(--pop-mint)_78%,black)] hover:brightness-[1.04] active:shadow-[0_1px_0_0_color-mix(in_oklch,var(--pop-mint)_78%,black)]",
         outline:
           "border-2 border-border bg-card text-foreground shadow-[0_3px_0_0_var(--border)] hover:bg-accent hover:text-accent-foreground active:shadow-[0_1px_0_0_var(--border)]",
         secondary:

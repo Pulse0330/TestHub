@@ -69,7 +69,7 @@ export function ProfileHeaderCard({
 								<>
 									<label
 										htmlFor="image-upload"
-										className="absolute bottom-1 right-1 flex size-10 cursor-pointer items-center justify-center rounded-full border-[3px] border-card bg-primary-soft text-primary-soft-foreground shadow-[0_3px_0_0_var(--primary-shade)] transition-all hover:scale-110"
+										className="absolute bottom-1 right-1 flex size-10 cursor-pointer items-center justify-center rounded-full border-[3px] border-card bg-primary-soft text-primary-soft-foreground shadow-[0_3px_0_0_var(--primary-soft-shade)] transition-all hover:scale-110"
 									>
 										<Camera className="size-5" strokeWidth={2.5} />
 									</label>

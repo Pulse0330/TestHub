@@ -155,7 +155,7 @@ function PlanButton({
 			className={cn(
 				"relative w-full p-4 rounded-2xl border-2 transition-all duration-150 text-left overflow-hidden",
 				isSelected
-					? "border-primary bg-primary/10 shadow-[0_4px_0_0_var(--primary)]"
+					? "border-primary/45 bg-primary-soft/40 shadow-[0_4px_0_0_var(--primary-soft-shade)]"
 					: "border-border bg-card shadow-[0_4px_0_0_var(--border)] hover:-translate-y-0.5 hover:border-primary/40 active:translate-y-0.5 active:shadow-[0_1px_0_0_var(--border)]",
 			)}
 		>

@@ -156,7 +156,7 @@ export const CourseCard = ({
 					</div>
 
 					{/* CTA */}
-					<span className="hidden sm:inline-flex shrink-0 items-center gap-1.5 rounded-xl bg-primary-soft px-4 py-2 text-sm font-extrabold text-primary-soft-foreground shadow-[0_3px_0_0_var(--primary-shade)] transition-transform group-hover:-translate-y-0.5">
+					<span className="hidden sm:inline-flex shrink-0 items-center gap-1.5 rounded-xl bg-primary-soft px-4 py-2 text-sm font-extrabold text-primary-soft-foreground shadow-[0_3px_0_0_var(--primary-soft-shade)] transition-transform group-hover:-translate-y-0.5">
 						{isNavigating ? (
 							<Loader2 className="size-4 animate-spin" />
 						) : (
@@ -164,7 +164,7 @@ export const CourseCard = ({
 						)}
 						Үзэх
 					</span>
-					<span className="sm:hidden flex size-9 shrink-0 items-center justify-center rounded-xl bg-primary-soft text-primary-soft-foreground shadow-[0_3px_0_0_var(--primary-shade)]">
+					<span className="sm:hidden flex size-9 shrink-0 items-center justify-center rounded-xl bg-primary-soft text-primary-soft-foreground shadow-[0_3px_0_0_var(--primary-soft-shade)]">
 						{isNavigating ? (
 							<Loader2 className="size-4 animate-spin" />
 						) : (

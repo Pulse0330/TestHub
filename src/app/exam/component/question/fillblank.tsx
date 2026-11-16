@@ -84,7 +84,7 @@ export default function FillInTheBlankQuestion({
 	const inputClassName = isInvalid
 		? "border-destructive bg-destructive/10"
 		: !isEmpty
-			? "border-primary bg-primary/10 text-primary"
+			? "border-primary/45 bg-primary-soft/40 text-foreground"
 			: "border-primary/50 focus-visible:ring-primary/30";
 
 	return (

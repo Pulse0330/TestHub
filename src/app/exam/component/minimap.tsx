@@ -72,7 +72,7 @@ const ExamMinimap = memo(function ExamMinimap({
 	const squareClass = (answered: boolean, isCurrent: boolean) =>
 		`relative flex aspect-square w-full items-center justify-center rounded-xl text-sm font-black tabular-nums transition-all active:scale-90 ${
 			answered
-				? "bg-primary-soft text-primary-soft-foreground shadow-[0_3px_0_0_var(--primary-shade)] hover:brightness-110"
+				? "bg-primary-soft text-primary-soft-foreground shadow-[0_3px_0_0_var(--primary-soft-shade)] hover:brightness-110"
 				: "bg-muted text-muted-foreground hover:bg-accent hover:text-accent-foreground"
 		} ${isCurrent ? "ring-4 ring-primary/30 ring-offset-2 ring-offset-card" : ""}`;
 
@@ -114,11 +114,11 @@ const ExamMinimap = memo(function ExamMinimap({
 									Хариулсан
 								</div>
 							</div>
-							<div className="rounded-2xl bg-pop-coral-soft p-3 text-center">
-								<div className="text-2xl font-black text-pop-coral-ink">
+							<div className="rounded-2xl bg-muted p-3 text-center">
+								<div className="text-2xl font-black text-foreground">
 									{totalCount - answeredCount}
 								</div>
-								<div className="text-xs font-bold uppercase tracking-wide text-pop-coral-ink">
+								<div className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
 									Үлдсэн
 								</div>
 							</div>
@@ -255,11 +255,11 @@ const ExamMinimap = memo(function ExamMinimap({
 						Хариулсан
 					</div>
 				</div>
-				<div className="rounded-2xl bg-pop-coral-soft p-3 text-center">
-					<div className="text-2xl font-black text-pop-coral-ink">
+				<div className="rounded-2xl bg-muted p-3 text-center">
+					<div className="text-2xl font-black text-foreground">
 						{totalCount - answeredCount}
 					</div>
-					<div className="text-[10px] font-bold uppercase tracking-wide text-pop-coral-ink sm:text-xs">
+					<div className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground sm:text-xs">
 						Үлдсэн
 					</div>
 				</div>

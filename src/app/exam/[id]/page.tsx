@@ -75,6 +75,10 @@ import {
 	prepareQuestions,
 	QuestionBody,
 } from "../component/QuestionBody";
+import {
+	TextSizeControl,
+	useExamTextScale,
+} from "../component/TextSizeControl";
 import { isAnswerFilled, useAnswerSync } from "../component/useAnswerSync";
 
 const SAVE_DELAYS = {
@@ -138,7 +142,7 @@ const ExamQuestionCard = memo(function ExamQuestionCard({
 		: isAnswered && isBookmarked
 			? "border-warning shadow-[0_4px_0_0_color-mix(in_oklch,var(--warning)_55%,transparent)]"
 			: isAnswered
-				? "border-primary/50 shadow-[0_4px_0_0_color-mix(in_oklch,var(--primary)_35%,transparent)]"
+				? "border-primary-soft-shade/70 shadow-[0_4px_0_0_color-mix(in_oklch,var(--primary-soft)_55%,transparent)]"
 				: isBookmarked
 					? "border-warning/70 shadow-[0_4px_0_0_color-mix(in_oklch,var(--warning)_40%,transparent)]"
 					: "border-border";
@@ -228,6 +232,7 @@ export default function ExamPage() {
 	const [showExitConfirm, setShowExitConfirm] = useState(false);
 	// Focus mode (one question at a time) is the default; list mode is optional.
 	const [viewMode, setViewMode] = useState<"focus" | "list">("focus");
+	const textScale = useExamTextScale();
 	const [showReview, setShowReview] = useState(false);
 	const swipeStart = useRef<{ x: number; y: number; id: number } | null>(null);
 	const programmaticScrollUntil = useRef(0);
@@ -708,6 +713,12 @@ export default function ExamPage() {
 							</button>
 						</fieldset>
 
+						{/* Бичвэрийн хэмжээ */}
+						<TextSizeControl
+							textScale={textScale}
+							className="order-5 hidden sm:flex md:order-3"
+						/>
+
 						{/* Navigator drawer trigger (rail replaces it on xl) */}
 						<Button
 							onClick={() => setShowMobileMinimapOverlay(true)}
@@ -773,7 +784,7 @@ export default function ExamPage() {
 										key={q.question_id}
 										className={`min-w-0 flex-1 rounded-full transition-all ${
 											isCurrent
-												? "h-2.5 bg-primary"
+												? "h-2.5 bg-pop-sky"
 												: marked
 													? "h-1.5 bg-warning"
 													: answered
@@ -791,7 +802,10 @@ export default function ExamPage() {
 			{/* ───────── Body ───────── */}
 			<div className="mx-auto flex w-full max-w-7xl flex-1 gap-8 px-3 sm:px-6 xl:grid xl:grid-cols-[minmax(0,1fr)_16rem] xl:px-8">
 				<div className="flex min-w-0 flex-1 flex-col">
-					<main className="mx-auto w-full max-w-3xl flex-1 py-3">
+					<main
+						className="mx-auto w-full max-w-3xl flex-1 py-3"
+						style={{ zoom: textScale.scale }}
+					>
 						{viewMode === "focus" ? (
 							currentQuestion && (
 								<div

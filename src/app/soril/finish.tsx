@@ -341,8 +341,8 @@ const FinishExamResultDialog = forwardRef<
 							<div
 								className={`rounded-2xl border-2 p-5 ${
 									isPassed
-										? "border-success/40 bg-success/10"
-										: "border-destructive/40 bg-destructive/10"
+										? "border-pop-mint/50 bg-pop-mint-soft"
+										: "border-pop-coral/50 bg-pop-coral-soft"
 								}`}
 							>
 								<div className="flex flex-col sm:flex-row items-center justify-between gap-4">
@@ -350,8 +350,8 @@ const FinishExamResultDialog = forwardRef<
 										<div
 											className={`flex size-12 items-center justify-center rounded-2xl ${
 												isPassed
-													? "bg-success text-white"
-													: "bg-destructive text-white"
+													? "bg-pop-mint text-pop-on"
+													: "bg-pop-coral text-pop-on"
 											}`}
 										>
 											<Award className="size-6" strokeWidth={2.5} />
