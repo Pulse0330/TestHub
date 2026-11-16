@@ -30,8 +30,8 @@ export const ResultSummaryCard = memo(function ResultSummaryCard({
 								fill="none"
 								stroke="currentColor"
 								viewBox="0 0 24 24"
+								aria-hidden="true"
 							>
-								<title>asd</title>
 								<path
 									strokeLinecap="round"
 									strokeLinejoin="round"
@@ -133,8 +133,8 @@ export const ResultSummaryCard = memo(function ResultSummaryCard({
 								fill="none"
 								stroke="currentColor"
 								viewBox="0 0 24 24"
+								aria-hidden="true"
 							>
-								<title>asd</title>
 								<path
 									strokeLinecap="round"
 									strokeLinejoin="round"
@@ -266,7 +266,7 @@ export const ResultSummaryCard = memo(function ResultSummaryCard({
 							<div
 								className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-pop-sky to-pop-violet transition-all duration-700 ease-out"
 								style={{
-									width: `${Math.min((examSummary.point / examSummary.ttl_point) * 100, 100)}%`,
+									width: `${examSummary.ttl_point > 0 ? Math.min((examSummary.point / examSummary.ttl_point) * 100, 100) : 0}%`,
 								}}
 							/>
 						</div>

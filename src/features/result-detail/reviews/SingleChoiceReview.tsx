@@ -67,11 +67,6 @@ export const SingleChoiceReview = memo(function SingleChoiceReview({
 										✗ Буруу
 									</div>
 								)}
-								{isUserSelected && !isCorrect && !isWrongSelection && (
-									<div className="rounded-full bg-primary px-3 py-1 text-sm font-extrabold text-primary-foreground">
-										✓ Та сонгосон
-									</div>
-								)}
 							</div>
 						</div>
 					);

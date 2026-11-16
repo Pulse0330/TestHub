@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { memo } from "react";
+import { AnswerContent } from "../AnswerContent";
 import type { AnswerReviewProps } from "./types";
 
 /** Харгалзуулах асуулт (que_type_id === 6). */
@@ -75,9 +76,10 @@ export const MatchingReview = memo(function MatchingReview({
 									/>
 								) : (
 									<div className="text-base font-medium">
-										{correctAnswer?.answer_name_html ||
-											correctAnswer?.answer_name ||
-											"Хариулт"}
+										<AnswerContent
+											html={correctAnswer?.answer_name_html}
+											text={correctAnswer?.answer_name || "Хариулт"}
+										/>
 									</div>
 								)}
 							</div>
@@ -101,8 +103,10 @@ export const MatchingReview = memo(function MatchingReview({
 										/>
 									) : (
 										<div className="text-base font-medium">
-											{userSelectedQuestion.answer_name_html ||
-												userSelectedQuestion.answer_name}
+											<AnswerContent
+												html={userSelectedQuestion.answer_name_html}
+												text={userSelectedQuestion.answer_name}
+											/>
 										</div>
 									)
 								) : (
@@ -166,9 +170,10 @@ export const MatchingReview = memo(function MatchingReview({
 											/>
 										) : (
 											<div className="text-base font-medium">
-												{answerItem.answer_name_html ||
-													answerItem.answer_name ||
-													"Хариулт"}
+												<AnswerContent
+													html={answerItem.answer_name_html}
+													text={answerItem.answer_name || "Хариулт"}
+												/>
 											</div>
 										)}
 									</div>
@@ -191,9 +196,10 @@ export const MatchingReview = memo(function MatchingReview({
 											/>
 										) : (
 											<div className="text-base font-medium">
-												{correctQuestion?.answer_name_html ||
-													correctQuestion?.answer_name ||
-													"Хариулт"}
+												<AnswerContent
+													html={correctQuestion?.answer_name_html}
+													text={correctQuestion?.answer_name || "Хариулт"}
+												/>
 											</div>
 										)}
 									</div>

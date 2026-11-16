@@ -190,6 +190,11 @@ export function ProfileContent({ user, userId }: ProfileContentProps) {
 
 	const handleCancelImage = () => cancelImage(user.img_url || "");
 	const handleToggleEdit = () => {
+		if (isEditing) {
+			// "Буцах" — хадгалаагүй зураг, өмнөх хадгалалтын алдааг цэвэрлэнэ
+			cancelImage(user.img_url || "");
+			updateMutation.reset();
+		}
 		setIsEditing(!isEditing);
 		setPasswordError("");
 		setPhoneError("");

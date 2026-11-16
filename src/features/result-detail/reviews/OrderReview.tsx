@@ -1,6 +1,7 @@
 "use client";
 
 import { memo } from "react";
+import { AnswerContent } from "../AnswerContent";
 import type { AnswerReviewProps } from "./types";
 
 /** Дараалал тогтоох асуулт (que_type_id === 5). */
@@ -56,7 +57,10 @@ export const OrderReview = memo(function OrderReview({
 								{/* Хариултын текст */}
 								<div className="flex-1 min-w-0">
 									<div className="text-base font-medium text-foreground">
-										{answer.answer_name_html || answer.answer_name || "Хариулт"}
+										<AnswerContent
+											html={answer.answer_name_html}
+											text={answer.answer_name || "Хариулт"}
+										/>
 									</div>
 								</div>
 
@@ -98,7 +102,10 @@ export const OrderReview = memo(function OrderReview({
 									className="flex items-center gap-3 rounded-xl border-2 border-success/40 bg-card p-3 font-bold"
 								>
 									<div className="text-base font-medium text-foreground">
-										{answer.answer_name_html || answer.answer_name || "Хариулт"}
+										<AnswerContent
+											html={answer.answer_name_html}
+											text={answer.answer_name || "Хариулт"}
+										/>
 									</div>
 								</div>
 							))}
