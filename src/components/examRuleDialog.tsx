@@ -2,6 +2,7 @@
 
 import {
 	AlertTriangle,
+	ArrowLeft,
 	Ban,
 	Camera,
 	CheckCircle2,
@@ -25,7 +26,13 @@ import {
 	X,
 	Zap,
 } from "lucide-react";
-import React, { useCallback, useMemo, useState } from "react";
+import React, {
+	useCallback,
+	useEffect,
+	useMemo,
+	useRef,
+	useState,
+} from "react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -37,6 +44,7 @@ import {
 	DialogHeader,
 	DialogTitle,
 } from "@/components/ui/dialog";
+import { cn } from "@/lib/utils";
 
 // ============================================
 // TYPES
@@ -238,63 +246,223 @@ const SectionHeader = React.memo<SectionHeaderProps>(function SectionHeader({
 });
 
 // ============================================
-// WARNING DIALOG - shown when checkbox not checked
+// RULES PANEL — reusable body (header + rules + acknowledgment + footer)
 // ============================================
 
-interface AckWarningDialogProps {
-	open: boolean;
-	onClose: () => void;
+/** Дүрэм зөвшөөрсний дараа шалгалт руу шилжихээс өмнөх хүлээлт (ms) */
+const CONFIRM_DELAY_MS = 1800;
+
+export interface ExamRulesPanelProps {
+	/** Дүрмийг зөвшөөрч «Шалгалт эхлүүлэх» дарсны дараа (бэлдэх хугацааны дараа) дуудагдана */
+	onConfirm: () => void;
+	/** Цуцлах / Буцах товч */
+	onCancel: () => void;
+	isMobile?: boolean;
+	/** "cancel" = «Цуцлах» (X), "back" = «Буцах» (←) — өөр алхмаас орж ирсэн үед */
+	cancelMode?: "cancel" | "back";
 }
 
-function AckWarningDialog({ open, onClose }: AckWarningDialogProps) {
+/**
+ * Шалгалтын дүрэм + зөвшөөрлийн checkbox.
+ * `DialogContent` дотор (flex-col, тогтсон/хязгаарлагдсан өндөртэй) байрлуулна —
+ * өөрийн `DialogTitle`-тэй тул тухайн үед өөр title render хийхгүй байх ёстой.
+ */
+export function ExamRulesPanel({
+	onConfirm,
+	onCancel,
+	isMobile = false,
+	cancelMode = "cancel",
+}: ExamRulesPanelProps) {
+	const [preparing, setPreparing] = useState(false);
+	const [acknowledged, setAcknowledged] = useState(false);
+	const [ackError, setAckError] = useState(false);
+	const ackRef = useRef<HTMLDivElement>(null);
+	const timerRef = useRef<number | null>(null);
+
+	// Хаагдвал (unmount) хүлээгдэж буй шилжилтийг цуцална
+	useEffect(
+		() => () => {
+			if (timerRef.current !== null) window.clearTimeout(timerRef.current);
+		},
+		[],
+	);
+
+	const handleNext = useCallback(() => {
+		if (!acknowledged) {
+			setAckError(true);
+			ackRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+			ackRef.current?.querySelector<HTMLButtonElement>("button")?.focus();
+			return;
+		}
+		setPreparing(true);
+		timerRef.current = window.setTimeout(() => {
+			timerRef.current = null;
+			onConfirm();
+		}, CONFIRM_DELAY_MS);
+	}, [acknowledged, onConfirm]);
+
+	const monitoringRules = isMobile
+		? MOBILE_MONITORING_RULES
+		: DESKTOP_MONITORING_RULES;
+
+	const showAckError = ackError && !acknowledged;
+
 	return (
-		<Dialog open={open} onOpenChange={onClose}>
-			<DialogContent className="w-[85vw] max-w-sm overflow-hidden p-0">
-				{/* Red accent top bar */}
+		<div className="flex min-h-0 flex-1 flex-col">
+			{/* Header */}
+			<div className="flex-none border-b-2 border-border bg-page-gradient px-4 pt-5 pb-4 sm:px-6">
+				<DialogHeader>
+					<DialogTitle className="flex items-center gap-3 pr-6 text-xl font-black text-foreground sm:text-2xl">
+						<span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-pop-violet-soft text-2xl shadow-[0_4px_0_0_color-mix(in_oklch,var(--pop-violet)_30%,transparent)]">
+							🍀
+						</span>
+						Амжилт хүсье!
+					</DialogTitle>
+					<DialogDescription className="mt-1 text-xs font-semibold sm:text-sm">
+						Цахимаар шалгалт өгөх дүрмийг анхааралтай уншиж эхлүүлнэ үү .
+					</DialogDescription>
+				</DialogHeader>
 
-				<div className="px-5 pt-6 pb-5">
-					{/* Icon + Title */}
-					<div className="flex flex-col items-center text-center gap-3 mb-4">
-						<div className="flex size-16 items-center justify-center rounded-3xl bg-destructive/10 shadow-[0_4px_0_0_color-mix(in_oklch,var(--destructive)_30%,transparent)]">
-							<AlertTriangle
-								className="size-8 text-destructive"
-								strokeWidth={2.5}
-							/>
-						</div>
-						<div>
-							<DialogTitle className="mb-1 text-lg font-black text-foreground">
-								Дүрмийг зөвшөөрөөгүй байна
-							</DialogTitle>
-							<DialogDescription className="text-xs font-semibold leading-relaxed">
-								Шалгалт эхлүүлэхийн өмнө доорх нөхцлийг зайлшгүй зөвшөөрнө үү
-							</DialogDescription>
-						</div>
+				<Alert className="mt-3 rounded-2xl border-2 border-destructive/30 bg-destructive/10 px-3 py-2">
+					<AlertTriangle className="size-4 text-destructive" />
+					<AlertDescription className="text-[11px] font-bold text-destructive sm:text-xs">
+						⚠️ АНХААРУУЛГА: Хуулах аливаа оролдлого бүрийг системд бүртгэж
+						байгааг анхаарна уу !!
+					</AlertDescription>
+				</Alert>
+			</div>
+
+			{/* Content */}
+			<div className="flex min-h-0 flex-1 flex-col justify-between overflow-y-auto bg-card px-4 py-4 sm:px-6">
+				<div>
+					<div className="mb-2">
+						<h3 className="flex items-center gap-2 text-base font-extrabold text-foreground sm:text-lg">
+							<span className="flex size-8 items-center justify-center rounded-xl bg-primary/10 text-primary">
+								<Shield className="size-4" strokeWidth={2.5} />
+							</span>
+							Шалгалтын дүрэм журам
+						</h3>
 					</div>
 
-					{/* Info box */}
-					<div className="mb-4 rounded-2xl bg-muted p-3">
-						<div className="flex items-start gap-2">
-							<CheckCircle2 className="mt-0.5 size-4 shrink-0 text-destructive" />
-							<p className="text-[11px] leading-snug font-semibold text-foreground sm:text-xs">
-								<span className="font-bold">"Шалгалтын дүрэм журам"</span>-ийн
-								checkbox-ийг чагтална уу. Дүрмийг уншиж, зөвшөөрсний дараа
-								шалгалтыг эхлүүлэх боломжтой.
-							</p>
+					<div className="space-y-1">
+						<SectionHeader
+							icon={Monitor}
+							title={isMobile ? "Утасны хяналт" : "Дэлгэцийн хяналт"}
+						/>
+						<div className="mb-1 grid gap-2 sm:grid-cols-2">
+							{monitoringRules.map((rule) => (
+								<RuleItem key={rule.title} {...rule} />
+							))}
+						</div>
+
+						<SectionHeader icon={Ban} title="Системийн хязгаарлалт" />
+						<div className="mb-1 grid gap-2 sm:grid-cols-2">
+							{SYSTEM_RESTRICTIONS.map((rule) => (
+								<RuleItem key={rule.title} {...rule} />
+							))}
+						</div>
+
+						<SectionHeader icon={Users} title="Хандлага болон аюулгүй байдал" />
+						<div className="mb-1 grid gap-2 sm:grid-cols-2">
+							{BEHAVIORAL_RULES.map((rule) => (
+								<RuleItem key={rule.title} {...rule} />
+							))}
+						</div>
+
+						<SectionHeader icon={CheckCircle2} title="Шалгалтын зөвлөмж" />
+						<div className="grid gap-2 sm:grid-cols-2">
+							{EXAM_GUIDELINES.map((rule) => (
+								<RuleItem key={rule.title} {...rule} />
+							))}
 						</div>
 					</div>
-
-					{/* Action button */}
-					<Button onClick={onClose} className="w-full">
-						Ойлголоо, буцах
-					</Button>
 				</div>
-			</DialogContent>
-		</Dialog>
+
+				{/* Acknowledgment */}
+				<div
+					ref={ackRef}
+					className={cn(
+						"mt-4 scroll-mb-4 rounded-2xl border-2 p-3 transition-colors duration-200 sm:p-4",
+						acknowledged
+							? "border-success bg-success/10 shadow-[0_4px_0_0_color-mix(in_oklch,var(--success)_40%,transparent)]"
+							: showAckError
+								? "border-destructive bg-destructive/10"
+								: "border-border bg-muted/60",
+					)}
+				>
+					<div className="flex flex-row items-start justify-between gap-3">
+						<Checkbox
+							id="ack-all"
+							checked={acknowledged}
+							onCheckedChange={() => setAcknowledged((v) => !v)}
+							aria-invalid={showAckError}
+							aria-describedby={showAckError ? "ack-all-error" : undefined}
+							className="mt-0.5 size-5 rounded-md border-2 data-[state=checked]:border-success data-[state=checked]:bg-success data-[state=checked]:text-white"
+						/>
+						<label
+							htmlFor="ack-all"
+							className="flex-1 cursor-pointer text-xs leading-snug font-bold text-foreground sm:text-sm"
+						>
+							Би Шалгалтын дүрэмтэй танилцсан бөгөөд энэ дүрмийг зөрчвөл
+							шалгалтнаас гаргахыг зөвшөөрч байна.
+						</label>
+					</div>
+					{showAckError && (
+						<p
+							id="ack-all-error"
+							role="alert"
+							className="mt-2 flex items-start gap-1.5 text-[11px] font-bold text-destructive sm:text-xs"
+						>
+							<AlertTriangle className="mt-px size-3.5 shrink-0" />
+							Шалгалт эхлүүлэхийн өмнө дүрмийг зөвшөөрч, checkbox-ийг чагтална
+							уу.
+						</p>
+					)}
+				</div>
+			</div>
+
+			{/* Footer */}
+			<DialogFooter className="flex flex-none flex-row items-center justify-between gap-2 border-t-2 border-border bg-muted/50 px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:justify-between sm:px-6">
+				<Button
+					variant="outline"
+					onClick={onCancel}
+					disabled={preparing}
+					className="text-xs sm:text-sm"
+				>
+					{cancelMode === "back" ? (
+						<>
+							<ArrowLeft className="size-4" />
+							Буцах
+						</>
+					) : (
+						<>
+							<X className="size-4" />
+							Цуцлах
+						</>
+					)}
+				</Button>
+
+				<Button
+					onClick={handleNext}
+					disabled={preparing}
+					className="text-xs disabled:cursor-not-allowed sm:text-sm"
+				>
+					{preparing ? (
+						"Бэлдэж байна..."
+					) : (
+						<>
+							<CheckCircle2 className="size-4" />
+							Шалгалт эхлүүлэх
+						</>
+					)}
+				</Button>
+			</DialogFooter>
+		</div>
 	);
 }
 
 // ============================================
-// MAIN COMPONENT
+// MAIN COMPONENT — standalone rules dialog
 // ============================================
 
 export default function ExamRulesDialog({
@@ -303,173 +471,23 @@ export default function ExamRulesDialog({
 	onConfirm,
 	isMobile = false,
 }: ExamRulesDialogProps) {
-	const [showMessage, setShowMessage] = useState(false);
-	const [acknowledged, setAcknowledged] = useState(false);
-	const [showAckWarning, setShowAckWarning] = useState(false);
-
-	const handleNext = useCallback(() => {
-		if (!acknowledged) {
-			setShowAckWarning(true);
-			return;
-		}
-		setShowMessage(true);
-		setTimeout(() => {
-			onConfirm();
-			onOpenChange(false);
-			setShowMessage(false);
-			setAcknowledged(false);
-		}, 1800);
-	}, [acknowledged, onConfirm, onOpenChange]);
-
-	const handleCancel = useCallback(() => {
+	const handleConfirm = useCallback(() => {
+		onConfirm();
 		onOpenChange(false);
-		setTimeout(() => {
-			setAcknowledged(false);
-		}, 300);
-	}, [onOpenChange]);
+	}, [onConfirm, onOpenChange]);
 
-	const monitoringRules = isMobile
-		? MOBILE_MONITORING_RULES
-		: DESKTOP_MONITORING_RULES;
+	const handleCancel = useCallback(() => onOpenChange(false), [onOpenChange]);
 
 	return (
-		<>
-			<Dialog open={open} onOpenChange={onOpenChange}>
-				<DialogContent className="flex h-[85vh] w-[90vw] max-w-3xl flex-col gap-0 overflow-hidden p-0">
-					{/* Header */}
-					<div className="flex-none border-b-2 border-border bg-page-gradient px-4 pt-5 pb-4 sm:px-6">
-						<DialogHeader>
-							<DialogTitle className="flex items-center gap-3 text-xl font-black text-foreground sm:text-2xl">
-								<span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-pop-violet-soft text-2xl shadow-[0_4px_0_0_color-mix(in_oklch,var(--pop-violet)_30%,transparent)]">
-									🍀
-								</span>
-								Амжилт хүсье!
-							</DialogTitle>
-							<DialogDescription className="mt-1 text-xs font-semibold sm:text-sm">
-								Цахимаар шалгалт өгөх дүрмийг анхааралтай уншиж эхлүүлнэ үү .
-							</DialogDescription>
-						</DialogHeader>
-
-						<Alert className="mt-3 rounded-2xl border-2 border-destructive/30 bg-destructive/10 px-3 py-2">
-							<AlertTriangle className="size-4 text-destructive" />
-							<AlertDescription className="text-[11px] font-bold text-destructive sm:text-xs">
-								⚠️ АНХААРУУЛГА: Хуулах аливаа оролдлого бүрийг системд бүртгэж
-								байгааг анхаарна уу !!
-							</AlertDescription>
-						</Alert>
-					</div>
-
-					{/* Content */}
-					<div className="flex min-h-0 flex-1 flex-col justify-between overflow-y-auto bg-card px-4 py-4 sm:px-6">
-						<div>
-							<div className="mb-2">
-								<h3 className="flex items-center gap-2 text-base font-extrabold text-foreground sm:text-lg">
-									<span className="flex size-8 items-center justify-center rounded-xl bg-primary/10 text-primary">
-										<Shield className="size-4" strokeWidth={2.5} />
-									</span>
-									Шалгалтын дүрэм журам
-								</h3>
-							</div>
-
-							<div className="space-y-1">
-								<SectionHeader
-									icon={Monitor}
-									title={isMobile ? "Утасны хяналт" : "Дэлгэцийн хяналт"}
-								/>
-								<div className="mb-1 grid gap-2 sm:grid-cols-2">
-									{monitoringRules.map((rule) => (
-										<RuleItem key={rule.title} {...rule} />
-									))}
-								</div>
-
-								<SectionHeader icon={Ban} title="Системийн хязгаарлалт" />
-								<div className="mb-1 grid gap-2 sm:grid-cols-2">
-									{SYSTEM_RESTRICTIONS.map((rule) => (
-										<RuleItem key={rule.title} {...rule} />
-									))}
-								</div>
-
-								<SectionHeader
-									icon={Users}
-									title="Хандлага болон аюулгүй байдал"
-								/>
-								<div className="mb-1 grid gap-2 sm:grid-cols-2">
-									{BEHAVIORAL_RULES.map((rule) => (
-										<RuleItem key={rule.title} {...rule} />
-									))}
-								</div>
-
-								<SectionHeader icon={CheckCircle2} title="Шалгалтын зөвлөмж" />
-								<div className="grid gap-2 sm:grid-cols-2">
-									{EXAM_GUIDELINES.map((rule) => (
-										<RuleItem key={rule.title} {...rule} />
-									))}
-								</div>
-							</div>
-						</div>
-
-						{/* Acknowledgment */}
-						<div
-							className={`mt-4 rounded-2xl border-2 p-3 transition-colors duration-200 sm:p-4 ${
-								acknowledged
-									? "border-success bg-success/10 shadow-[0_4px_0_0_color-mix(in_oklch,var(--success)_40%,transparent)]"
-									: "border-border bg-muted/60"
-							}`}
-						>
-							<div className="flex flex-row items-start justify-between gap-3">
-								<Checkbox
-									id="ack-all"
-									checked={acknowledged}
-									onCheckedChange={() => setAcknowledged((v) => !v)}
-									className="mt-0.5 size-5 rounded-md border-2 data-[state=checked]:border-success data-[state=checked]:bg-success data-[state=checked]:text-white"
-								/>
-								<label
-									htmlFor="ack-all"
-									className="flex-1 cursor-pointer text-xs leading-snug font-bold text-foreground sm:text-sm"
-								>
-									Би Шалгалтын дүрэмтэй танилцсан бөгөөд энэ дүрмийг зөрчвөл
-									шалгалтнаас гаргахыг зөвшөөрч байна.
-								</label>
-							</div>
-						</div>
-					</div>
-
-					{/* Footer */}
-					<DialogFooter className="flex flex-none flex-row items-center justify-between gap-2 border-t-2 border-border bg-muted/50 px-4 py-3 sm:justify-between sm:px-6">
-						<Button
-							variant="outline"
-							onClick={handleCancel}
-							disabled={showMessage}
-							className="text-xs sm:text-sm"
-						>
-							<X className="size-4" />
-							Цуцлах
-						</Button>
-
-						<Button
-							onClick={handleNext}
-							disabled={showMessage}
-							className="text-xs disabled:cursor-not-allowed sm:text-sm"
-						>
-							{showMessage ? (
-								"Бэлдэж байна..."
-							) : (
-								<>
-									<CheckCircle2 className="size-4" />
-									Шалгалт эхлүүлэх
-								</>
-							)}
-						</Button>
-					</DialogFooter>
-				</DialogContent>
-			</Dialog>
-
-			{/* Warning dialog for unchecked acknowledgment */}
-			<AckWarningDialog
-				open={showAckWarning}
-				onClose={() => setShowAckWarning(false)}
-			/>
-		</>
+		<Dialog open={open} onOpenChange={onOpenChange}>
+			<DialogContent className="flex h-[85vh] w-[90vw] max-w-3xl flex-col gap-0 overflow-hidden p-0">
+				<ExamRulesPanel
+					onConfirm={handleConfirm}
+					onCancel={handleCancel}
+					isMobile={isMobile}
+				/>
+			</DialogContent>
+		</Dialog>
 	);
 }
 

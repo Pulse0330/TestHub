@@ -18,7 +18,10 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { memo, useCallback, useEffect, useMemo, useState } from "react";
-import ExamRulesDialog from "@/components/examRuleDialog";
+import {
+	ExamDetailDialog,
+	type ExamDetailStatus,
+} from "@/components/ExamDetailDialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -78,6 +81,19 @@ function computeExamStatus(exam: Exam) {
 	return { isActive, isPaid, isPurchased, isLocked, canTakeExam };
 }
 
+/** Дэлгэрэнгүй dialog-ийн төлөв — карт дээрх төлбөрийн дүрэмтэй ижил. */
+function getDetailStatus(exam: Exam): ExamDetailStatus {
+	const { isActive, isPurchased, isLocked, canTakeExam } =
+		computeExamStatus(exam);
+	return {
+		isLocked,
+		isPurchased,
+		isExpired: exam.flag >= 2,
+		canPay: isLocked && isActive,
+		canTakeExam,
+	};
+}
+
 const getFlagConfig = (flag: number) => {
 	switch (flag) {
 		case 1:
@@ -107,8 +123,8 @@ interface ExamCardItemProps {
 	index: number;
 	isNavigating: boolean;
 	loadingExamId: number | null;
-	onExamClick: (examId: number, canTake: boolean) => void;
-	onCreateInvoice: (exam: Exam, e: React.MouseEvent) => void;
+	onExamClick: (exam: Exam) => void;
+	onCreateInvoice: (exam: Exam, e?: React.MouseEvent) => void;
 }
 
 const ExamCardItem = memo(
@@ -138,11 +154,11 @@ const ExamCardItem = memo(
 			>
 				<button
 					type="button"
-					onClick={() => onExamClick(exam.exam_id, canTakeExam)}
+					onClick={() => onExamClick(exam)}
 					className={cn(
 						"group card-pop lift flex h-full w-full flex-col overflow-hidden p-2 text-left",
 						isLocked && "border-pop-sun/60",
-						(!canTakeExam || isNavigating) && "opacity-60 cursor-not-allowed",
+						(!canTakeExam || isNavigating) && "opacity-60",
 					)}
 				>
 					{/* Header — өнгөт banner */}
@@ -277,7 +293,7 @@ const ExamCardItem = memo(
 
 ExamCardItem.displayName = "ExamCardItem";
 
-// ── Shared actions (invoice / rules dialog / navigation) ─────────
+// ── Shared actions (invoice / detail+rules dialog / navigation) ──
 function useExamActions(onPaymentSuccess?: () => void) {
 	const router = useRouter();
 	const { userId } = useAuthStore();
@@ -286,13 +302,14 @@ function useExamActions(onPaymentSuccess?: () => void) {
 	const [qpayDialogOpen, setQpayDialogOpen] = useState(false);
 	const [qpayData, setQpayData] = useState<QPayInvoiceResponse | null>(null);
 	const [loadingExamId, setLoadingExamId] = useState<number | null>(null);
-	const [rulesDialogOpen, setRulesDialogOpen] = useState(false);
-	const [selectedExamId, setSelectedExamId] = useState<number | null>(null);
+	// Дэлгэрэнгүй → дүрэм → эхлүүлэх dialog (нэг л instance)
+	const [detailExam, setDetailExam] = useState<Exam | null>(null);
+	const [detailStep, setDetailStep] = useState<"details" | "rules">("details");
 	const [isNavigating, setIsNavigating] = useState(false);
 
 	const handleCreateInvoice = useCallback(
-		async (exam: Exam, e: React.MouseEvent) => {
-			e.stopPropagation();
+		async (exam: Exam, e?: React.MouseEvent) => {
+			e?.stopPropagation();
 			if (!userId) return;
 			setLoadingExamId(exam.exam_id);
 			try {
@@ -323,26 +340,43 @@ function useExamActions(onPaymentSuccess?: () => void) {
 		onPaymentSuccess?.();
 	}, [onPaymentSuccess, queryClient]);
 
+	/** Карт дээр дарахад дэлгэрэнгүй, «Шалгалт эхлүүлэх»-ээс шууд дүрмийн алхам нээгдэнэ */
 	const handleExamClick = useCallback(
-		(examId: number, canTake: boolean) => {
-			if (!canTake || isNavigating) return;
-			setSelectedExamId(examId);
-			setRulesDialogOpen(true);
+		(exam: Exam, step: "details" | "rules" = "details") => {
+			if (isNavigating) return;
+			setDetailStep(step);
+			setDetailExam(exam);
 		},
 		[isNavigating],
 	);
 
-	const handleRulesConfirm = useCallback(async () => {
-		if (!selectedExamId) return;
-		try {
-			setIsNavigating(true);
-			await router.replace(`/exam/${selectedExamId}`);
-		} catch {
-			/* silent */
-		} finally {
-			setIsNavigating(false);
-		}
-	}, [selectedExamId, router]);
+	const handleDetailOpenChange = useCallback((open: boolean) => {
+		if (!open) setDetailExam(null);
+	}, []);
+
+	// QPay нэхэмжлэх хүсэлт дууссаны дараа dialog-ийг хааж QPay dialog-ийг харуулна
+	const handlePayFromDetail = useCallback(
+		async (exam: Exam) => {
+			await handleCreateInvoice(exam);
+			setDetailExam(null);
+		},
+		[handleCreateInvoice],
+	);
+
+	const handleStartExam = useCallback(
+		async (exam: Exam) => {
+			setDetailExam(null);
+			try {
+				setIsNavigating(true);
+				await router.replace(`/exam/${exam.exam_id}`);
+			} catch {
+				/* silent */
+			} finally {
+				setIsNavigating(false);
+			}
+		},
+		[router],
+	);
 
 	const dialogs = (
 		<>
@@ -354,11 +388,16 @@ function useExamActions(onPaymentSuccess?: () => void) {
 				onPaymentSuccess={handlePaymentSuccess}
 				successMessage="Таны төлбөр амжилттай төлөгдлөө. Та шалгалт өгөх боломжтой боллоо."
 			/>
-			<ExamRulesDialog
-				open={rulesDialogOpen}
-				onOpenChange={setRulesDialogOpen}
-				onConfirm={handleRulesConfirm}
-				isMobile={false}
+			<ExamDetailDialog
+				exam={detailExam}
+				getStatus={getDetailStatus}
+				onOpenChange={handleDetailOpenChange}
+				onPay={handlePayFromDetail}
+				onStart={handleStartExam}
+				isCreatingInvoice={
+					detailExam !== null && loadingExamId === detailExam.exam_id
+				}
+				initialStep={detailStep}
 			/>
 		</>
 	);
@@ -620,7 +659,7 @@ export const NextExamHero = memo(function NextExamHero({
 					) : (
 						<Button
 							size="lg"
-							onClick={() => handleExamClick(exam.exam_id, canTakeExam)}
+							onClick={() => handleExamClick(exam, "rules")}
 							disabled={!canTakeExam || isNavigating}
 							className="w-full bg-card text-base text-primary shadow-[0_5px_0_0_var(--primary-shade)] hover:bg-accent hover:brightness-100 active:shadow-[0_1px_0_0_var(--primary-shade)]"
 						>
