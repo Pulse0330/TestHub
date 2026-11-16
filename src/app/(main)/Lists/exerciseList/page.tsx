@@ -806,7 +806,7 @@ export default function TestGroupPage() {
 	const renderSummaryStep = () => (
 		<div className="mx-auto max-w-2xl space-y-4">
 			<div className="card-pop overflow-hidden animate-pop-in">
-				<div className="bg-gradient-to-br from-pop-violet to-pop-pink p-6 sm:p-8 text-primary-foreground">
+				<div className="bg-gradient-to-br from-pop-violet to-pop-pink p-6 sm:p-8 text-pop-on">
 					<div className="flex items-center gap-3">
 						<span className="flex size-12 items-center justify-center rounded-2xl bg-card/20 text-2xl">
 							🚀

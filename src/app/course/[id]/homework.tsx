@@ -53,7 +53,7 @@ export function Homework({ content, onStartExam }: HomeworkProps) {
 					<div className="flex items-start justify-between gap-4">
 						<div className="flex-1 min-w-0 space-y-3">
 							<div className="flex items-center gap-3 flex-wrap">
-								<div className="flex size-12 items-center justify-center rounded-2xl bg-pop-sun text-primary-foreground shadow-[0_4px_0_0_color-mix(in_oklch,var(--pop-sun)_60%,black)]">
+								<div className="flex size-12 items-center justify-center rounded-2xl bg-pop-sun text-pop-on shadow-[0_4px_0_0_color-mix(in_oklch,var(--pop-sun)_60%,black)]">
 									{getContentIcon(content.l_content_type)}
 								</div>
 								<Badge variant="sun" className="rounded-full bg-card">
@@ -82,7 +82,7 @@ export function Homework({ content, onStartExam }: HomeworkProps) {
 					{content.testcnt && (
 						<div className="rounded-2xl bg-pop-sky-soft p-4">
 							<div className="flex items-center gap-3">
-								<div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-pop-sky text-primary-foreground">
+								<div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-pop-sky text-pop-on">
 									<FileText className="h-4 w-4" strokeWidth={2.5} />
 								</div>
 								<div className="min-w-0">
@@ -101,7 +101,7 @@ export function Homework({ content, onStartExam }: HomeworkProps) {
 					{content.minut && (
 						<div className="rounded-2xl bg-pop-sun-soft p-4">
 							<div className="flex items-center gap-3">
-								<div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-pop-sun text-primary-foreground">
+								<div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-pop-sun text-pop-on">
 									<Clock className="h-4 w-4" strokeWidth={2.5} />
 								</div>
 								<div className="min-w-0">
@@ -126,7 +126,7 @@ export function Homework({ content, onStartExam }: HomeworkProps) {
 							<div
 								className={`flex size-9 shrink-0 items-center justify-center rounded-xl ${
 									content.stu_worked === 1
-										? "bg-pop-mint text-primary-foreground"
+										? "bg-pop-mint text-pop-on"
 										: "bg-card text-muted-foreground border-2 border-border"
 								}`}
 							>

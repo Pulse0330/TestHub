@@ -521,82 +521,156 @@ export const NextExamHero = memo(function NextExamHero({
 	const isPaying = loadingExamId === exam.exam_id;
 
 	return (
-		<div
+		<section
+			aria-label="Дараагийн шалгалт"
 			className={cn(
-				"relative flex h-full flex-col overflow-hidden rounded-3xl bg-primary p-5 text-primary-foreground shadow-[0_6px_0_0_var(--primary-shade)] sm:p-6",
+				"relative overflow-hidden rounded-3xl border border-border bg-[linear-gradient(135deg,var(--pop-sky-soft),var(--pop-violet-soft))] p-5 sm:p-8 lg:p-10",
 				className,
 			)}
 		>
-			{/* Decorative shapes */}
+			{/* Зөөлөн чимэглэл */}
 			<div aria-hidden className="pointer-events-none absolute inset-0">
-				<div className="absolute -right-12 -top-16 size-52 rounded-full bg-primary-foreground/10" />
-				<div className="absolute -bottom-20 -left-10 size-44 rounded-full bg-primary-foreground/10" />
-				<div className="absolute right-10 top-24 size-3 rounded-full bg-pop-sun" />
-				<div className="absolute right-24 top-10 size-2 rounded-full bg-pop-mint" />
+				<div className="absolute -top-24 -right-16 size-72 rounded-full bg-card/40" />
+				<div className="absolute -bottom-32 left-1/3 size-72 rounded-full bg-card/30" />
 			</div>
 
-			<div className="relative flex flex-1 flex-col gap-5">
-				{/* Top row */}
-				<div className="flex items-center justify-between gap-3">
-					<span className="inline-flex items-center gap-1.5 rounded-full bg-primary-foreground/15 px-3 py-1 text-xs font-extrabold">
-						<span aria-hidden>🎯</span>
-						Дараагийн шалгалт
-					</span>
-					{isLocked ? (
-						<Badge className="shrink-0 border-0 bg-pop-sun px-2.5 py-0.5 text-[11px] text-pop-sun-ink dark:text-background">
-							<Lock className="size-3" strokeWidth={2.75} />
-							Төлбөртэй
-						</Badge>
-					) : isPurchased ? (
-						<Badge className="shrink-0 border-0 bg-card px-2.5 py-0.5 text-[11px] text-pop-mint-ink">
-							<Unlock className="size-3" strokeWidth={2.75} />
-							Төлөгдсөн
-						</Badge>
-					) : (
-						<Badge
-							className={cn(
-								"shrink-0 border-0 px-2.5 py-0.5 text-[11px]",
-								flagConfig.badgeClass,
-							)}
-						>
-							<flagConfig.Icon className="size-3" strokeWidth={2.75} />
-							{flagConfig.label}
-						</Badge>
-					)}
-				</div>
-
-				{/* Title */}
-				<div className="min-w-0 space-y-2">
-					{exam.lesson_name && (
-						<span className="inline-block max-w-full truncate rounded-full bg-primary-foreground/15 px-2.5 py-0.5 text-[11px] font-extrabold uppercase tracking-wide">
-							{exam.lesson_name}
+			<div className="relative grid gap-8 lg:grid-cols-[1.4fr_1fr] lg:items-center lg:gap-12">
+				{/* Зүүн: гарчиг, мэдээлэл, үйлдэл */}
+				<div className="flex min-w-0 flex-col gap-5">
+					<div className="flex flex-wrap items-center gap-2">
+						<span className="inline-flex items-center gap-1.5 rounded-full bg-card/80 px-3 py-1 text-xs font-extrabold text-pop-sky-ink">
+							<CalendarClock className="size-3.5" strokeWidth={2.5} />
+							Дараагийн шалгалт
 						</span>
-					)}
-					<h2 className="line-clamp-3 break-words text-2xl font-black leading-tight tracking-tight sm:text-3xl">
-						{exam.title}
-					</h2>
+						{isLocked ? (
+							<Badge className="border-0 bg-pop-sun-soft px-2.5 py-0.5 text-[11px] text-pop-sun-ink">
+								<Lock className="size-3" strokeWidth={2.75} />
+								Төлбөртэй
+							</Badge>
+						) : isPurchased ? (
+							<Badge className="border-0 bg-card px-2.5 py-0.5 text-[11px] text-pop-mint-ink">
+								<Unlock className="size-3" strokeWidth={2.75} />
+								Төлөгдсөн
+							</Badge>
+						) : (
+							<Badge
+								className={cn(
+									"border-0 px-2.5 py-0.5 text-[11px]",
+									flagConfig.badgeClass,
+								)}
+							>
+								<flagConfig.Icon className="size-3" strokeWidth={2.75} />
+								{flagConfig.label}
+							</Badge>
+						)}
+					</div>
+
+					<div className="min-w-0 space-y-2">
+						{exam.lesson_name && (
+							<p className="truncate text-sm font-extrabold uppercase tracking-wide text-muted-foreground">
+								{exam.lesson_name}
+							</p>
+						)}
+						<h2 className="line-clamp-3 break-words text-3xl leading-tight font-black tracking-tight text-balance text-foreground sm:text-4xl lg:text-5xl">
+							{exam.title}
+						</h2>
+					</div>
+
+					<div className="flex flex-wrap gap-2 text-xs font-bold text-foreground/80">
+						<span className="inline-flex items-center gap-1.5 rounded-full bg-card/70 px-3 py-1.5">
+							<CalendarClock className="size-3.5" strokeWidth={2.5} />
+							Эхлэх{" "}
+							<span className="tabular-nums">
+								{start.date} {start.time}
+							</span>
+						</span>
+						<span className="inline-flex items-center gap-1.5 rounded-full bg-card/70 px-3 py-1.5">
+							<CalendarClock className="size-3.5" strokeWidth={2.5} />
+							Дуусах{" "}
+							<span className="tabular-nums">
+								{end.date} {end.time}
+							</span>
+						</span>
+						<span className="inline-flex items-center gap-1.5 rounded-full bg-card/70 px-3 py-1.5">
+							<Clock className="size-3.5" strokeWidth={2.5} />
+							{exam.exam_minute} мин
+						</span>
+						<span className="inline-flex items-center gap-1.5 rounded-full bg-card/70 px-3 py-1.5">
+							<FileText className="size-3.5" strokeWidth={2.5} />
+							{exam.que_cnt} асуулт
+						</span>
+					</div>
+
+					<div className="flex flex-col gap-2 pt-1 sm:flex-row">
+						{isLocked && isActive ? (
+							<Button
+								size="lg"
+								onClick={(e) => handleCreateInvoice(exam, e)}
+								disabled={isPaying}
+								className="bg-pop-sun-soft text-pop-sun-ink shadow-[0_4px_0_0_color-mix(in_oklch,var(--pop-sun)_70%,transparent)] active:shadow-[0_1px_0_0_color-mix(in_oklch,var(--pop-sun)_70%,transparent)] sm:min-w-56"
+							>
+								{isPaying ? (
+									<Loader2 className="size-5 animate-spin" />
+								) : (
+									<>
+										<CreditCard className="size-5" strokeWidth={2.5} />
+										Төлбөр төлөх
+									</>
+								)}
+							</Button>
+						) : (
+							<Button
+								size="lg"
+								onClick={() => handleExamClick(exam, "rules")}
+								disabled={!canTakeExam || isNavigating}
+								className="sm:min-w-56"
+							>
+								{isNavigating ? (
+									<Loader2 className="size-5 animate-spin" />
+								) : canTakeExam ? (
+									<>
+										<Play className="size-5 fill-current" strokeWidth={2.5} />
+										Шалгалт эхлүүлэх
+									</>
+								) : (
+									<>
+										<flagConfig.Icon className="size-5" strokeWidth={2.5} />
+										{flagConfig.label}
+									</>
+								)}
+							</Button>
+						)}
+						<Button
+							size="lg"
+							variant="outline"
+							onClick={() => handleExamClick(exam)}
+						>
+							Дэлгэрэнгүй
+							<ArrowRight className="size-4" strokeWidth={2.75} />
+						</Button>
+					</div>
 				</div>
 
-				{/* Countdown */}
+				{/* Баруун: тоолуур */}
 				{target && (
-					<div className="space-y-2">
-						<p className="text-xs font-bold uppercase tracking-wide text-primary-foreground/75">
+					<div className="rounded-3xl bg-card/80 p-5 backdrop-blur-sm sm:p-6">
+						<p className="mb-3 text-xs font-extrabold uppercase tracking-wide text-muted-foreground">
 							{countdownLabel}
 						</p>
-						<div className="flex gap-2">
+						<div className="grid grid-cols-3 gap-2 sm:gap-3">
 							{[
 								{ k: "d", v: countdown?.days, l: "өдөр" },
 								{ k: "h", v: countdown?.hours, l: "цаг" },
-								{ k: "m", v: countdown?.minutes, l: "мин" },
+								{ k: "m", v: countdown?.minutes, l: "минут" },
 							].map(({ k, v, l }) => (
 								<div
 									key={k}
-									className="flex min-w-[4.25rem] flex-col items-center rounded-2xl bg-card px-3 py-2 text-foreground shadow-[0_4px_0_0_var(--primary-shade)]"
+									className="flex flex-col items-center rounded-2xl bg-pop-sky-soft py-3 sm:py-5"
 								>
-									<span className="text-2xl font-black tabular-nums text-primary sm:text-3xl">
+									<span className="text-3xl font-black tabular-nums text-pop-sky-ink sm:text-5xl">
 										{v === undefined ? "–" : String(v).padStart(2, "0")}
 									</span>
-									<span className="text-[10px] font-extrabold uppercase tracking-wide text-muted-foreground">
+									<span className="mt-1 text-[11px] font-extrabold uppercase tracking-wide text-muted-foreground">
 										{l}
 									</span>
 								</div>
@@ -604,77 +678,8 @@ export const NextExamHero = memo(function NextExamHero({
 						</div>
 					</div>
 				)}
-
-				{/* Dates + stats */}
-				<div className="flex flex-wrap gap-2 text-[11px] font-bold">
-					<span className="inline-flex items-center gap-1 rounded-full bg-primary-foreground/15 px-2.5 py-1">
-						<CalendarClock className="size-3.5" strokeWidth={2.5} />
-						Эхлэх{" "}
-						<span className="tabular-nums">
-							{start.date} {start.time}
-						</span>
-					</span>
-					<span className="inline-flex items-center gap-1 rounded-full bg-primary-foreground/15 px-2.5 py-1">
-						<CalendarClock className="size-3.5" strokeWidth={2.5} />
-						Дуусах{" "}
-						<span className="tabular-nums">
-							{end.date} {end.time}
-						</span>
-					</span>
-					<span className="inline-flex items-center gap-1 rounded-full bg-primary-foreground/15 px-2.5 py-1">
-						<Clock className="size-3.5" strokeWidth={2.5} />
-						{exam.exam_minute} мин
-					</span>
-					<span className="inline-flex items-center gap-1 rounded-full bg-primary-foreground/15 px-2.5 py-1">
-						<FileText className="size-3.5" strokeWidth={2.5} />
-						{exam.que_cnt} асуулт
-					</span>
-				</div>
-
-				{/* CTA */}
-				<div className="mt-auto pt-1">
-					{isLocked && isActive ? (
-						<Button
-							size="lg"
-							onClick={(e) => handleCreateInvoice(exam, e)}
-							disabled={isPaying}
-							className="w-full bg-pop-sun text-base text-pop-sun-ink shadow-[0_5px_0_0_color-mix(in_oklch,var(--pop-sun)_60%,black)] active:shadow-[0_1px_0_0_color-mix(in_oklch,var(--pop-sun)_60%,black)] dark:text-background"
-						>
-							{isPaying ? (
-								<Loader2 className="size-5 animate-spin" />
-							) : (
-								<>
-									<CreditCard className="size-5" strokeWidth={2.5} />
-									Төлбөр төлөх
-								</>
-							)}
-						</Button>
-					) : (
-						<Button
-							size="lg"
-							onClick={() => handleExamClick(exam, "rules")}
-							disabled={!canTakeExam || isNavigating}
-							className="w-full bg-card text-base text-primary shadow-[0_5px_0_0_var(--primary-shade)] hover:bg-accent hover:brightness-100 active:shadow-[0_1px_0_0_var(--primary-shade)]"
-						>
-							{isNavigating ? (
-								<Loader2 className="size-5 animate-spin" />
-							) : canTakeExam ? (
-								<>
-									<Play className="size-5 fill-current" strokeWidth={2.5} />
-									Шалгалт эхлүүлэх
-									<ArrowRight className="size-5" strokeWidth={2.75} />
-								</>
-							) : (
-								<>
-									<flagConfig.Icon className="size-5" strokeWidth={2.5} />
-									{flagConfig.label}
-								</>
-							)}
-						</Button>
-					)}
-				</div>
 			</div>
 			{dialogs}
-		</div>
+		</section>
 	);
 });

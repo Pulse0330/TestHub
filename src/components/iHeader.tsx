@@ -63,7 +63,7 @@ export const NAV: Section[] = [
 		label: "Нүүр",
 		short: "Нүүр",
 		icon: Home,
-		tone: "bg-pop-violet text-white",
+		tone: "bg-pop-violet text-pop-on",
 		links: [{ href: "/home", label: "Үндсэн хуудас", icon: Home }],
 	},
 	{
@@ -71,7 +71,7 @@ export const NAV: Section[] = [
 		label: "Шалгалт",
 		short: "Шалгалт",
 		icon: FileText,
-		tone: "bg-pop-sky text-white",
+		tone: "bg-pop-sky text-pop-on",
 		links: [
 			{ href: "/Lists/examList", label: "Шалгалтын жагсаалт", icon: FileText },
 			{ href: "/Lists/examResult", label: "Шалгалтын үр дүн", icon: BarChart3 },
@@ -97,7 +97,7 @@ export const NAV: Section[] = [
 		label: "Дасгал ажил",
 		short: "Дасгал",
 		icon: Dumbbell,
-		tone: "bg-pop-mint text-white",
+		tone: "bg-pop-mint text-pop-on",
 		links: [
 			{ href: "/Lists/exerciseList", label: "Дасгал ажил", icon: Dumbbell },
 		],
@@ -107,7 +107,7 @@ export const NAV: Section[] = [
 		label: "Цахим сургалт",
 		short: "Хичээл",
 		icon: BookOpen,
-		tone: "bg-pop-pink text-white",
+		tone: "bg-pop-pink text-pop-on",
 		links: [
 			{ href: "/Lists/courseList", label: "Хичээл", icon: School },
 			{
@@ -150,7 +150,7 @@ const UserAvatar: React.FC<{
 	return (
 		<div
 			className={cn(
-				"flex flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-pop-violet to-pop-pink font-black text-white",
+				"flex flex-shrink-0 items-center justify-center rounded-full bg-pop-sky-soft font-black text-pop-sky-ink",
 				cls,
 				size === "sm" ? "text-sm" : "text-base",
 			)}
@@ -163,19 +163,15 @@ const UserAvatar: React.FC<{
 // ── Logo ─────────────────────────────────────────────────────────
 const Logo = () => (
 	<Link href="/home" className="group flex shrink-0 items-center gap-2.5">
-		<span className="flex size-10 items-center justify-center rounded-2xl bg-gradient-to-br from-pop-violet via-pop-pink to-pop-sun p-[2px] transition-transform group-hover:rotate-6">
-			<span className="flex size-full items-center justify-center rounded-[14px] bg-card">
-				<Image
-					src="/image/logoLogin.png"
-					alt="Skuul"
-					width={177}
-					height={142}
-					priority
-					style={{ width: 24, height: 24, objectFit: "contain" }}
-				/>
-			</span>
-		</span>
-		<span className="text-xl font-black tracking-tight text-gradient">
+		<Image
+			src="/image/logoLogin.png"
+			alt=""
+			width={177}
+			height={142}
+			priority
+			className="h-8 w-auto transition-transform group-hover:-rotate-6"
+		/>
+		<span className="text-xl font-black tracking-tight text-foreground">
 			Skuul
 		</span>
 	</Link>
@@ -211,33 +207,24 @@ const UserMenu: React.FC<{
 						userName={userInfo.userName}
 						size="sm"
 					/>
-					{!compact && (
-						<>
-							<span className="hidden max-w-32 truncate text-sm font-extrabold xl:block">
-								{userInfo.userName}
-							</span>
-							<ChevronDown className="size-4 text-muted-foreground" />
-						</>
-					)}
+					{!compact && <ChevronDown className="size-4 text-muted-foreground" />}
 				</button>
 			</DropdownMenuTrigger>
 			<DropdownMenuContent align="end" sideOffset={10} className="w-64 p-2">
-				<div className="mb-2 flex items-center gap-3 rounded-xl bg-muted p-3">
-					<UserAvatar
-						userImage={userInfo.userImage}
-						userName={userInfo.userName}
-					/>
-					<div className="min-w-0">
-						<p className="truncate text-sm font-extrabold">
-							{userInfo.userName}
-						</p>
-						{(userInfo.schoolName || userInfo.userEmail) && (
+				{(userInfo.schoolName || userInfo.userEmail) && (
+					<div className="mb-2 space-y-0.5 rounded-xl bg-muted px-3 py-2.5">
+						{userInfo.schoolName && (
+							<p className="truncate text-xs font-bold text-foreground">
+								{userInfo.schoolName}
+							</p>
+						)}
+						{userInfo.userEmail && (
 							<p className="truncate text-xs font-semibold text-muted-foreground">
-								{userInfo.schoolName || userInfo.userEmail}
+								{userInfo.userEmail}
 							</p>
 						)}
 					</div>
-				</div>
+				)}
 				<DropdownMenuItem
 					onClick={() => router.push("/userProfile")}
 					className="cursor-pointer gap-3 rounded-xl px-3 py-2.5 text-sm font-bold"
@@ -357,14 +344,20 @@ export const Navbar01: React.FC = () => {
 						})}
 					</nav>
 
-					<div className="ml-auto flex items-center gap-2">
-						<div className="hidden lg:block">
+					<div className="ml-auto flex min-w-0 items-center gap-2.5">
+						<p className="min-w-0 truncate text-right text-sm font-semibold text-muted-foreground">
+							Сайн уу,{" "}
+							<span className="font-extrabold text-foreground">
+								{userInfo.userName}
+							</span>
+						</p>
+						<div className="hidden shrink-0 lg:block">
 							<UserMenu
 								userInfo={userInfo}
 								onLogout={() => setShowLogoutDialog(true)}
 							/>
 						</div>
-						<div className="lg:hidden">
+						<div className="shrink-0 lg:hidden">
 							<UserMenu
 								compact
 								userInfo={userInfo}

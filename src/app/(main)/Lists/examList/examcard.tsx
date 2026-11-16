@@ -166,8 +166,8 @@ export default function ExamCard({
 							className={cn(
 								"flex size-12 shrink-0 items-center justify-center rounded-2xl transition-transform duration-300 group-hover:-rotate-6",
 								isLocked
-									? "bg-pop-sun text-foreground shadow-[0_3px_0_0_color-mix(in_oklch,var(--pop-sun)_60%,black)]"
-									: "bg-pop-mint text-primary-foreground shadow-[0_3px_0_0_color-mix(in_oklch,var(--pop-mint)_60%,black)]",
+									? "bg-pop-sun text-pop-on shadow-[0_3px_0_0_color-mix(in_oklch,var(--pop-sun)_60%,black)]"
+									: "bg-pop-mint text-pop-on shadow-[0_3px_0_0_color-mix(in_oklch,var(--pop-mint)_60%,black)]",
 							)}
 						>
 							{isLocked ? (
@@ -232,7 +232,7 @@ export default function ExamCard({
 						className={cn(
 							"mt-auto inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl text-sm font-bold transition-all",
 							isLocked
-								? "bg-pop-sun text-foreground shadow-[0_4px_0_0_color-mix(in_oklch,var(--pop-sun)_65%,black)]"
+								? "bg-pop-sun text-pop-on shadow-[0_4px_0_0_color-mix(in_oklch,var(--pop-sun)_65%,black)]"
 								: "bg-primary text-primary-foreground shadow-[0_4px_0_0_var(--primary-shade)]",
 						)}
 					>

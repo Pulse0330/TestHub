@@ -20,7 +20,7 @@ export const EssayReview = memo(function EssayReview({
 				<div className="flex items-start gap-4">
 					{/* Icon */}
 					<div className="shrink-0">
-						<div className="flex size-10 items-center justify-center rounded-xl bg-pop-sky text-primary-foreground">
+						<div className="flex size-10 items-center justify-center rounded-xl bg-pop-sky text-pop-on">
 							<svg
 								className="w-6 h-6"
 								fill="none"

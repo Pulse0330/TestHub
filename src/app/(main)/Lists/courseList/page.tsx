@@ -45,32 +45,32 @@ const VIEW_STORAGE_KEY = "courseList:view";
 const SUBJECT_COLORS = [
 	{
 		soft: "bg-pop-violet-soft text-pop-violet-ink",
-		solid: "bg-pop-violet text-primary-foreground border-pop-violet",
+		solid: "bg-pop-violet text-pop-on border-pop-violet",
 		dot: "bg-pop-violet",
 	},
 	{
 		soft: "bg-pop-sky-soft text-pop-sky-ink",
-		solid: "bg-pop-sky text-primary-foreground border-pop-sky",
+		solid: "bg-pop-sky text-pop-on border-pop-sky",
 		dot: "bg-pop-sky",
 	},
 	{
 		soft: "bg-pop-mint-soft text-pop-mint-ink",
-		solid: "bg-pop-mint text-primary-foreground border-pop-mint",
+		solid: "bg-pop-mint text-pop-on border-pop-mint",
 		dot: "bg-pop-mint",
 	},
 	{
 		soft: "bg-pop-sun-soft text-pop-sun-ink",
-		solid: "bg-pop-sun text-primary-foreground border-pop-sun",
+		solid: "bg-pop-sun text-pop-on border-pop-sun",
 		dot: "bg-pop-sun",
 	},
 	{
 		soft: "bg-pop-coral-soft text-pop-coral-ink",
-		solid: "bg-pop-coral text-primary-foreground border-pop-coral",
+		solid: "bg-pop-coral text-pop-on border-pop-coral",
 		dot: "bg-pop-coral",
 	},
 	{
 		soft: "bg-pop-pink-soft text-pop-pink-ink",
-		solid: "bg-pop-pink text-primary-foreground border-pop-pink",
+		solid: "bg-pop-pink text-pop-on border-pop-pink",
 		dot: "bg-pop-pink",
 	},
 ];

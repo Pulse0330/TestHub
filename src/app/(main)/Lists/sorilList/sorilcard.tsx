@@ -79,7 +79,7 @@ export const SorilCard: React.FC<SorilCardProps> = ({
 						{/* Lock Overlay for Unpaid Exams */}
 						{isLocked && (
 							<div className="absolute inset-0 z-10 flex items-center justify-center bg-foreground/30">
-								<div className="flex size-11 items-center justify-center rounded-2xl bg-pop-sun text-foreground shadow-[0_3px_0_0_color-mix(in_oklch,var(--pop-sun)_60%,black)]">
+								<div className="flex size-11 items-center justify-center rounded-2xl bg-pop-sun text-pop-on shadow-[0_3px_0_0_color-mix(in_oklch,var(--pop-sun)_60%,black)]">
 									<Lock className="size-5" strokeWidth={2.5} />
 								</div>
 							</div>
@@ -121,7 +121,7 @@ export const SorilCard: React.FC<SorilCardProps> = ({
 								className={cn(
 									"ml-auto flex size-8 shrink-0 items-center justify-center rounded-full transition-all duration-200",
 									isLocked
-										? "bg-pop-sun-soft text-pop-sun-ink group-hover:bg-pop-sun group-hover:text-foreground"
+										? "bg-pop-sun-soft text-pop-sun-ink group-hover:bg-pop-sun group-hover:text-pop-on"
 										: "bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground",
 								)}
 							>

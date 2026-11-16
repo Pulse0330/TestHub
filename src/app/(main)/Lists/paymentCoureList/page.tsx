@@ -762,7 +762,7 @@ export default function PaymentCoursesPage() {
 						type="button"
 						aria-label={`Сагс нээх — ${selectedIds.size} хичээл`}
 						onClick={() => dispatchUi({ type: "OPEN_CART" })}
-						className="lg:hidden fixed bottom-24 right-5 size-16 bg-pop-coral text-primary-foreground rounded-2xl shadow-[0_5px_0_0_color-mix(in_oklch,var(--pop-coral)_60%,black)] active:translate-y-1 active:shadow-[0_1px_0_0_color-mix(in_oklch,var(--pop-coral)_60%,black)] flex items-center justify-center z-30"
+						className="lg:hidden fixed bottom-24 right-5 size-16 bg-pop-coral text-pop-on rounded-2xl shadow-[0_5px_0_0_color-mix(in_oklch,var(--pop-coral)_60%,black)] active:translate-y-1 active:shadow-[0_1px_0_0_color-mix(in_oklch,var(--pop-coral)_60%,black)] flex items-center justify-center z-30"
 					>
 						<ShoppingCart className="size-7" strokeWidth={2.5} />
 						<span

@@ -487,7 +487,7 @@ export default function ExercisePage() {
 				{showSummary ? (
 					/* Final summary */
 					<div className="card-pop overflow-hidden animate-pop-in">
-						<div className="bg-gradient-to-br from-pop-violet to-pop-pink p-6 sm:p-8 text-center text-primary-foreground">
+						<div className="bg-gradient-to-br from-pop-violet to-pop-pink p-6 sm:p-8 text-center text-pop-on">
 							<div className="mx-auto mb-3 flex size-16 items-center justify-center rounded-full bg-card/20 text-4xl animate-float">
 								{unansweredCount === 0 ? "🎉" : "📋"}
 							</div>

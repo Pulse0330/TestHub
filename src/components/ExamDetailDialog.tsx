@@ -505,7 +505,7 @@ function ExamDetailBody({
 						autoFocus
 						onClick={onPay}
 						disabled={isCreatingInvoice}
-						className="w-full bg-pop-sun text-foreground shadow-[0_4px_0_0_color-mix(in_oklch,var(--pop-sun)_65%,black)] hover:bg-pop-sun/90 active:shadow-[0_1px_0_0_color-mix(in_oklch,var(--pop-sun)_65%,black)] sm:w-auto sm:min-w-44"
+						className="w-full bg-pop-sun text-pop-on shadow-[0_4px_0_0_color-mix(in_oklch,var(--pop-sun)_65%,black)] hover:bg-pop-sun/90 active:shadow-[0_1px_0_0_color-mix(in_oklch,var(--pop-sun)_65%,black)] sm:w-auto sm:min-w-44"
 					>
 						{isCreatingInvoice ? (
 							"Уншиж байна..."

@@ -233,7 +233,7 @@ function CourseCard({
 							<Button
 								size="sm"
 								onClick={handleExtend}
-								className="w-full gap-1 bg-pop-coral text-primary-foreground shadow-[0_3px_0_0_color-mix(in_oklch,var(--pop-coral)_60%,black)]"
+								className="w-full gap-1 bg-pop-coral text-pop-on shadow-[0_3px_0_0_color-mix(in_oklch,var(--pop-coral)_60%,black)]"
 							>
 								Сунгах
 							</Button>

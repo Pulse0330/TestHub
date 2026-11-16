@@ -303,7 +303,7 @@ function SorilDetailBody({
 					className={cn(
 						"w-full sm:w-auto sm:min-w-44",
 						isLocked &&
-							"bg-pop-sun text-foreground shadow-[0_4px_0_0_color-mix(in_oklch,var(--pop-sun)_65%,black)] hover:bg-pop-sun/90",
+							"bg-pop-sun text-pop-on shadow-[0_4px_0_0_color-mix(in_oklch,var(--pop-sun)_65%,black)] hover:bg-pop-sun/90",
 					)}
 				>
 					{isLocked ? (

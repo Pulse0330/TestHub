@@ -55,7 +55,7 @@ function ExamTimer({
 			}`}
 		>
 			<div
-				className={`flex items-center justify-center rounded-full bg-pop-sky text-white ${compact ? "size-6" : "size-8"}`}
+				className={`flex items-center justify-center rounded-full bg-pop-sky text-pop-on ${compact ? "size-6" : "size-8"}`}
 			>
 				<Clock className={compact ? "size-3.5" : "size-4"} strokeWidth={2.75} />
 			</div>

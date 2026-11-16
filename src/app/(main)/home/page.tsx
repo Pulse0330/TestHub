@@ -41,9 +41,9 @@ import ExamLists, { NextExamHero, pickNextExam } from "./homeExamCard";
 
 const ANIMATION_STAGGER = 0.04;
 
-// Bento tile base: 2px border + 3D bottom shadow
+// Bento tile base: тайван нимгэн хүрээ + зөөлөн сүүдэр
 const TILE =
-	"rounded-3xl border-2 border-border bg-card shadow-[0_4px_0_0_var(--border)]";
+	"rounded-3xl border border-border bg-card shadow-[0_1px_2px_rgb(0_0_0/0.04)]";
 
 // ============================================================================
 // BENTO TILE — motion wrapper with grid placement
@@ -66,7 +66,7 @@ const BentoTile = ({ className, delay = 0, children }: BentoTileProps) => (
 );
 
 // ============================================================================
-// GREETING TILE — compact, name + date + friendly line
+// TODAY — огноо (мэндчилгээ header дээр)
 // ============================================================================
 const MN_WEEKDAYS = [
 	"Ням",
@@ -84,62 +84,26 @@ function useToday() {
 	return today;
 }
 
-const GreetingTile = memo(({ username }: { username: string }) => {
+/** Өнөөдрийн огноо + урам өгөх мөр (мэндчилгээ header-т шилжсэн). */
+const TodayLine = memo(() => {
 	const today = useToday();
-	const dateLabel = today
-		? `${today.getFullYear()} оны ${today.getMonth() + 1}-р сарын ${today.getDate()}, ${MN_WEEKDAYS[today.getDay()]}`
-		: "";
-
+	if (!today) return <div className="h-5" />;
 	return (
-		<div
-			className={cn(
-				TILE,
-				"relative flex h-full items-center gap-4 overflow-hidden p-4 sm:p-5",
-			)}
-		>
-			<div
-				aria-hidden
-				className="pointer-events-none absolute inset-0 bg-dots opacity-40"
-			/>
-			<div
-				aria-hidden
-				className="relative hidden size-14 shrink-0 items-center justify-center rounded-2xl bg-pop-sun-soft text-3xl shadow-[0_4px_0_0_color-mix(in_oklch,var(--pop-sun)_35%,transparent)] min-[400px]:flex animate-float"
-			>
-				👋
-			</div>
-			<div className="relative min-w-0 flex-1 space-y-0.5">
-				<p className="text-xs font-bold text-muted-foreground">
-					Тавтай морилно уу
-					{dateLabel && <span className="tabular-nums"> · {dateLabel}</span>}
-				</p>
-				<h1 className="truncate text-xl font-black tracking-tight sm:text-2xl">
-					{username}
-				</h1>
-				<p className="text-sm font-semibold text-muted-foreground">
-					Өнөөдөр бас нэг алхам урагшилъя ✨
-				</p>
-			</div>
-			<Link
-				href="/Lists/paymentCoureList"
-				className="relative hidden shrink-0 sm:block"
-			>
-				<Button size="sm" variant="outline" className="gap-1.5">
-					<BookOpen className="size-4 text-pop-mint-ink" strokeWidth={2.5} />
-					Сургалт үзэх
-					<ArrowRight className="size-4" strokeWidth={2.5} />
-				</Button>
-			</Link>
-			<Link
-				href="/Lists/paymentCoureList"
-				aria-label="Сургалт үзэх"
-				className="relative flex size-10 shrink-0 items-center justify-center rounded-xl bg-pop-mint-soft text-pop-mint-ink sm:hidden"
-			>
-				<BookOpen className="size-5" strokeWidth={2.5} />
-			</Link>
-		</div>
+		<p className="text-sm font-semibold text-muted-foreground">
+			<span className="font-extrabold text-foreground">
+				{MN_WEEKDAYS[today.getDay()]}
+			</span>
+			<span className="tabular-nums">
+				, {today.getMonth() + 1}-р сарын {today.getDate()}
+			</span>
+			<span className="hidden sm:inline">
+				{" "}
+				· Өнөөдөр бас нэг алхам урагшилъя
+			</span>
+		</p>
 	);
 });
-GreetingTile.displayName = "GreetingTile";
+TodayLine.displayName = "TodayLine";
 
 // ============================================================================
 // COUNT TILE
@@ -208,28 +172,28 @@ const SHORTCUTS = [
 		href: "/Lists/examList",
 		label: "Шалгалтууд",
 		Icon: ClipboardCheck,
-		chip: "bg-pop-violet text-primary-foreground shadow-[0_3px_0_0_color-mix(in_oklch,var(--pop-violet)_60%,black)]",
+		chip: "bg-pop-violet-soft text-pop-violet-ink",
 		hover: "hover:border-pop-violet",
 	},
 	{
 		href: "/Lists/sorilList",
 		label: "Сорилууд",
 		Icon: FileText,
-		chip: "bg-pop-sky text-primary-foreground shadow-[0_3px_0_0_color-mix(in_oklch,var(--pop-sky)_60%,black)]",
+		chip: "bg-pop-sky-soft text-pop-sky-ink",
 		hover: "hover:border-pop-sky",
 	},
 	{
 		href: "/Lists/exerciseList",
 		label: "Дасгал ажил",
 		Icon: Dumbbell,
-		chip: "bg-pop-coral text-primary-foreground shadow-[0_3px_0_0_color-mix(in_oklch,var(--pop-coral)_60%,black)]",
+		chip: "bg-pop-coral-soft text-pop-coral-ink",
 		hover: "hover:border-pop-coral",
 	},
 	{
 		href: "/Lists/paymentCoureList",
-		label: "Сургалтууд",
+		label: "Сургалт үзэх",
 		Icon: BookOpen,
-		chip: "bg-pop-mint text-primary-foreground shadow-[0_3px_0_0_color-mix(in_oklch,var(--pop-mint)_60%,black)]",
+		chip: "bg-pop-mint-soft text-pop-mint-ink",
 		hover: "hover:border-pop-mint",
 	},
 ] as const;
@@ -598,7 +562,6 @@ export default function HomePage() {
 		}
 	}, [profileData, setProfile]);
 
-	const username = profileData?.RetData?.[0]?.username ?? "Хэрэглэгч";
 	const hasExams = Boolean(homeData?.RetDataThirt?.length);
 	const hasSorils = Boolean(homeData?.RetDataFourth?.length);
 	const examCount = homeData?.RetDataThirt?.length ?? 0;
@@ -621,8 +584,12 @@ export default function HomePage() {
 		<TooltipProvider>
 			{/* Bento grid. DOM order = mobile priority; md+ uses dense auto-placement. */}
 			<div className="grid w-full grid-flow-row-dense grid-cols-2 gap-3 sm:gap-4 md:grid-cols-6">
-				{/* 1. Дараагийн шалгалт — hero (2x2) */}
-				<BentoTile className="col-span-2 md:col-span-3 md:row-span-2">
+				<div className="col-span-2 md:col-span-6">
+					<TodayLine />
+				</div>
+
+				{/* 1. Дараагийн шалгалт — бүтэн өргөнтэй hero */}
+				<BentoTile className="col-span-2 md:col-span-6">
 					{isLoading ? (
 						<HeroLoading />
 					) : nextExam ? (
@@ -632,13 +599,8 @@ export default function HomePage() {
 					)}
 				</BentoTile>
 
-				{/* 2. Greeting */}
-				<BentoTile className="col-span-2 md:col-span-3" delay={0.05}>
-					<GreetingTile username={username} />
-				</BentoTile>
-
 				{/* 3. Count tiles */}
-				<BentoTile delay={0.1}>
+				<BentoTile className="md:col-span-2" delay={0.1}>
 					<CountTile
 						label="Идэвхтэй шалгалт"
 						value={examCount}
@@ -647,7 +609,7 @@ export default function HomePage() {
 						tone="violet"
 					/>
 				</BentoTile>
-				<BentoTile delay={0.13}>
+				<BentoTile className="md:col-span-2" delay={0.13}>
 					<CountTile
 						label="Сорилын сан"
 						value={sorilCount}
@@ -656,7 +618,7 @@ export default function HomePage() {
 						tone="sky"
 					/>
 				</BentoTile>
-				<BentoTile className="col-span-2 md:col-span-1" delay={0.16}>
+				<BentoTile className="col-span-2 md:col-span-2" delay={0.16}>
 					<CountTile
 						label="Хандалт"
 						value="24/7"
@@ -667,12 +629,7 @@ export default function HomePage() {
 				</BentoTile>
 
 				{/* 4. Shortcuts */}
-				<div
-					className={cn(
-						"col-span-2 grid min-w-0 grid-cols-2 gap-3 sm:gap-4 md:grid-cols-4",
-						wideCol,
-					)}
-				>
+				<div className="col-span-2 grid min-w-0 grid-cols-2 gap-3 sm:gap-4 md:col-span-6 md:grid-cols-4">
 					{SHORTCUTS.map((sc, i) => (
 						<BentoTile key={sc.href} delay={0.18 + i * 0.03}>
 							<ShortcutTile {...sc} />

@@ -19,7 +19,7 @@ export const ResultSummaryCard = memo(function ResultSummaryCard({
 	return (
 		<div className="card-pop animate-pop-in overflow-hidden">
 			{/* Толгой хэсэг */}
-			<div className="relative overflow-hidden bg-gradient-to-br from-pop-violet to-pop-pink p-6 text-white md:p-8">
+			<div className="relative overflow-hidden bg-gradient-to-br from-pop-violet to-pop-pink p-6 text-pop-on md:p-8">
 				<div className="pointer-events-none absolute -right-10 -top-10 size-40 rounded-full bg-primary-foreground/10" />
 				<div className="pointer-events-none absolute -bottom-16 left-1/3 size-48 rounded-full bg-primary-foreground/10" />
 				<div className="relative flex flex-col items-center gap-6 md:flex-row md:justify-between">
@@ -127,7 +127,7 @@ export const ResultSummaryCard = memo(function ResultSummaryCard({
 						<p className="text-xs font-bold uppercase tracking-wide text-pop-violet-ink">
 							Нийт асуулт
 						</p>
-						<div className="flex size-8 shrink-0 items-center justify-center rounded-xl bg-pop-violet text-primary-foreground">
+						<div className="flex size-8 shrink-0 items-center justify-center rounded-xl bg-pop-violet text-pop-on">
 							<svg
 								className="size-4"
 								fill="none"

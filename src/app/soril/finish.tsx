@@ -417,7 +417,7 @@ const FinishExamResultDialog = forwardRef<
 							</div>
 
 							<div className="flex items-center gap-3 rounded-2xl bg-pop-sun-soft p-4 text-sm">
-								<div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-pop-sun text-white">
+								<div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-pop-sun text-pop-on">
 									<Zap className="size-5" strokeWidth={2.5} />
 								</div>
 								<span className="font-bold text-pop-sun-ink">
@@ -476,7 +476,7 @@ const FinishExamResultDialog = forwardRef<
 
 							<div className="grid grid-cols-2 gap-3 mb-4">
 								<div className="flex items-center gap-3 rounded-2xl bg-pop-mint-soft p-3 sm:p-4">
-									<div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-pop-mint text-white">
+									<div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-pop-mint text-pop-on">
 										<CheckCircle className="size-5" strokeWidth={2.5} />
 									</div>
 									<div className="min-w-0">
@@ -490,7 +490,7 @@ const FinishExamResultDialog = forwardRef<
 								</div>
 
 								<div className="flex items-center gap-3 rounded-2xl bg-pop-coral-soft p-3 sm:p-4">
-									<div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-pop-coral text-white">
+									<div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-pop-coral text-pop-on">
 										<XCircle className="size-5" strokeWidth={2.5} />
 									</div>
 									<div className="min-w-0">

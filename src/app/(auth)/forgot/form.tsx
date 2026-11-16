@@ -347,7 +347,7 @@ export default function ForgotForm({ onClose }: ForgotFormProps) {
 										<AlertDescription className="py-2">
 											<div className="space-y-4">
 												<div className="flex gap-3">
-													<div className="flex size-7 shrink-0 items-center justify-center rounded-full bg-pop-sky text-xs font-black text-primary-foreground">
+													<div className="flex size-7 shrink-0 items-center justify-center rounded-full bg-pop-sky text-xs font-black text-pop-on">
 														1
 													</div>
 													<p className="text-sm font-semibold text-foreground">
@@ -364,7 +364,7 @@ export default function ForgotForm({ onClose }: ForgotFormProps) {
 													</span>
 												</div>
 												<div className="flex gap-3 pt-2">
-													<div className="flex size-7 shrink-0 items-center justify-center rounded-full bg-pop-sky text-xs font-black text-primary-foreground">
+													<div className="flex size-7 shrink-0 items-center justify-center rounded-full bg-pop-sky text-xs font-black text-pop-on">
 														2
 													</div>
 													<div className="flex-1 space-y-3">
