@@ -1,7 +1,6 @@
 "use client";
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import axios from "axios";
 import { AnimatePresence, m } from "framer-motion";
 import {
 	BookOpen,
@@ -18,7 +17,11 @@ import { useCallback, useMemo, useReducer, useRef, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import QPayDialog from "@/features/qpay";
-import { getPaymentCourseList } from "@/lib/api";
+import {
+	type CourseInvoicePayload,
+	createCourseInvoice,
+	getPaymentCourseList,
+} from "@/lib/api";
 import { queryKeys } from "@/lib/queryKeys";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/stores/useAuthStore";
@@ -447,7 +450,7 @@ export default function PaymentCoursesPage() {
 			const currentIds = [...selectedIdsRef.current];
 			const firstCourse = courseMap.get(currentIds[0]);
 
-			const payload = {
+			const payload: CourseInvoicePayload = {
 				amount: plan.amount.toString(),
 				userid: userId.toString(),
 				device_token: "",
@@ -457,14 +460,7 @@ export default function PaymentCoursesPage() {
 				urls: currentIds.map((id) => ({ topic_id: id.toString() })),
 			};
 
-			const { data } = await axios.post<QPayInvoiceResponse | string>(
-				"/api/qpay/invoice",
-				payload,
-			);
-			const parsed: QPayInvoiceResponse =
-				typeof data === "string" ? JSON.parse(data) : data;
-
-			if (!parsed?.qr_image) throw new Error("QPay хариу буруу байна");
+			const parsed = await createCourseInvoice(payload);
 
 			setQpayData(parsed);
 			dispatchUi({ type: "OPEN_QPAY" });

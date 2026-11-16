@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { getAimags, getClasses, getDistricts, getSchools } from "@/lib/api";
 import { queryKeys } from "@/lib/queryKeys";
-import { apiAimag, apiClass, apiDistrict, apiSchool } from "../_lib/api";
 import type {
 	AimagItem,
 	ClassItem,
@@ -59,7 +59,8 @@ export function useLocationCascade(isEditing: boolean, user: UserData) {
 	// дарж бичих (race) боломжгүй.
 	const aimagQuery = useQuery({
 		queryKey: queryKeys.profile.aimags,
-		queryFn: async (): Promise<AimagItem[]> => (await apiAimag()).RetData ?? [],
+		queryFn: async (): Promise<AimagItem[]> =>
+			(await getAimags()).RetData ?? [],
 		enabled: isEditing,
 		staleTime: Number.POSITIVE_INFINITY,
 	});
@@ -73,7 +74,7 @@ export function useLocationCascade(isEditing: boolean, user: UserData) {
 	const districtQuery = useQuery({
 		queryKey: queryKeys.profile.districts(aimagId),
 		queryFn: async (): Promise<DistrictItem[]> =>
-			(await apiDistrict(aimagId ?? 0)).RetData ?? [],
+			(await getDistricts(aimagId ?? 0)).RetData ?? [],
 		enabled: isEditing && !!aimagId,
 		staleTime: Number.POSITIVE_INFINITY,
 	});
@@ -84,7 +85,7 @@ export function useLocationCascade(isEditing: boolean, user: UserData) {
 	const schoolQuery = useQuery({
 		queryKey: queryKeys.profile.schools(aimagId, districtId),
 		queryFn: async (): Promise<SchoolItem[]> =>
-			(await apiSchool(aimagId ?? 0, districtId ?? 0)).RetData ?? [],
+			(await getSchools(aimagId ?? 0, districtId ?? 0)).RetData ?? [],
 		enabled: isEditing && !!aimagId && !!districtId,
 		staleTime: Number.POSITIVE_INFINITY,
 	});
@@ -97,7 +98,7 @@ export function useLocationCascade(isEditing: boolean, user: UserData) {
 	const classQuery = useQuery({
 		queryKey: queryKeys.profile.classes(schoolDb, schoolIp),
 		queryFn: async (): Promise<ClassItem[]> =>
-			((await apiClass(schoolDb, schoolIp)).RetData ?? []).filter(
+			((await getClasses(schoolDb, schoolIp)).RetData ?? []).filter(
 				(c: ClassItem) => c.studentgroupid && c.studentgroupid !== "0",
 			),
 		enabled: isEditing && !!schoolDb,

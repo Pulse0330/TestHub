@@ -1,6 +1,5 @@
 "use client";
 
-import axios from "axios";
 import {
 	AlertCircle,
 	CheckCircle2,
@@ -18,6 +17,7 @@ import {
 	DialogHeader,
 	DialogTitle,
 } from "@/components/ui/dialog";
+import { checkQPayPayment } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import type { QPayInvoiceResponse } from "@/types/Qpay/qpayinvoice";
 
@@ -142,13 +142,10 @@ export default function QPayDialog({
 			setShowNotPaidMessage(false);
 			setError(null);
 
-			const response = await axios.post("/api/qpay/check", {
-				userid: userId.toString(),
-				invoice_id: qpayData.invoice_id,
-			});
+			const result = await checkQPayPayment(userId, qpayData.invoice_id);
 			if (session !== sessionRef.current) return;
 
-			if (response.data?.RetResponse?.ResponseType === true) {
+			if (result?.RetResponse?.ResponseType === true) {
 				setPaymentStatus("success");
 				if (onPaymentSuccessRef.current) {
 					successPendingRef.current = true;

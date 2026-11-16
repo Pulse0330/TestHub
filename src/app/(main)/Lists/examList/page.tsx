@@ -1,7 +1,6 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import axios from "axios";
 import {
 	AlertCircle,
 	CalendarClock,
@@ -24,7 +23,11 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import QPayDialog from "@/features/qpay";
 import { useServerTime } from "@/hooks/useServerTime";
-import { getexamfiltertlists, getTestFilter } from "@/lib/api";
+import {
+	createExamInvoice,
+	getexamfiltertlists,
+	getTestFilter,
+} from "@/lib/api";
 import { queryKeys } from "@/lib/queryKeys";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/stores/useAuthStore";
@@ -170,17 +173,10 @@ export default function ExamListPage() {
 		try {
 			setIsCreatingInvoice(true);
 
-			const response = await axios.post("/api/examqpay/invoice", {
-				amount: exam.amount?.toString() || "0",
-				userid: userId.toString(),
-				device_token: "",
-				orderid: exam.bill_type?.toString() || "0",
-				bilid: exam.exam_id.toString(),
-				classroom_id: "0",
-			});
+			const invoice = await createExamInvoice(exam, userId);
 
-			if (response.data) {
-				setQpayData(response.data);
+			if (invoice) {
+				setQpayData(invoice);
 				setQpayDialogOpen(true);
 			}
 		} catch (error) {

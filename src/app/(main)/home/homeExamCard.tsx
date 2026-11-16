@@ -1,7 +1,6 @@
 "use client";
 
 import { useQueryClient } from "@tanstack/react-query";
-import axios from "axios";
 import { m } from "framer-motion";
 import {
 	ArrowRight,
@@ -31,6 +30,7 @@ import {
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
 import QPayDialog from "@/features/qpay";
+import { createExamInvoice } from "@/lib/api";
 import { queryKeys } from "@/lib/queryKeys";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/stores/useAuthStore";
@@ -313,16 +313,9 @@ function useExamActions(onPaymentSuccess?: () => void) {
 			if (!userId) return;
 			setLoadingExamId(exam.exam_id);
 			try {
-				const response = await axios.post("/api/examqpay/invoice", {
-					amount: exam.amount?.toString() ?? "0",
-					userid: userId.toString(),
-					device_token: "",
-					orderid: exam.bill_type?.toString() ?? "0",
-					bilid: exam.exam_id.toString(),
-					classroom_id: "0",
-				});
-				if (response.data) {
-					setQpayData(response.data);
+				const invoice = await createExamInvoice(exam, userId);
+				if (invoice) {
+					setQpayData(invoice);
 					setQpayDialogOpen(true);
 				}
 			} catch {

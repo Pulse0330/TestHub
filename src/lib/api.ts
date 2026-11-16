@@ -1,5 +1,6 @@
 // src/lib/api.ts
 
+import axios from "axios";
 import api from "@/lib/axios";
 import type { ContentViewResponse } from "@/types/course/contentView";
 import type { CourseListResponse } from "@/types/course/courseList";
@@ -24,6 +25,12 @@ import type {
 	TestSavedMixedResponse,
 } from "@/types/exercise/testSavedMixed";
 import type { HomeResponseType } from "@/types/home";
+import type {
+	AimagItem,
+	ClassItem,
+	DistrictItem,
+	SchoolItem,
+} from "@/types/location";
 import type { ForgotPasswordResponse } from "@/types/login/forgot/forgot";
 import type {
 	CheckTokenResponse,
@@ -39,6 +46,7 @@ import type {
 } from "@/types/login/loginToken/loginToken";
 import type { RegisterSysUserResponse } from "@/types/login/sign/register";
 import type { getplaninfoCourseData } from "@/types/paymentCourse/getplaninfo";
+import type { QPayInvoiceResponse } from "@/types/Qpay/qpayinvoice";
 import type { ApiSorillistsResponse } from "@/types/soril/sorilLists";
 import type { SorilresultListResponseType } from "@/types/soril/sorilResultLists";
 import type { UserProfileResponseType } from "@/types/user";
@@ -466,6 +474,188 @@ export const getPaymentCourseList = async (
 ): Promise<getplaninfoCourseData> => {
 	const { data } = await api.post<getplaninfoCourseData>("/getplaninfo", {
 		user_id: userId,
+	});
+	return data;
+};
+
+//------------------------------- Дотоод API (Next.js /api route) ---------------------------------//
+// Эдгээр route-ууд server дээр ажиллаж, backend руу дамжуулна.
+// Browser-оос шууд backend биш, заавал эдгээр функцээр дуудна.
+
+const internalApi = axios.create({
+	baseURL: "/api",
+	headers: { "Content-Type": "application/json" },
+	timeout: 15000,
+});
+
+interface InternalRetResponse {
+	ResponseMessage: string;
+	StatusCode?: string;
+	ResponseCode?: string;
+	ResponseType: boolean;
+}
+
+export interface InternalListResponse<T> {
+	RetResponse?: InternalRetResponse;
+	RetData?: T[];
+}
+
+export interface OtpCodeResponse {
+	RetResponse?: InternalRetResponse & {
+		RtrGenCode?: string;
+		RtrGenCodeSeconds?: string | number;
+	};
+}
+
+export interface OtpCheckResponse {
+	RetResponse?: InternalRetResponse;
+}
+
+/** Төхөөрөмжийн мэдээлэл — ua-parser-js-ийг зөвхөн OTP үед ачаална. */
+async function getDeviceInfo() {
+	const { UAParser } = await import("ua-parser-js");
+	const parser = new UAParser();
+	const device = parser.getDevice();
+	const os = parser.getOS();
+	const browser = parser.getBrowser();
+	return {
+		devicemodel:
+			device.model || `${os.name || "Unknown"} - ${browser.name || "Unknown"}`,
+		ismob: device.type === "mobile" || device.type === "tablet" ? 1 : 0,
+	};
+}
+
+// ===== OTP =====
+export const requestOtpCode = async (
+	phone: number,
+): Promise<OtpCodeResponse> => {
+	const { data } = await internalApi.post<OtpCodeResponse>("/otp/getcode", {
+		phone,
+		conftype: "1",
+		bundleid: "ikh_skuul.mn",
+		...(await getDeviceInfo()),
+	});
+	return data;
+};
+
+export const checkOtpCode = async (
+	phone: number,
+	code: number,
+): Promise<OtpCheckResponse> => {
+	const { data } = await internalApi.post<OtpCheckResponse>("/otp/smscheck", {
+		phone,
+		code,
+	});
+	return data;
+};
+
+// ===== QPay =====
+/** Шалгалтын төлбөрийн QPay нэхэмжлэх үүсгэнэ. */
+export const createExamInvoice = async (
+	exam: {
+		exam_id: number;
+		amount?: number | string | null;
+		bill_type?: number | string | null;
+	},
+	userId: number,
+): Promise<QPayInvoiceResponse> => {
+	const { data } = await internalApi.post<QPayInvoiceResponse>(
+		"/examqpay/invoice",
+		{
+			amount: exam.amount?.toString() || "0",
+			userid: userId.toString(),
+			device_token: "",
+			orderid: exam.bill_type?.toString() || "0",
+			bilid: exam.exam_id.toString(),
+			classroom_id: "0",
+		},
+	);
+	return data;
+};
+
+export interface CourseInvoicePayload {
+	amount: string;
+	userid: string;
+	device_token: string;
+	orderid: string;
+	bilid: string;
+	classroom_id: string;
+	urls: { topic_id: string }[];
+}
+
+/** Хичээлийн (төлөвлөгөөний) төлбөрийн QPay нэхэмжлэх үүсгэнэ. */
+export const createCourseInvoice = async (
+	payload: CourseInvoicePayload,
+): Promise<QPayInvoiceResponse> => {
+	const { data } = await internalApi.post<QPayInvoiceResponse | string>(
+		"/qpay/invoice",
+		payload,
+	);
+	// Backend заримдаа JSON-ийг string хэлбэрээр буцаадаг
+	const parsed: QPayInvoiceResponse =
+		typeof data === "string" ? JSON.parse(data) : data;
+	if (!parsed?.qr_image) throw new Error("QPay хариу буруу байна");
+	return parsed;
+};
+
+/** QPay төлбөр төлөгдсөн эсэхийг шалгана. */
+export const checkQPayPayment = async (
+	userId: number | string,
+	invoiceId: string,
+): Promise<{ RetResponse?: InternalRetResponse }> => {
+	const { data } = await internalApi.post("/qpay/check", {
+		userid: userId.toString(),
+		invoice_id: invoiceId,
+	});
+	return data;
+};
+
+// ===== Байршил (аймаг → дүүрэг → сургууль → анги) =====
+export const getAimags = async (): Promise<InternalListResponse<AimagItem>> =>
+	(await internalApi.post("/sign/aimag", {})).data;
+
+export const getDistricts = async (
+	aimagId: number,
+): Promise<InternalListResponse<DistrictItem>> =>
+	(await internalApi.post("/sign/district", { aimag_id: aimagId })).data;
+
+export const getSchools = async (
+	aimagId: number,
+	districtId: number,
+): Promise<InternalListResponse<SchoolItem>> =>
+	(
+		await internalApi.post("/sign/surguuli", {
+			aimag_id: aimagId,
+			district_id: districtId,
+		})
+	).data;
+
+export const getClasses = async (
+	database: string,
+	serverip: string,
+): Promise<InternalListResponse<ClassItem>> =>
+	(await internalApi.post("/sign/angi", { database, serverip })).data;
+
+//------------------------------- Файл upload ---------------------------------//
+const UPLOAD_URL = "https://uploads.ecm.mn/upload/single";
+
+export interface UploadFileResult {
+	fileStatus: number;
+	message: string;
+	file: {
+		name: string;
+		savedName: string;
+		url: string;
+	};
+}
+
+/** Зураг upload хийнэ (uploads.ecm.mn). */
+export const uploadImage = async (
+	formData: FormData,
+): Promise<UploadFileResult> => {
+	const { data } = await axios.post<UploadFileResult>(UPLOAD_URL, formData, {
+		headers: { "Content-Type": "multipart/form-data" },
+		timeout: 0, // том файлд хугацааны хязгааргүй
 	});
 	return data;
 };

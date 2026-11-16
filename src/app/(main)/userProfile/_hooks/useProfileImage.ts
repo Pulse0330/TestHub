@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { uploadImage } from "@/utils/upload";
+import { uploadImage } from "@/lib/api";
 
 /** Профайл зургийг WebP болгон хөрвүүлж upload хийх, preview-г удирдах. */
 export function useProfileImage() {

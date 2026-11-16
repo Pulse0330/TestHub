@@ -1,7 +1,6 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import axios from "axios";
 import {
 	KeyRound,
 	Loader2,
@@ -21,7 +20,6 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
-import { UAParser } from "ua-parser-js";
 import * as z from "zod";
 import {
 	AUTH_CLOSE_BUTTON_CLASS,
@@ -39,7 +37,11 @@ import {
 	FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { registerSysUserRequest } from "@/lib/api";
+import {
+	checkOtpCode,
+	registerSysUserRequest,
+	requestOtpCode,
+} from "@/lib/api";
 
 const formSchema = z
 	.object({
@@ -61,21 +63,6 @@ const formSchema = z
 		message: "Нууц үг таарахгүй байна",
 		path: ["confirmPassword"],
 	});
-
-const getDeviceInfo = () => {
-	const parser = new UAParser();
-	const device = parser.getDevice();
-	const os = parser.getOS();
-	const browser = parser.getBrowser();
-	if (device.model) return device.model;
-	return `${os.name || "Unknown"} - ${browser.name || "Unknown"}`;
-};
-
-const isMobileDevice = () => {
-	const parser = new UAParser();
-	const device = parser.getDevice();
-	return device.type === "mobile" || device.type === "tablet" ? 1 : 0;
-};
 
 interface SignFormProps {
 	onClose?: () => void;
@@ -124,22 +111,15 @@ export function SignForm({ onClose }: SignFormProps) {
 		if (!phoneValidation) return;
 		setIsChecking(true);
 		try {
-			const response = await axios.post("/api/otp/getcode", {
-				phone: Number(phone),
-				conftype: "1",
-				bundleid: "ikh_skuul.mn",
-				devicemodel: getDeviceInfo(),
-				ismob: isMobileDevice(),
-			});
-			if (response.data.RetResponse?.ResponseType) {
-				setVerificationCode(response.data.RetResponse.RtrGenCode);
-				setTimeLeft(Number(response.data.RetResponse.RtrGenCodeSeconds || 180));
+			const data = await requestOtpCode(Number(phone));
+			if (data.RetResponse?.ResponseType) {
+				setVerificationCode(data.RetResponse.RtrGenCode ?? "");
+				setTimeLeft(Number(data.RetResponse.RtrGenCodeSeconds || 180));
 				setIsWaitingForSMS(true);
-				toast.success(response.data.RetResponse.ResponseMessage);
+				toast.success(data.RetResponse.ResponseMessage);
 			} else {
 				toast.error(
-					response.data.RetResponse?.ResponseMessage ||
-						"Код үүсгэхэд алдаа гарлаа",
+					data.RetResponse?.ResponseMessage || "Код үүсгэхэд алдаа гарлаа",
 				);
 			}
 		} catch {
@@ -156,11 +136,11 @@ export function SignForm({ onClose }: SignFormProps) {
 		}
 		setIsChecking(true);
 		try {
-			const response = await axios.post("/api/otp/smscheck", {
-				phone: Number(form.getValues("phone")),
-				code: Number(verificationCode),
-			});
-			if (response.data.RetResponse?.ResponseType) {
+			const data = await checkOtpCode(
+				Number(form.getValues("phone")),
+				Number(verificationCode),
+			);
+			if (data.RetResponse?.ResponseType) {
 				toast.success("Утасны дугаар баталгаажлаа!");
 				setIsVerified(true);
 				setIsWaitingForSMS(false);
