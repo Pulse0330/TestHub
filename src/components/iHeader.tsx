@@ -166,17 +166,17 @@ const Logo = () => (
 		<span className="flex size-10 items-center justify-center rounded-2xl bg-gradient-to-br from-pop-violet via-pop-pink to-pop-sun p-[2px] transition-transform group-hover:rotate-6">
 			<span className="flex size-full items-center justify-center rounded-[14px] bg-card">
 				<Image
-					src="/image/asd.png"
-					alt="EXMO"
-					width={24}
-					height={24}
+					src="/image/logoLogin.png"
+					alt="Skuul"
+					width={177}
+					height={142}
 					priority
 					style={{ width: 24, height: 24, objectFit: "contain" }}
 				/>
 			</span>
 		</span>
 		<span className="text-xl font-black tracking-tight text-gradient">
-			EXMO
+			Skuul
 		</span>
 	</Link>
 );

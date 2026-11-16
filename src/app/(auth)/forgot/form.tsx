@@ -199,9 +199,9 @@ export default function ForgotForm({ onClose }: ForgotFormProps) {
 				<div className="flex flex-1 flex-col items-center justify-center px-6 py-8 text-center sm:px-8">
 					<Image
 						src="/image/logoLogin.png"
-						alt="EXMO logo"
-						width={120}
-						height={40}
+						alt="Skuul"
+						width={177}
+						height={142}
 						className="mx-auto mb-6 h-9 w-auto"
 					/>
 					<div className="relative mx-auto mb-5 flex size-20 animate-pop-in items-center justify-center rounded-full bg-success/15 text-success shadow-[0_4px_0_0_color-mix(in_oklch,var(--success)_35%,transparent)]">
@@ -261,9 +261,9 @@ export default function ForgotForm({ onClose }: ForgotFormProps) {
 			<div className="px-6 pt-6 pr-14 pb-2 sm:px-8 sm:pt-8 sm:pr-14">
 				<Image
 					src="/image/logoLogin.png"
-					alt="EXMO logo"
-					width={120}
-					height={40}
+					alt="Skuul"
+					width={177}
+					height={142}
 					className="mb-5 hidden h-8 w-auto md:block"
 				/>
 				<div className="flex items-center gap-3">

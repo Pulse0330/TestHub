@@ -206,10 +206,10 @@ export function SignForm({ onClose }: SignFormProps) {
 
 			<div className="px-6 pt-6 pr-14 pb-2 sm:px-8 sm:pt-8 sm:pr-14">
 				<Image
-					src="/image/asd.png"
-					alt="EXMO"
-					width={110}
-					height={36}
+					src="/image/logoLogin.png"
+					alt="Skuul"
+					width={177}
+					height={142}
 					className="mb-5 hidden h-8 w-auto md:block"
 				/>
 				<div className="flex items-center gap-3">

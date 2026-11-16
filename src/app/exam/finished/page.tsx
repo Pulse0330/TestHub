@@ -5,7 +5,7 @@ import { CheckCircle2 } from "lucide-react";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-	title: "Шалгалт дууслаа | EXMO",
+	title: "Шалгалт дууслаа",
 };
 
 export default function IntegrationExamFinishedPage() {

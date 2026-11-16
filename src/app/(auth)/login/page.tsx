@@ -33,7 +33,7 @@ const ForgotForm = dynamic(() => import("@/app/(auth)/forgot/form"));
 
 type ModalType = "login" | "sign" | "forgot" | null;
 
-export default function ExmoLanding() {
+export default function SkuulLanding() {
 	const [isDark, setIsDark] = useState(true);
 	const [menuOpen, setMenuOpen] = useState(false);
 	const [modal, setModal] = useState<ModalType>(null);
@@ -160,15 +160,15 @@ export default function ExmoLanding() {
 				<div className="max-w-6xl mx-auto px-4 sm:px-8 lg:px-12 h-16 flex items-center justify-between gap-3">
 					<div className="flex items-center gap-2 flex-shrink-0 min-w-0">
 						<Image
-							src="/image/asd.png"
-							alt="EXMO"
-							width={120}
-							height={32}
+							src="/image/logoLogin.png"
+							alt="Skuul"
+							width={177}
+							height={142}
 							className="h-8 w-auto"
 							priority
 						/>
 						<span className="text-lg font-black tracking-[3px] uppercase text-gradient">
-							EXMO
+							Skuul
 						</span>
 					</div>
 
@@ -391,14 +391,14 @@ export default function ExmoLanding() {
 					<div className="flex items-center">
 						<Image
 							src="/image/logoLogin.png"
-							alt="EXMO"
-							width={90}
-							height={24}
+							alt="Skuul"
+							width={177}
+							height={142}
 							className="h-6 w-auto"
 						/>
 					</div>
 					<span className="text-xs font-semibold text-muted-foreground text-center">
-						© 2026 EXMO. Бүх эрх хуулиар хамгаалагдсан.
+						© 2026 Skuul. Бүх эрх хуулиар хамгаалагдсан.
 					</span>
 				</footer>
 			</div>

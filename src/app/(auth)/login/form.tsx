@@ -237,9 +237,9 @@ export function LoginForm({ onClose }: LoginFormProps) {
 			<div className="px-6 pt-6 pr-14 pb-2 sm:px-8 sm:pt-8 sm:pr-14">
 				<Image
 					src="/image/logoLogin.png"
-					alt="EXMO"
-					width={110}
-					height={36}
+					alt="Skuul"
+					width={177}
+					height={142}
 					className="mb-5 hidden h-8 w-auto md:block"
 				/>
 				<div className="flex items-center gap-3">
@@ -426,7 +426,7 @@ function AuthBrandPanel() {
 
 			<div className="relative max-w-[18rem]">
 				<p className="text-6xl leading-none font-black tracking-tight drop-shadow-[0_4px_0_rgb(0_0_0/0.12)]">
-					EXMO
+					Skuul
 				</p>
 				<p className="mt-4 text-2xl leading-tight font-extrabold">
 					Шалгалт, Сургалт, Дасгал
@@ -466,7 +466,7 @@ function AuthMobileHeader() {
 			<div className="relative flex items-center justify-between gap-3 pr-10">
 				<div className="min-w-0">
 					<p className="text-3xl leading-none font-black tracking-tight">
-						EXMO
+						Skuul
 					</p>
 					<p className="mt-1 truncate text-xs font-bold opacity-90">
 						Шалгалт, Сургалт, Дасгал
