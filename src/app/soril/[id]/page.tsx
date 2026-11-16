@@ -170,6 +170,9 @@ const SorilQuestionCard = memo(function SorilQuestionCard({
 	);
 });
 
+/** Карт горимд нэг дэлгэцэнд харуулах асуултын тоо. */
+const CARD_PAGE_SIZE = 2;
+
 export default function SorilPage() {
 	const { userId } = useAuthStore();
 	const { id } = useParams();
@@ -259,19 +262,24 @@ export default function SorilPage() {
 		});
 	}, []);
 
+	// Карт горимд асуултыг CARD_PAGE_SIZE-аар (2-оор) харуулна
+	const pageStart =
+		currentQuestionIndex - (currentQuestionIndex % CARD_PAGE_SIZE);
+	const pageEnd = Math.min(pageStart + CARD_PAGE_SIZE, totalCount);
+
 	const goToPreviousQuestion = useCallback(() => {
-		if (currentQuestionIndex > 0) {
-			setCurrentQuestionIndex((prev) => prev - 1);
+		if (pageStart > 0) {
+			setCurrentQuestionIndex(Math.max(pageStart - CARD_PAGE_SIZE, 0));
 			window.scrollTo({ top: 0, behavior: "smooth" });
 		}
-	}, [currentQuestionIndex]);
+	}, [pageStart]);
 
 	const goToNextQuestion = useCallback(() => {
-		if (currentQuestionIndex < totalCount - 1) {
-			setCurrentQuestionIndex((prev) => prev + 1);
+		if (pageStart + CARD_PAGE_SIZE < totalCount) {
+			setCurrentQuestionIndex(pageStart + CARD_PAGE_SIZE);
 			window.scrollTo({ top: 0, behavior: "smooth" });
 		}
-	}, [currentQuestionIndex, totalCount]);
+	}, [pageStart, totalCount]);
 
 	// ============================================
 	// FOCUS MODE UX: review, navigator, keyboard, swipe
@@ -361,10 +369,11 @@ export default function SorilPage() {
 		t: number;
 		id: number;
 	} | null>(null);
-	const currentQueTypeId = allQuestions[currentQuestionIndex]?.que_type_id;
-	// Чирэх төрлийн асуултууд (эрэмбэлэх, холбох) дээр swipe идэвхгүй
-	const isSwipeEnabled =
-		viewMode === "card" && currentQueTypeId !== 5 && currentQueTypeId !== 6;
+	// Чирэх төрлийн асуултууд (эрэмбэлэх, холбох) хуудсанд байвал swipe идэвхгүй
+	const pageHasDragQuestion = allQuestions
+		.slice(pageStart, pageEnd)
+		.some((q) => q.que_type_id === 5 || q.que_type_id === 6);
+	const isSwipeEnabled = viewMode === "card" && !pageHasDragQuestion;
 
 	const handleSwipePointerDown = useCallback(
 		(e: ReactPointerEvent<HTMLDivElement>) => {
@@ -464,8 +473,8 @@ export default function SorilPage() {
 		);
 	}
 
-	const currentQuestion = allQuestions[currentQuestionIndex];
-	const isLastQuestion = currentQuestionIndex === totalCount - 1;
+	const pageQuestions = allQuestions.slice(pageStart, pageEnd);
+	const isLastQuestion = pageEnd >= totalCount;
 	const unansweredList = allQuestions
 		.map((q, index) => ({ q, index }))
 		.filter(({ q }) => !answeredQuestionIds.has(q.question_id));
@@ -648,7 +657,10 @@ export default function SorilPage() {
 					{/* Segmented progress */}
 					<div className="flex items-center gap-3 px-0.5">
 						<span className="shrink-0 text-sm font-black text-foreground tabular-nums">
-							Асуулт {currentQuestionIndex + 1}
+							Асуулт{" "}
+							{viewMode === "card" && pageEnd - pageStart > 1
+								? `${pageStart + 1}–${pageEnd}`
+								: currentQuestionIndex + 1}
 							<span className="text-muted-foreground"> / {totalCount}</span>
 						</span>
 						<div
@@ -661,7 +673,10 @@ export default function SorilPage() {
 						>
 							{allQuestions.map((q, idx) => {
 								const answered = answeredQuestionIds.has(q.question_id);
-								const isCurrent = idx === currentQuestionIndex;
+								const isCurrent =
+									viewMode === "card"
+										? idx >= pageStart && idx < pageEnd
+										: idx === currentQuestionIndex;
 								const marked = bookmarkedQuestions.has(q.question_id);
 								return (
 									<span
@@ -699,7 +714,7 @@ export default function SorilPage() {
 					<TextSizeControl textScale={textScale} />
 				</div>
 				<main
-					className="mx-auto w-full min-w-0 max-w-3xl"
+					className={`mx-auto w-full min-w-0 ${viewMode === "card" ? "max-w-3xl xl:max-w-none" : "max-w-3xl"}`}
 					style={{ zoom: textScale.scale }}
 				>
 					{examInfo && (
@@ -709,19 +724,22 @@ export default function SorilPage() {
 					)}
 
 					{viewMode === "card" ? (
-						currentQuestion && (
+						pageQuestions.length > 0 && (
 							<div
 								onPointerDown={handleSwipePointerDown}
 								onPointerUp={handleSwipePointerUp}
 								onPointerCancel={handleSwipePointerCancel}
 								style={isSwipeEnabled ? { touchAction: "pan-y" } : undefined}
 							>
-								<div key={currentQuestion.question_id}>
-									{renderQuestionCard(
-										currentQuestion,
-										currentQuestionIndex,
-										true,
-									)}
+								<div
+									key={pageStart}
+									className="grid items-start gap-5 xl:grid-cols-2"
+								>
+									{pageQuestions.map((q, i) => (
+										<div key={q.question_id} className="min-w-0">
+											{renderQuestionCard(q, pageStart + i, true)}
+										</div>
+									))}
 								</div>
 								<p className="mt-3 text-center text-xs font-bold text-muted-foreground">
 									<span className="hidden lg:inline">
@@ -775,7 +793,7 @@ export default function SorilPage() {
 					<div className="mx-auto flex max-w-3xl gap-3 px-3 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
 						<Button
 							onClick={goToPreviousQuestion}
-							disabled={currentQuestionIndex === 0}
+							disabled={pageStart === 0}
 							variant="outline"
 							size="lg"
 							className="h-12 flex-1 text-base"
