@@ -420,17 +420,10 @@ input[type="number"] {
 	}
 }
 
-@media (width <= 768px) and (width >= 481px) {
+@media (width <= 768px) {
 	.math-content {
-		font-size: 0.875rem;
+		font-size: 0.9375rem;
 		line-height: 1.6;
-	}
-}
-
-@media (width <= 480px) {
-	.math-content {
-		font-size: 0.75rem;
-		line-height: 1.5;
 	}
 }
 
@@ -489,7 +482,6 @@ input[type="number"] {
 	.math-content ul li {
 		line-height: 1.6;
 		margin-bottom: 0.4rem;
-		font-size: 0.875rem;
 	}
 }
 
@@ -503,7 +495,6 @@ input[type="number"] {
 	.math-content ul li {
 		line-height: 1.5;
 		margin-bottom: 0.3rem;
-		font-size: 0.75rem;
 	}
 }
 
@@ -598,36 +589,14 @@ input[type="number"] {
 }
 
 /* ═══════════════════════════════════════════════════
-   RESPONSIVE SCALE
-   Матриц агуулсан container-т scale хэрэглэхгүй.
-   Зөвхөн энгийн inline math-д scale хэрэглэнэ.
+   RESPONSIVE
+   Inline math текстийн font-size-ийг дагана (transform scale
+   хэрэглэхгүй — утсан дээр томьёо хэт жижиг болж, layout
+   эвдэрдэг байсан).
 ═══════════════════════════════════════════════════ */
-
-@media (width >= 1025px) {
-	.math-content mjx-container:not(:has(mjx-mtable)):not([display="true"]) {
-		transform: scale(0.9);
-		transform-origin: left center;
-	}
-}
-
-@media (width <= 1024px) and (width >= 769px) {
-	.math-content mjx-container:not(:has(mjx-mtable)):not([display="true"]) {
-		transform: scale(0.75);
-		transform-origin: left center;
-	}
-}
-
-@media (width <= 768px) and (width >= 481px) {
-	.math-content mjx-container:not(:has(mjx-mtable)):not([display="true"]) {
-		transform: scale(0.6);
-		transform-origin: left center;
-	}
-}
 
 @media (width <= 480px) {
 	.math-content mjx-container:not(:has(mjx-mtable)):not([display="true"]) {
-		transform: scale(0.5);
-		transform-origin: left center;
 		max-width: calc(100vw - 2rem);
 	}
 

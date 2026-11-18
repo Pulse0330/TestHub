@@ -115,7 +115,9 @@ export function TeacherShell({ children }: { children: React.ReactNode }) {
 		router.push("/login");
 	};
 
-	const name = user?.fname || user?.firstname || "Багш";
+	// persist hydrate болохоос өмнө SSR-тэй ижил утга рендерлэнэ (hydration mismatch-аас сэргийлнэ)
+	const name = (hydrated && (user?.fname || user?.firstname)) || "Багш";
+	const schoolName = hydrated ? user?.sch_name : undefined;
 
 	return (
 		<div className="min-h-dvh bg-background text-foreground">
@@ -157,8 +159,8 @@ export function TeacherShell({ children }: { children: React.ReactNode }) {
 					<p className="ml-auto hidden min-w-0 truncate text-sm font-semibold text-muted-foreground sm:block">
 						Сайн уу,{" "}
 						<span className="font-extrabold text-foreground">{name}</span>
-						{user?.sch_name && (
-							<span className="hidden md:inline"> · {user.sch_name}</span>
+						{schoolName && (
+							<span className="hidden md:inline"> · {schoolName}</span>
 						)}
 					</p>
 					<div className="ml-auto flex items-center gap-1 sm:ml-2">
