@@ -33,7 +33,15 @@ export async function POST(request: NextRequest) {
 
 		const { database, serverip } = body;
 
-		if (!database || !serverip) {
+		// Зөвхөн дотоод сүлжээний сургуулийн DB сервер, энгийн DB нэр —
+		// гадны сервер рүү нууц үгтэй холболт үүсгэхээс (SSRF) хамгаална.
+		const isValidTarget =
+			typeof database === "string" &&
+			/^[A-Za-z0-9_]{1,64}$/.test(database) &&
+			typeof serverip === "string" &&
+			/^172\.16\.\d{1,3}\.\d{1,3}$/.test(serverip);
+
+		if (!database || !serverip || !isValidTarget) {
 			return NextResponse.json(
 				{
 					RetResponse: {

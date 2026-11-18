@@ -10,28 +10,7 @@ const api = axios.create({
 	timeout: 10000,
 });
 
-// Request interceptor
-api.interceptors.request.use(
-	(config) => {
-		// Login эсвэл бусад request-д conn object нэмэх
-		if (config.data && typeof config.data === "object") {
-			config.data = {
-				...config.data,
-				conn: {
-					user: "edusr",
-					password: "sql$erver43",
-					database: "ikh_skuul",
-					server: "172.16.1.79",
-					options: { encrypt: false, trustServerCertificate: false },
-				},
-			};
-		}
-		console.log();
-		return config;
-	},
-
-	(error) => Promise.reject(error),
-);
+// DB холболтыг backend өөрийн .env-ээс авдаг — body-д `conn` явуулахгүй.
 
 // Response interceptor
 api.interceptors.response.use(

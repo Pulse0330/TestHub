@@ -48,6 +48,24 @@ E2E-ийн бүтэн урсгалын тест зөвхөн `E2E_USERNAME`, `E2
 
 CI (`.github/workflows/ci.yml`) PR бүр дээр typecheck → lint → test → build ажиллуулна.
 
+## 🔌 API
+
+Backend: `https://backend.skuul.mn/api` (`NEXT_PUBLIC_API_URL`). Бүх хүсэлт POST, DB холболтыг backend өөрийн `.env`-ээс авдаг тул **body-д `conn` явуулахгүй**. Хариу: `RetResponse.ResponseCode` `"10"` амжилттай, `"11"` алдаа/хоосон.
+
+Бүх API `@/lib/api`-аас импортлогдоно:
+
+| Модуль | Агуулга |
+|---|---|
+| `src/lib/api.ts` | Апп-д ашиглагдаж буй endpoint-ууд (нэвтрэх, шалгалт, сорил, дасгал, хичээл, профайл, QPay, байршил, integration) |
+| `studentApi` (`src/lib/student-api.ts`) | Суралцагчийн бусад endpoint-ууд (мэдэгдэл, захидал, баннер, төлбөр, үр дүн ...) |
+| `teacherApi` (`src/lib/teacher-api.ts`) | Багшийн API (сургууль, хичээл, багш, суралцагч, даалгаврын сан, шалгалт, live, цахим хичээл ...) — UI хараахан байхгүй |
+
+```ts
+import { teacherApi, isApiSuccess } from "@/lib/api";
+const res = await teacherApi.lesson.list({ school_id: 3 });
+if (isApiSuccess(res)) console.log(res.RetData);
+```
+
 ## 📁 Бүтэц
 
 ```

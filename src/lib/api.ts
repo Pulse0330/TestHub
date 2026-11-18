@@ -478,9 +478,20 @@ export const getPaymentCourseList = async (
 	return data;
 };
 
-//------------------------------- Дотоод API (Next.js /api route) ---------------------------------//
-// Эдгээр route-ууд server дээр ажиллаж, backend руу дамжуулна.
-// Browser-оос шууд backend биш, заавал эдгээр функцээр дуудна.
+//------------------------------- OTP, QPay, байршил, анги ---------------------------------//
+// QPay, байршил нь backend руу шууд (conn-гүй). OTP (гадны SMS үйлчилгээ) болон
+// анги (сургууль бүрийн өөрийн DB) нь Next.js /api route-оор дамжина.
+
+/**
+ * Backend руу шууд, хариуг шүүлтгүйгээр (StatusCode шалгахгүй) — QPay,
+ * байршлын жагсаалт гэх мэт RetResponse-гүй эсвэл "төлөгдөөгүй" гэх мэт
+ * амжилтгүй хариуг дуудагч өөрөө шалгах endpoint-уудад.
+ */
+const backendRaw = axios.create({
+	baseURL: process.env.NEXT_PUBLIC_API_URL ?? "https://backend.skuul.mn/api",
+	headers: { "Content-Type": "application/json" },
+	timeout: 15000,
+});
 
 const internalApi = axios.create({
 	baseURL: "/api",
@@ -559,11 +570,12 @@ export const createExamInvoice = async (
 	},
 	userId: number,
 ): Promise<QPayInvoiceResponse> => {
-	const { data } = await internalApi.post<QPayInvoiceResponse>(
-		"/examqpay/invoice",
+	const { data } = await backendRaw.post<QPayInvoiceResponse>(
+		"/get_qpayinvoiceweb",
 		{
 			amount: exam.amount?.toString() || "0",
 			userid: userId.toString(),
+			user_id: userId,
 			device_token: "",
 			orderid: exam.bill_type?.toString() || "0",
 			bilid: exam.exam_id.toString(),
@@ -587,9 +599,9 @@ export interface CourseInvoicePayload {
 export const createCourseInvoice = async (
 	payload: CourseInvoicePayload,
 ): Promise<QPayInvoiceResponse> => {
-	const { data } = await internalApi.post<QPayInvoiceResponse | string>(
-		"/qpay/invoice",
-		payload,
+	const { data } = await backendRaw.post<QPayInvoiceResponse | string>(
+		"/api_get_qpayinvoice",
+		{ ...payload, user_id: Number(payload.userid) },
 	);
 	// Backend заримдаа JSON-ийг string хэлбэрээр буцаадаг
 	const parsed: QPayInvoiceResponse =
@@ -603,7 +615,7 @@ export const checkQPayPayment = async (
 	userId: number | string,
 	invoiceId: string,
 ): Promise<{ RetResponse?: InternalRetResponse }> => {
-	const { data } = await internalApi.post("/qpay/check", {
+	const { data } = await backendRaw.post("/get_qpaycheckweb", {
 		userid: userId.toString(),
 		invoice_id: invoiceId,
 	});
@@ -612,19 +624,19 @@ export const checkQPayPayment = async (
 
 // ===== Байршил (аймаг → дүүрэг → сургууль → анги) =====
 export const getAimags = async (): Promise<InternalListResponse<AimagItem>> =>
-	(await internalApi.post("/sign/aimag", {})).data;
+	(await backendRaw.post("/aimag", {})).data;
 
 export const getDistricts = async (
 	aimagId: number,
 ): Promise<InternalListResponse<DistrictItem>> =>
-	(await internalApi.post("/sign/district", { aimag_id: aimagId })).data;
+	(await backendRaw.post("/district", { aimag_id: aimagId })).data;
 
 export const getSchools = async (
 	aimagId: number,
 	districtId: number,
 ): Promise<InternalListResponse<SchoolItem>> =>
 	(
-		await internalApi.post("/sign/surguuli", {
+		await backendRaw.post("/school", {
 			aimag_id: aimagId,
 			district_id: districtId,
 		})
@@ -807,3 +819,17 @@ export const finishIntegrationExam = async (
 	);
 	return { RetResponse: toRetResponse(data), RetData: data.RetData ?? 0 };
 };
+
+//------------------------------- Нэмэлт API (Postman collection-ууд) ---------------------------------//
+// Бүх API нэг газраас: import { studentApi, teacherApi } from "@/lib/api"
+export {
+	type ApiResponse,
+	type ApiRetResponse,
+	apiGet,
+	apiPost,
+	isApiSuccess,
+	type Paged,
+	type PageParams,
+} from "./api-client";
+export * as studentApi from "./student-api";
+export * as teacherApi from "./teacher-api";
