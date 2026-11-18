@@ -11,6 +11,7 @@ import {
 	Home,
 	LogOut,
 	type LucideIcon,
+	Presentation,
 	School,
 	Target,
 	TrendingUp,
@@ -38,6 +39,7 @@ import {
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ThemeSwitch } from "@/components/ui/ui-theme";
+import { isTeacherGroup } from "@/features/teacher/hooks";
 import { clearSession } from "@/lib/auth";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/stores/useAuthStore";
@@ -187,6 +189,7 @@ const UserMenu: React.FC<{
 		userImage: string;
 		schoolName: string;
 		userEmail: string;
+		isTeacher?: boolean;
 	};
 	onLogout: () => void;
 	compact?: boolean;
@@ -235,6 +238,15 @@ const UserMenu: React.FC<{
 					<UserCircle className="size-4" />
 					Профайл
 				</DropdownMenuItem>
+				{userInfo.isTeacher && (
+					<DropdownMenuItem
+						onClick={() => router.push("/teacher")}
+						className="cursor-pointer gap-3 rounded-xl px-3 py-2.5 text-sm font-bold"
+					>
+						<Presentation className="size-4" />
+						Багшийн хэсэг
+					</DropdownMenuItem>
+				)}
 				<div className="flex items-center rounded-xl px-1.5 py-1 transition-colors hover:bg-accent">
 					<ThemeSwitch
 						showLabels
@@ -303,6 +315,7 @@ export const Navbar01: React.FC = () => {
 			userEmail: user?.email || "",
 			userImage: imgUrl || user?.img_url || "",
 			schoolName: user?.sch_name || "",
+			isTeacher: isTeacherGroup(user?.ugroup),
 		}),
 		[user, firstname, imgUrl],
 	);

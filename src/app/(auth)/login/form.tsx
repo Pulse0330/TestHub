@@ -28,6 +28,7 @@ import {
 	FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { isTeacherGroup } from "@/features/teacher/hooks";
 import { createSessionRequest, loginToken, loginTokenRequest } from "@/lib/api";
 import { IDLE_TIMEOUT_MINUTES } from "@/lib/auth";
 import { setCookie } from "@/lib/cookie";
@@ -137,8 +138,9 @@ export function LoginForm({ onForgot, onSign, className }: LoginFormProps) {
 			];
 			for (const [key, val] of cookies) setCookie(key, val, 7);
 			const group = Number(userData.ugroup);
-			if (group === 3 || group === 4) {
-				router.push("/userProfile");
+			// Багш, менежер → багшийн хэсэг
+			if (isTeacherGroup(group)) {
+				router.push("/teacher");
 			} else if (userData.is_enabled === 0) {
 				toast.info("Профайл мэдээллээ бөглөнө үү", {
 					description:
@@ -186,7 +188,9 @@ export function LoginForm({ onForgot, onSign, className }: LoginFormProps) {
 			for (const [key, val] of cookies) setCookie(key, val, 7);
 			const group = Number(userData.ugroup);
 			const isProfileIncomplete = userData.is_enabled === 0;
-			if (isProfileIncomplete || group === 5 || group === 4) {
+			if (isTeacherGroup(group) && !isProfileIncomplete) {
+				router.push("/teacher");
+			} else if (isProfileIncomplete || group === 5) {
 				if (isProfileIncomplete) {
 					toast.info("Профайл мэдээллээ бөглөнө үү", {
 						description:
