@@ -1,4 +1,4 @@
-// Багшийн API (backend.skuul.mn/api) — багш, менежерийн тал.
+// Багшийн API (clickup.ecm.mn/api) — багш, менежерийн тал.
 // Эх сурвалж: "Skuul — Багшийн API" Postman collection. UI одоогоор байхгүй.
 // Бүх хүсэлт POST, body-д `conn` явуулахгүй (DB-г backend .env-ээс авна).
 // Хариу: RetResponse.ResponseCode "10" амжилттай, "11" алдаа/хоосон.

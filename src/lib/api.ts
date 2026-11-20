@@ -488,7 +488,7 @@ export const getPaymentCourseList = async (
  * амжилтгүй хариуг дуудагч өөрөө шалгах endpoint-уудад.
  */
 const backendRaw = axios.create({
-	baseURL: process.env.NEXT_PUBLIC_API_URL ?? "https://backend.skuul.mn/api",
+	baseURL: process.env.NEXT_PUBLIC_API_URL ?? "https://clickup.ecm.mn/api",
 	headers: { "Content-Type": "application/json" },
 	timeout: 15000,
 });

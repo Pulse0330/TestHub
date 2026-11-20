@@ -74,7 +74,7 @@ export async function POST(request: NextRequest) {
 			conn,
 		};
 
-		const classResponse = await fetch("https://backend.skuul.mn/api/class", {
+		const classResponse = await fetch("https://clickup.ecm.mn/api/class", {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
 			body: JSON.stringify(payload),

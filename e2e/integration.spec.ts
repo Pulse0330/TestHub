@@ -33,7 +33,7 @@ test.describe("integration exam via URL", () => {
 		await page.route("**/integration.ecm.mn/**", (route) =>
 			route.fulfill({ json: EXAM_FILL }),
 		);
-		await page.route("**/backend.skuul.mn/**", (route) =>
+		await page.route("**/clickup.ecm.mn/**", (route) =>
 			route.fulfill({
 				json: { RetResponse: { StatusCode: "200" }, RetData: [] },
 			}),

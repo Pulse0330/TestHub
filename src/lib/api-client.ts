@@ -1,4 +1,4 @@
-// Backend (backend.skuul.mn/api) руу дуудах нийтлэг helper ба хариуны төрлүүд.
+// Backend (clickup.ecm.mn/api) руу дуудах нийтлэг helper ба хариуны төрлүүд.
 // DB холболтыг backend өөрийн .env-ээс авдаг — body-д `conn` явуулахгүй.
 
 import api from "@/lib/axios";

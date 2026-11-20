@@ -50,7 +50,7 @@ CI (`.github/workflows/ci.yml`) PR бүр дээр typecheck → lint → test �
 
 ## 🔌 API
 
-Backend: `https://backend.skuul.mn/api` (`NEXT_PUBLIC_API_URL`). Бүх хүсэлт POST, DB холболтыг backend өөрийн `.env`-ээс авдаг тул **body-д `conn` явуулахгүй**. Хариу: `RetResponse.ResponseCode` `"10"` амжилттай, `"11"` алдаа/хоосон.
+Backend: `https://clickup.ecm.mn/api` (`NEXT_PUBLIC_API_URL`). Бүх хүсэлт POST, DB холболтыг backend өөрийн `.env`-ээс авдаг тул **body-д `conn` явуулахгүй**. Хариу: `RetResponse.ResponseCode` `"10"` амжилттай, `"11"` алдаа/хоосон.
 
 Бүх API `@/lib/api`-аас импортлогдоно:
 
