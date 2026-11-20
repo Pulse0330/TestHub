@@ -22,7 +22,10 @@ export async function proxy(request: NextRequest) {
 		pathname.startsWith("/exam/") &&
 		!!searchParams.get("dbname") &&
 		!!searchParams.get("userid");
-	if (isIntegrationExam || pathname === "/exam/finished") {
+	// Хөгжүүлэлтийн шууд нэвтрэлт (production-д хуудас нь 404)
+	const isDevLogin =
+		process.env.NODE_ENV === "development" && pathname === "/dev-login";
+	if (isIntegrationExam || isDevLogin || pathname === "/exam/finished") {
 		return NextResponse.next();
 	}
 
