@@ -12,6 +12,12 @@ const nextConfig: NextConfig = {
 	},
 	reactStrictMode: true,
 
+	experimental: {
+		// Build бүр цэвэр эхэлнэ — хуучин .next/cache (жишээ нь өмнөх
+		// node_modules-ийн замууд) build-ийг эвдэхээс сэргийлнэ.
+		turbopackFileSystemCacheForBuild: false,
+	},
+
 	compiler: {
 		removeConsole:
 			process.env.NODE_ENV === "production"
