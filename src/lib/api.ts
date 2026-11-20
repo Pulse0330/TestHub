@@ -1,5 +1,6 @@
 // src/lib/api.ts
 
+import axios from "axios";
 import api from "@/lib/axios";
 import type { ContentViewResponse } from "@/types/course/contentView";
 import type { CourseListResponse } from "@/types/course/courseList";
@@ -19,12 +20,17 @@ import type { ExamResponseMoreApiResponse } from "@/types/exam/examResultMore";
 import type { TestFilterResponse } from "@/types/exercise/testFilter";
 import type { ExamFinishResponse } from "@/types/exercise/testGetFill";
 import type { GetTestGroupResponse } from "@/types/exercise/testGroup";
-import type { ApiResponseWithNullData } from "@/types/exercise/testSaved";
 import type {
 	TestSavedMixedItem,
 	TestSavedMixedResponse,
 } from "@/types/exercise/testSavedMixed";
 import type { HomeResponseType } from "@/types/home";
+import type {
+	AimagItem,
+	ClassItem,
+	DistrictItem,
+	SchoolItem,
+} from "@/types/location";
 import type { ForgotPasswordResponse } from "@/types/login/forgot/forgot";
 import type {
 	CheckTokenResponse,
@@ -39,24 +45,12 @@ import type {
 	User,
 } from "@/types/login/loginToken/loginToken";
 import type { RegisterSysUserResponse } from "@/types/login/sign/register";
-import type {} from "@/types/login/sign/registerChoose/aimag";
-import type {} from "@/types/login/sign/registerChoose/duureg";
-import type {} from "@/types/login/sign/registerChoose/sum";
-import type {} from "@/types/login/sign/registerChoose/surguuli";
-import type { ExamVariantsResponse } from "@/types/mnExam/examVariants";
-import type { ExamAttendanceResponse } from "@/types/mnExam/mnExamAttendance";
-import type { mnExamFinishResponse } from "@/types/mnExam/mnExamFinish";
-import type { mnExamVariantResponse } from "@/types/mnExam/mnExamList";
-import type { mnExamUserCheckResponseType } from "@/types/mnExam/mnExamUserCheck";
-import type { ExamPrintListResponse } from "@/types/mnExam/mnPrint";
-import type { MNUserCheckResponse } from "@/types/mnExam/mnUserCheck";
 import type { getplaninfoCourseData } from "@/types/paymentCourse/getplaninfo";
 import type { QPayInvoiceResponse } from "@/types/Qpay/qpayinvoice";
 import type { ApiSorillistsResponse } from "@/types/soril/sorilLists";
 import type { SorilresultListResponseType } from "@/types/soril/sorilResultLists";
 import type { UserProfileResponseType } from "@/types/user";
 import type { userUpdateResponse } from "@/types/userUpdate";
-import api1 from "./axios1";
 //-------------------------------Auth---------------------------------//
 
 // ===== LoginToken request =====
@@ -222,16 +216,6 @@ export const getServerDate = async (): Promise<string> => {
 };
 
 //-------------------------------Exam---------------------------------//
-// ===== Get Examlists  =====
-export const getExamlists = async (
-	userId: number,
-): Promise<ApiExamlistsResponse> => {
-	const { data } = await api.post<ApiExamlistsResponse>("/getexamlists", {
-		user_id: userId,
-		optype: 0,
-	});
-	return data;
-};
 //===== Get Examresultlists =====
 export const getexamresultlists = async (
 	userId: number,
@@ -256,47 +240,8 @@ export const getExamById = async (
 	});
 	return data;
 };
-// ===== Exam New request =====
-export const getNewExamFill = async (
-	userId: number,
-	variant_id: number,
-	examId: number,
-	examDateId: number,
-	examRegId: number,
-): Promise<ApiExamResponse> => {
-	const { data } = await api1.post<ApiExamResponse>("/api_getexamfill", {
-		variant_id: variant_id,
-		exam_id: examId,
-		exam_date_id: examDateId,
-		exam_reg_id: examRegId,
-		userid: userId,
-	});
-	return data;
-};
 
 // ===== Soril New request =====
-
-export const getExamVariants = async (
-	userId: number,
-): Promise<ExamVariantsResponse> => {
-	const { data } = await api1.post<ExamVariantsResponse>("/list", {
-		procname: "api_exam_variants",
-		userid: userId,
-	});
-	return data;
-};
-//=====Миний шалгалтын мэдээлэл========
-export const getmnExamUserCheck = async (
-	examinee_number: string,
-	userId: number,
-): Promise<mnExamUserCheckResponseType> => {
-	const { data } = await api1.post<mnExamUserCheckResponseType>("/list", {
-		procname: "api_my_exam_info",
-		examinee_number,
-		userid: userId,
-	});
-	return data;
-};
 
 // ===== Exam choosed  =====
 export const saveExamAnswer = async (
@@ -317,53 +262,6 @@ export const saveExamAnswer = async (
 		exam_id: examId,
 		user_id: userId,
 	});
-	return data;
-};
-// ===== mnExam choosed  =====
-export const savemnExamAnswer = async (
-	userId: number,
-	examId: number,
-	questionId: number,
-	answerId: number,
-	queTypeId: number,
-	answer: string = "",
-	rowNum: number,
-	exam_date_id: number,
-	exam_reg_id: number,
-): Promise<ExamAnswerResponse> => {
-	const { data } = await api.post<ExamAnswerResponse>("/apiexamchoosedanswer", {
-		que_type_id: queTypeId,
-		question_id: questionId,
-		answer_id: answerId,
-		answer: answer,
-		row_num: rowNum,
-		exam_id: examId,
-		user_id: userId,
-		exam_date_id: exam_date_id,
-		exam_reg_id: exam_reg_id,
-	});
-	return data;
-};
-// ===== mnExam delete  =====
-export const deletemnExamAnswer = async (
-	userId: number,
-	examId: number,
-	questionId: number,
-	answerId: number,
-	exam_reg_id: number,
-	exam_date_id: number,
-): Promise<ExamChoosedAnswerDeleteResponse> => {
-	const { data } = await api.post<ExamChoosedAnswerDeleteResponse>(
-		"/apiexamdeletedanswer",
-		{
-			user_id: userId,
-			exam_id: examId,
-			question_id: questionId,
-			answer_id: answerId,
-			exam_date_id: exam_date_id,
-			exam_reg_id: exam_reg_id,
-		},
-	);
 	return data;
 };
 // ===== Exam choosedanswer delete   =====
@@ -471,16 +369,6 @@ export const getexamFinishFiltertLists = async (
 	return data;
 };
 //-------------------------------Soril---------------------------------//
-// ===== Get Sorillists  =====
-export const getSorillists = async (
-	userId: number,
-): Promise<ApiSorillistsResponse> => {
-	const { data } = await api.post<ApiSorillistsResponse>("/webgetexamlists", {
-		user_id: userId,
-		optype: 1,
-	});
-	return data;
-};
 
 // ===== Get sorilFilteredlists  =====
 export const getSorilFilteredlists = async (
@@ -492,19 +380,6 @@ export const getSorilFilteredlists = async (
 		lesson_id: lesson_id,
 		optype: 1,
 	});
-	return data;
-};
-//===== Get Sorilresultlists =====
-export const getSorilresultlists = async (
-	userId: number,
-): Promise<SorilresultListResponseType> => {
-	const { data } = await api.post<SorilresultListResponseType>(
-		"/getexamresultlists",
-		{
-			exam_type: 3,
-			user_id: userId,
-		},
-	);
 	return data;
 };
 //===== Get SorilFilterdresultlists =====
@@ -524,28 +399,6 @@ export const getSorilFilterdresultlists = async (
 };
 //-------------------------------Test---------------------------------//
 
-// ===== Get testGroup =====
-export const getTestGroup = async (
-	userId: number,
-): Promise<GetTestGroupResponse> => {
-	const { data } = await api.post<GetTestGroupResponse>("/gettestgroup", {
-		user_id: userId,
-	});
-	return data;
-};
-// ===== Get testSaved =====
-export const getTestSaved = async (
-	test_cnt: number,
-	rlesson_id: number,
-	userId: number,
-): Promise<ApiResponseWithNullData> => {
-	const { data } = await api.post<ApiResponseWithNullData>("/testsaved", {
-		user_id: userId,
-		test_cnt,
-		rlesson_id,
-	});
-	return data;
-};
 // ===== Get testGetFill =====
 export const gettTestFill = async (
 	userId: number,
@@ -592,14 +445,6 @@ export const getTestFiltered = async (
 };
 
 //-------------------------------Course---------------------------------//
-export const getCourseList = async (
-	userId: number,
-): Promise<CourseListResponse> => {
-	const { data } = await api.post<CourseListResponse>("/getcourse", {
-		user_id: userId,
-	});
-	return data;
-};
 
 // ===== Get ContentView =====
 export const getContentView = async (
@@ -632,97 +477,359 @@ export const getPaymentCourseList = async (
 	});
 	return data;
 };
-//------------------------------- QPAY ---------------------------------//
-export const getQPayInvoice = async (
-	amount: string,
-	userId: string,
-	orderId: string,
-	billId: string,
-	classroomId: string,
-	topics: number[],
-): Promise<QPayInvoiceResponse> => {
-	const { data } = await api.post<QPayInvoiceResponse>(
-		"https://backend.skuul.mn/api/api_get_qpayinvoice",
-		{
-			amount,
-			userid: userId,
-			device_token: "",
-			orderid: orderId,
-			bilid: billId,
-			classroom_id: classroomId,
-			urls: topics.map((id) => ({ topic_id: id.toString() })),
-		},
-	);
 
-	return data;
-};
-//------------------------------- МХБШ ---------------------------------//
+//------------------------------- OTP, QPay, байршил, анги ---------------------------------//
+// QPay, байршил нь backend руу шууд (conn-гүй). OTP (гадны SMS үйлчилгээ) болон
+// анги (сургууль бүрийн өөрийн DB) нь Next.js /api route-оор дамжина.
 
-export const getMNPrint = async (params: {
-	userId: number;
-	examineeNumber: string;
-	examDateId?: number;
-}): Promise<ExamPrintListResponse> => {
-	const { data } = await api1.post<ExamPrintListResponse>("/list", {
-		procname: "api_my_exam_page_print",
-		examinee_number: params.examineeNumber,
-		exam_date_id: params.examDateId ?? 0,
-		userid: params.userId,
-		conn: "skuul",
+/**
+ * Backend руу шууд, хариуг шүүлтгүйгээр (StatusCode шалгахгүй) — QPay,
+ * байршлын жагсаалт гэх мэт RetResponse-гүй эсвэл "төлөгдөөгүй" гэх мэт
+ * амжилтгүй хариуг дуудагч өөрөө шалгах endpoint-уудад.
+ */
+const backendRaw = axios.create({
+	baseURL: process.env.NEXT_PUBLIC_API_URL ?? "https://clickup.ecm.mn/api",
+	headers: { "Content-Type": "application/json" },
+	timeout: 15000,
+});
+
+const internalApi = axios.create({
+	baseURL: "/api",
+	headers: { "Content-Type": "application/json" },
+	timeout: 15000,
+});
+
+interface InternalRetResponse {
+	ResponseMessage: string;
+	StatusCode?: string;
+	ResponseCode?: string;
+	ResponseType: boolean;
+}
+
+export interface InternalListResponse<T> {
+	RetResponse?: InternalRetResponse;
+	RetData?: T[];
+}
+
+export interface OtpCodeResponse {
+	RetResponse?: InternalRetResponse & {
+		RtrGenCode?: string;
+		RtrGenCodeSeconds?: string | number;
+	};
+}
+
+export interface OtpCheckResponse {
+	RetResponse?: InternalRetResponse;
+}
+
+/** Төхөөрөмжийн мэдээлэл — ua-parser-js-ийг зөвхөн OTP үед ачаална. */
+async function getDeviceInfo() {
+	const { UAParser } = await import("ua-parser-js");
+	const parser = new UAParser();
+	const device = parser.getDevice();
+	const os = parser.getOS();
+	const browser = parser.getBrowser();
+	return {
+		devicemodel:
+			device.model || `${os.name || "Unknown"} - ${browser.name || "Unknown"}`,
+		ismob: device.type === "mobile" || device.type === "tablet" ? 1 : 0,
+	};
+}
+
+// ===== OTP =====
+export const requestOtpCode = async (
+	phone: number,
+): Promise<OtpCodeResponse> => {
+	const { data } = await internalApi.post<OtpCodeResponse>("/otp/getcode", {
+		phone,
+		conftype: "1",
+		bundleid: "ikh_skuul.mn",
+		...(await getDeviceInfo()),
 	});
 	return data;
 };
 
-export const getMNExamVariants = async (
+export const checkOtpCode = async (
+	phone: number,
+	code: number,
+): Promise<OtpCheckResponse> => {
+	const { data } = await internalApi.post<OtpCheckResponse>("/otp/smscheck", {
+		phone,
+		code,
+	});
+	return data;
+};
+
+// ===== QPay =====
+/** Шалгалтын төлбөрийн QPay нэхэмжлэх үүсгэнэ. */
+export const createExamInvoice = async (
+	exam: {
+		exam_id: number;
+		amount?: number | string | null;
+		bill_type?: number | string | null;
+	},
 	userId: number,
-	examinee_number: string,
-): Promise<mnExamVariantResponse> => {
-	const { data } = await api1.post<mnExamVariantResponse>("/list", {
-		procname: "api_exam_date_variants",
-		userid: userId,
-		examinee_number,
-	});
-	return data;
-};
-
-export const getMNExamFinish = async (
-	exam_register_id: number,
-	variant_id: number,
-	exam_id: number,
-	exam_date_id: number,
-): Promise<mnExamFinishResponse> => {
-	const { data } = await api1.post<mnExamFinishResponse>(
-		"/examregistrationsanswers",
+): Promise<QPayInvoiceResponse> => {
+	const { data } = await backendRaw.post<QPayInvoiceResponse>(
+		"/get_qpayinvoiceweb",
 		{
-			exam_register_id: exam_register_id,
-			exam_id: exam_id,
-			exam_date_id: exam_date_id,
-			variant_id: variant_id,
+			amount: exam.amount?.toString() || "0",
+			userid: userId.toString(),
+			user_id: userId,
+			device_token: "",
+			orderid: exam.bill_type?.toString() || "0",
+			bilid: exam.exam_id.toString(),
+			classroom_id: "0",
 		},
 	);
 	return data;
 };
-export const getMNExamAttendace = async (
-	exam_registration_id: number | null,
-	status: string,
-	start_time: string,
-	end_time: string,
-	userid: number,
-): Promise<ExamAttendanceResponse> => {
-	const { data } = await api1.post<ExamAttendanceResponse>("/examattendance", {
-		exam_registration_id: exam_registration_id,
-		status: status,
-		start_time: start_time,
-		end_time: end_time,
-		userid: userid,
+
+export interface CourseInvoicePayload {
+	amount: string;
+	userid: string;
+	device_token: string;
+	orderid: string;
+	bilid: string;
+	classroom_id: string;
+	urls: { topic_id: string }[];
+}
+
+/** Хичээлийн (төлөвлөгөөний) төлбөрийн QPay нэхэмжлэх үүсгэнэ. */
+export const createCourseInvoice = async (
+	payload: CourseInvoicePayload,
+): Promise<QPayInvoiceResponse> => {
+	const { data } = await backendRaw.post<QPayInvoiceResponse | string>(
+		"/api_get_qpayinvoice",
+		{ ...payload, user_id: Number(payload.userid) },
+	);
+	// Backend заримдаа JSON-ийг string хэлбэрээр буцаадаг
+	const parsed: QPayInvoiceResponse =
+		typeof data === "string" ? JSON.parse(data) : data;
+	if (!parsed?.qr_image) throw new Error("QPay хариу буруу байна");
+	return parsed;
+};
+
+/** QPay төлбөр төлөгдсөн эсэхийг шалгана. */
+export const checkQPayPayment = async (
+	userId: number | string,
+	invoiceId: string,
+): Promise<{ RetResponse?: InternalRetResponse }> => {
+	const { data } = await backendRaw.post("/get_qpaycheckweb", {
+		userid: userId.toString(),
+		invoice_id: invoiceId,
 	});
 	return data;
 };
-export const getMNuserCheck = async (
-	regnumber: string,
-): Promise<MNUserCheckResponse> => {
-	const { data } = await api1.post<MNUserCheckResponse>("/myexaminees", {
-		regnumber,
+
+// ===== Байршил (аймаг → дүүрэг → сургууль → анги) =====
+export const getAimags = async (): Promise<InternalListResponse<AimagItem>> =>
+	(await backendRaw.post("/aimag", {})).data;
+
+export const getDistricts = async (
+	aimagId: number,
+): Promise<InternalListResponse<DistrictItem>> =>
+	(await backendRaw.post("/district", { aimag_id: aimagId })).data;
+
+export const getSchools = async (
+	aimagId: number,
+	districtId: number,
+): Promise<InternalListResponse<SchoolItem>> =>
+	(
+		await backendRaw.post("/school", {
+			aimag_id: aimagId,
+			district_id: districtId,
+		})
+	).data;
+
+export const getClasses = async (
+	database: string,
+	serverip: string,
+): Promise<InternalListResponse<ClassItem>> =>
+	(await internalApi.post("/sign/angi", { database, serverip })).data;
+
+//------------------------------- Файл upload ---------------------------------//
+const UPLOAD_URL = "https://uploads.ecm.mn/upload/single";
+
+export interface UploadFileResult {
+	fileStatus: number;
+	message: string;
+	file: {
+		name: string;
+		savedName: string;
+		url: string;
+	};
+}
+
+/** Зураг upload хийнэ (uploads.ecm.mn). */
+export const uploadImage = async (
+	formData: FormData,
+): Promise<UploadFileResult> => {
+	const { data } = await axios.post<UploadFileResult>(UPLOAD_URL, formData, {
+		headers: { "Content-Type": "multipart/form-data" },
+		timeout: 0, // том файлд хугацааны хязгааргүй
 	});
 	return data;
 };
+
+//------------------------------- Integration (гадны системээс URL-аар) ---------------------------------//
+// /exam/:id?dbname=...&userid=...&classroom_id=...&domname=... хэлбэрээр
+// орж ирсэн шалгалт integration.ecm.mn API-г ашиглана. Хариуг одоогийн
+// API-ийн хэлбэрт (RetResponse) хөрвүүлдэг тул шалгалтын хуудас өөрчлөлтгүй ажиллана.
+
+const integrationApi = axios.create({
+	baseURL:
+		process.env.NEXT_PUBLIC_INTEGRATION_API_URL ??
+		"https://integration.ecm.mn/api",
+	headers: { "Content-Type": "application/json" },
+	timeout: 10000,
+});
+
+interface IntegrationBaseResponse {
+	message: string;
+	code: string;
+	status: string;
+	success: boolean;
+}
+
+type IntegrationExamFillResponse = IntegrationBaseResponse &
+	Partial<Omit<ApiExamResponse, "RetResponse">>;
+
+interface IntegrationFinishResponse extends IntegrationBaseResponse {
+	RetData: number | null;
+}
+
+/** Бүх integration хүсэлтэд явдаг DB сонголт. */
+const withIntegrationDb = (dbname: string) => ({
+	cmdname: "integration_ConfigTake",
+	dbnamelist: [{ dbname }],
+});
+
+const toRetResponse = (res: IntegrationBaseResponse) => ({
+	ResponseMessage: res.message,
+	StatusCode: res.code,
+	ResponseCode: res.status,
+	ResponseType: res.success,
+});
+
+export const getIntegrationExamFill = async (
+	dbname: string,
+	userId: number,
+	examId: number,
+	classroomId: number | null,
+): Promise<ApiExamResponse> => {
+	const { data } = await integrationApi.post<IntegrationExamFillResponse>(
+		"/IntegrationExamFill",
+		{
+			...withIntegrationDb(dbname),
+			exam_id: examId,
+			user_id: userId,
+			classroom_id: classroomId ?? 0,
+		},
+	);
+	if (!data.success) {
+		throw new Error(data.message || "Шалгалт ачаалж чадсангүй");
+	}
+	return {
+		RetResponse: toRetResponse(data),
+		ExamInfo: data.ExamInfo ?? [],
+		Questions: data.Questions ?? [],
+		Answers: data.Answers ?? [],
+		ChoosedAnswer: data.ChoosedAnswer ?? [],
+		ChoosedFiles: data.ChoosedFiles ?? [],
+		RetData: data.RetData ?? [],
+	};
+};
+
+export const saveIntegrationExamAnswer = async (
+	dbname: string,
+	userId: number,
+	examId: number,
+	questionId: number,
+	answerId: number,
+	queTypeId: number,
+	answer = "",
+	rowNum = 0,
+): Promise<ExamAnswerResponse> => {
+	const { data } = await integrationApi.post<IntegrationBaseResponse>(
+		"/IntegrationExamChoosedAnswer",
+		{
+			...withIntegrationDb(dbname),
+			que_type_id: queTypeId,
+			question_id: questionId,
+			answer_id: answerId,
+			answer,
+			row_num: rowNum,
+			exam_id: examId,
+			user_id: userId,
+		},
+	);
+	if (!data.success) {
+		throw new Error(data.message || "Хариулт хадгалж чадсангүй");
+	}
+	return {
+		RetResponse: toRetResponse(data),
+		RetData: { success: data.success },
+	};
+};
+
+export const deleteIntegrationExamAnswer = async (
+	dbname: string,
+	userId: number,
+	examId: number,
+	questionId: number,
+	answerId: number,
+): Promise<ExamChoosedAnswerDeleteResponse> => {
+	const { data } = await integrationApi.post<IntegrationBaseResponse>(
+		"/IntegrationExamDeletedAnswer",
+		{
+			...withIntegrationDb(dbname),
+			question_id: questionId,
+			answer_id: answerId,
+			exam_id: examId,
+			user_id: userId,
+		},
+	);
+	if (!data.success) {
+		throw new Error(data.message || "Хариулт устгаж чадсангүй");
+	}
+	return { RetResponse: toRetResponse(data), RetData: null };
+};
+
+/**
+ * Integration шалгалт дуусгах. Амжилтгүй үед алдаа шидэхгүй —
+ * дуудагч RetResponse-оор шалгана.
+ */
+export const finishIntegrationExam = async (
+	dbname: string,
+	payload: FinishExamRequest,
+	classroomId: number | null,
+): Promise<FinishExamResponse> => {
+	const { data } = await integrationApi.post<IntegrationFinishResponse>(
+		"/IntegrationExamFinish",
+		{
+			...withIntegrationDb(dbname),
+			user_id: payload.user_id,
+			exam_id: payload.exam_id,
+			classroom_id: classroomId ?? 0,
+			exam_type: payload.exam_type,
+			start_eid: payload.start_eid,
+			exam_time: payload.exam_time,
+		},
+	);
+	return { RetResponse: toRetResponse(data), RetData: data.RetData ?? 0 };
+};
+
+//------------------------------- Нэмэлт API (Postman collection-ууд) ---------------------------------//
+// Бүх API нэг газраас: import { studentApi, teacherApi } from "@/lib/api"
+export {
+	type ApiResponse,
+	type ApiRetResponse,
+	apiGet,
+	apiPost,
+	isApiSuccess,
+	type Paged,
+	type PageParams,
+} from "./api-client";
+export * as studentApi from "./student-api";
+export * as teacherApi from "./teacher-api";

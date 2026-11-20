@@ -1,94 +1,6 @@
 "use client";
 import Image from "next/image";
-import { memo, useEffect, useRef } from "react";
-
-// ---- Helpers ----
-interface MathContentProps {
-	html: string;
-}
-
-function cleanHtml(raw: string): string {
-	return (
-		raw
-			.replace(/&nbsp;/g, " ")
-			.replace(/&amp;/g, "&")
-			.replace(/&lt;/g, "<")
-			.replace(/&gt;/g, ">")
-			.replace(/&quot;/g, '"')
-			.replace(/&#39;/g, "'")
-			// MathML дотор Cyrillic О → Latin O
-			.replace(/(<m[a-z]+[^>]*>)\s*О\s*(<\/m[a-z]+>)/g, "$1O$2")
-	);
-}
-
-// ---- MathContent ----
-function MathContent({ html }: MathContentProps) {
-	const mathRef = useRef<HTMLDivElement>(null);
-
-	// biome-ignore lint/correctness/useExhaustiveDependencies: html өөрчлөгдөхөд MathJax дахин render хийх шаардлагатай
-	useEffect(() => {
-		const renderMath = async () => {
-			if (!mathRef.current || !window.MathJax) return;
-			try {
-				if (window.MathJax.typesetClear) {
-					window.MathJax.typesetClear([mathRef.current]);
-				}
-				if (window.MathJax.typesetPromise) {
-					await window.MathJax.typesetPromise([mathRef.current]);
-				}
-
-				const containers = mathRef.current.querySelectorAll("mjx-container");
-				containers.forEach((container: Element) => {
-					const el = container as HTMLElement;
-					const hasMatrix = !!container.querySelector("mjx-mtable, mtable");
-					// MathJax 3 CHTML → "true", SVG → "block"
-					const isDisplayMode =
-						el.getAttribute("display") === "true" ||
-						el.getAttribute("display") === "block";
-
-					if (hasMatrix || isDisplayMode) {
-						el.style.cssText = "";
-						el.style.display = "block";
-						el.style.overflowX = "auto"; // scroll зөвхөн матриц дээр
-						el.style.maxWidth = "100%";
-						el.style.margin = "8px 0";
-					} else {
-						el.style.cssText = "";
-						el.style.display = "inline-flex";
-						el.style.alignItems = "center";
-						el.style.verticalAlign = "middle";
-						el.style.overflow = "visible"; // inline scroll үүсгэхгүй
-						el.style.maxWidth = "100%";
-					}
-				});
-			} catch (err) {
-				console.error("MathJax rendering error:", err);
-			}
-		};
-
-		if (window.MathJax?.startup?.promise) {
-			window.MathJax.startup.promise.then(renderMath);
-		} else {
-			renderMath();
-		}
-	}, [html]); // html өөрчлөгдөхөд дахин render
-
-	return (
-		<div
-			ref={mathRef}
-			dangerouslySetInnerHTML={{ __html: cleanHtml(html) }}
-			className="math-content text-inherit"
-			style={{
-				width: "100%",
-				maxWidth: "100%",
-				overflow: "visible", // wrapper дээр scroll үгүй
-				overflowWrap: "break-word",
-				wordBreak: "break-word",
-				lineHeight: "1.8",
-			}}
-		/>
-	);
-}
+import { MathContent } from "@/components/MathContent";
 
 // ---- Types ----
 interface Answer {
@@ -142,7 +54,7 @@ function QuestionRow({
 			{/* ── Question header ── */}
 			<div className="flex flex-row gap-3 mb-3 items-start">
 				<div className="flex flex-col items-center shrink-0 gap-1">
-					<span className="bg-primary text-primary-foreground rounded-full w-7 h-7 flex items-center justify-center text-sm font-bold">
+					<span className="bg-primary-soft text-primary-soft-foreground rounded-full w-7 h-7 flex items-center justify-center text-sm font-bold">
 						{questionNumber}
 					</span>
 					{points !== undefined && (
@@ -183,13 +95,13 @@ function QuestionRow({
 								className={`flex items-start gap-2 px-3 py-2 rounded-md text-sm transition-colors
                   ${
 										isCorrect
-											? "bg-green-100 dark:bg-green-900/30 border border-green-400 text-green-800 dark:text-green-300 font-medium"
+											? "bg-pop-mint-soft border border-pop-mint text-pop-mint-ink font-medium"
 											: "bg-muted/50 hover:bg-muted"
 									}`}
 							>
 								<span
 									className={`shrink-0 font-semibold w-5 text-center pt-0.5
-                    ${isCorrect ? "text-green-600 dark:text-green-400" : "text-muted-foreground"}`}
+                    ${isCorrect ? "text-pop-mint-ink" : "text-muted-foreground"}`}
 								>
 									{label}
 								</span>
@@ -212,9 +124,9 @@ function QuestionRow({
 						{fillBlanks.map((blank) => (
 							<div
 								key={blank.answer_id}
-								className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-md text-sm"
+								className="flex items-center gap-1.5 px-3 py-1.5 bg-pop-sky-soft border border-pop-sky/40 rounded-md text-sm"
 							>
-								<span className="font-bold text-blue-600 dark:text-blue-400 shrink-0">
+								<span className="font-bold text-pop-sky-ink shrink-0">
 									{blank.answer_name}:
 								</span>
 								<MathContent html={blank.answer_name_html} />
@@ -253,9 +165,9 @@ function QuestionRow({
 							{matchAnswers.map((a) => (
 								<div
 									key={a.answer_id}
-									className="flex items-start gap-2 px-3 py-1.5 mb-1 bg-blue-50 dark:bg-blue-900/20 rounded-md text-sm"
+									className="flex items-start gap-2 px-3 py-1.5 mb-1 bg-pop-sky-soft rounded-md text-sm"
 								>
-									<span className="text-blue-500 font-semibold w-5 shrink-0 pt-0.5">
+									<span className="text-pop-sky-ink font-semibold w-5 shrink-0 pt-0.5">
 										{a.refid}.
 									</span>
 									<div className="flex-1 min-w-0 overflow-visible">
@@ -273,4 +185,4 @@ function QuestionRow({
 
 // ---- Exports ----
 export { MathContent, QuestionRow };
-export default memo(MathContent);
+export default MathContent;

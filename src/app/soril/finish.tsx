@@ -1,6 +1,6 @@
 "use client";
 
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import {
 	Award,
 	CheckCircle,
@@ -14,7 +14,7 @@ import {
 	Zap,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { forwardRef, useImperativeHandle, useState } from "react";
+import { forwardRef, useImperativeHandle, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
@@ -30,10 +30,7 @@ import { Progress } from "@/components/ui/progress";
 import { finishExam, getExamResults } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/stores/useAuthStore";
-import type {
-	FinishExamRequest,
-	FinishExamResponse,
-} from "@/types/exam/examFinish";
+import { formatHMS } from "../exam/component/examTime";
 
 interface ExamResultData {
 	test_id: number;
@@ -64,7 +61,12 @@ interface FinishExamResultDialogProps {
 	examId: number;
 	examType: number;
 	startEid: number;
-	elapsedSeconds: number; // ✅ секундээр
+	/** Сорилд зарцуулсан хугацаа (секунд) — дуусгах мөчид дуудна. */
+	getElapsedSeconds: () => number;
+	/** Дараалсан бүх хариултыг хадгална; бүгд хадгалагдвал true. */
+	flushAnswers: () => Promise<boolean>;
+	/** Сорил серверт амжилттай дууссаны дараа дуудагдана. */
+	onFinished?: () => void;
 	answeredCount: number;
 	totalCount: number;
 	/** Өгөгдвөл "Сорил дуусгах" товч шууд баталгаажуулалт нээхийн оронд үүнийг дуудна (жишээ нь шалгах самбар). */
@@ -87,7 +89,9 @@ const FinishExamResultDialog = forwardRef<
 			examId,
 			examType,
 			startEid,
-			elapsedSeconds,
+			getElapsedSeconds,
+			flushAnswers,
+			onFinished,
 			answeredCount,
 			totalCount,
 			onRequestFinish,
@@ -99,42 +103,24 @@ const FinishExamResultDialog = forwardRef<
 		const router = useRouter();
 		const [open, setOpen] = useState(false);
 		const [finishedTestId, setFinishedTestId] = useState<number | null>(null);
+		const [isFinishing, setIsFinishing] = useState(false);
+		/** Баталгаажуулах цонх нээгдэх үеийн үргэлжилсэн хугацаа (харуулах зорилгоор). */
+		const [elapsedSnapshot, setElapsedSnapshot] = useState(0);
+		const finishingRef = useRef(false);
+		const finishedRef = useRef(false);
 
 		const isDadlaga = examType === 2;
 
-		const finishMutation = useMutation<
-			FinishExamResponse,
-			Error,
-			FinishExamRequest
-		>({
-			mutationFn: (payload) => finishExam(payload),
-			onSuccess: (res) => {
-				if (res.RetResponse.ResponseCode === "10") {
-					const testId = res.RetData;
+		const openDialog = () => {
+			setElapsedSnapshot(getElapsedSeconds());
+			setOpen(true);
+		};
 
-					if (isDadlaga) {
-						toast.success("✅ Сорил амжилттай дууслаа!");
-						setTimeout(() => {
-							router.push("/home");
-						}, 1500);
-					} else {
-						toast.success("✅ Сорил амжилттай дууслаа");
-						if (testId) setFinishedTestId(testId);
-					}
-				} else {
-					toast.error(res.RetResponse.ResponseMessage);
-					setOpen(false);
-				}
-			},
-			onError: () => {
-				toast.error(
-					isDadlaga
-						? "Сорил дуусгах үед алдаа гарлаа"
-						: "Сорил дуусгах үед алдаа гарлаа",
-				);
-				setOpen(false);
-			},
-		});
+		const handleOpenChange = (next: boolean) => {
+			if (isFinishing) return;
+			if (next) setElapsedSnapshot(getElapsedSeconds());
+			setOpen(next);
+		};
 
 		const { data: resultsData, isLoading: isLoadingResults } =
 			useQuery<ExamResultsResponse>({
@@ -148,40 +134,70 @@ const FinishExamResultDialog = forwardRef<
 				retryDelay: 1000,
 			});
 
-		// ✅ finish.tsx дээр console.log нэмээд шалгах
-		const handleFinish = () => {
+		/** Хариултуудыг хадгална → finishExam. Алдаа гарвал хуудсандаа үлдэнэ. */
+		const handleFinish = async () => {
+			if (finishingRef.current || finishedRef.current) return;
 			if (!userId) {
 				toast.error("Хэрэглэгчийн мэдээлэл олдсонгүй");
 				return;
 			}
 
-			// ✅ elapsedSeconds нь одоо үнэхээр секунд байна
-			const hours = Math.floor(elapsedSeconds / 3600);
-			const minutes = Math.floor((elapsedSeconds % 3600) / 60);
-			const seconds = elapsedSeconds % 60;
+			finishingRef.current = true;
+			setIsFinishing(true);
+			try {
+				const allSaved = await flushAnswers();
+				if (!allSaved) {
+					toast.error(
+						"Зарим хариулт хадгалагдаагүй байна. Интернэт холболтоо шалгаад дахин оролдоно уу.",
+					);
+					return;
+				}
 
-			const formattedTime = `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+				const res = await finishExam({
+					exam_id: examId,
+					exam_type: examType,
+					start_eid: startEid,
+					exam_time: formatHMS(getElapsedSeconds()),
+					user_id: userId,
+				});
 
-			const payload = {
-				exam_id: examId,
-				exam_type: examType,
-				start_eid: startEid,
-				exam_time: formattedTime, // ✅ Одоо зөв утгатай байх болно
-				user_id: userId,
-			};
+				if (res.RetResponse.ResponseCode === "10") {
+					finishedRef.current = true;
+					onFinished?.();
+					const testId = res.RetData;
 
-			console.log("📤 Илгээж буй payload:", payload);
-			finishMutation.mutate(payload);
+					if (isDadlaga) {
+						toast.success("✅ Сорил амжилттай дууслаа!");
+						setTimeout(() => {
+							router.push("/home");
+						}, 1500);
+					} else {
+						toast.success("✅ Сорил амжилттай дууслаа");
+						if (testId) setFinishedTestId(testId);
+						else router.push("/Lists/sorilResult");
+					}
+				} else {
+					toast.error(
+						res.RetResponse.ResponseMessage || "Сорил дуусгах үед алдаа гарлаа",
+					);
+				}
+			} catch (error) {
+				console.error("Сорил дуусгах алдаа:", error);
+				toast.error("Сорил дуусгах үед алдаа гарлаа. Дахин оролдоно уу.");
+			} finally {
+				finishingRef.current = false;
+				setIsFinishing(false);
+			}
 		};
+
 		// Expose triggerFinish method to parent via ref
 		useImperativeHandle(ref, () => ({
 			triggerFinish: () => {
-				setOpen(true);
-				// Auto-trigger finish after showing dialog
-				setTimeout(handleFinish, 100);
+				openDialog();
+				void handleFinish();
 			},
 			openConfirm: () => {
-				setOpen(true);
+				openDialog();
 			},
 		}));
 
@@ -220,7 +236,7 @@ const FinishExamResultDialog = forwardRef<
 		if (finishedTestId && !isDadlaga) {
 			if (isLoadingResults) {
 				return (
-					<Dialog open={open} onOpenChange={setOpen}>
+					<Dialog open={open} onOpenChange={handleOpenChange}>
 						<DialogTrigger asChild>{triggerButton}</DialogTrigger>
 
 						<DialogContent className="w-full sm:max-w-[550px] p-4 sm:p-6">
@@ -240,7 +256,10 @@ const FinishExamResultDialog = forwardRef<
 						<DialogContent className="w-full sm:max-w-[450px] p-6">
 							<DialogHeader className="text-center sm:text-center items-center">
 								<div className="mx-auto mb-2 flex size-16 items-center justify-center rounded-full bg-destructive/10">
-									<XCircle className="size-9 text-destructive" strokeWidth={2.5} />
+									<XCircle
+										className="size-9 text-destructive"
+										strokeWidth={2.5}
+									/>
 								</div>
 								<DialogTitle className="text-xl font-black">
 									Үр дүн олдсонгүй
@@ -322,8 +341,8 @@ const FinishExamResultDialog = forwardRef<
 							<div
 								className={`rounded-2xl border-2 p-5 ${
 									isPassed
-										? "border-success/40 bg-success/10"
-										: "border-destructive/40 bg-destructive/10"
+										? "border-pop-mint/50 bg-pop-mint-soft"
+										: "border-pop-coral/50 bg-pop-coral-soft"
 								}`}
 							>
 								<div className="flex flex-col sm:flex-row items-center justify-between gap-4">
@@ -331,8 +350,8 @@ const FinishExamResultDialog = forwardRef<
 										<div
 											className={`flex size-12 items-center justify-center rounded-2xl ${
 												isPassed
-													? "bg-success text-white"
-													: "bg-destructive text-white"
+													? "bg-pop-mint text-pop-on"
+													: "bg-pop-coral text-pop-on"
 											}`}
 										>
 											<Award className="size-6" strokeWidth={2.5} />
@@ -358,7 +377,10 @@ const FinishExamResultDialog = forwardRef<
 
 							<div className="grid grid-cols-3 gap-2 sm:gap-3">
 								<div className="rounded-2xl bg-pop-sky-soft p-3 sm:p-4 text-center">
-									<Target className="w-6 h-6 mx-auto mb-1.5 text-pop-sky-ink" strokeWidth={2.5} />
+									<Target
+										className="w-6 h-6 mx-auto mb-1.5 text-pop-sky-ink"
+										strokeWidth={2.5}
+									/>
 									<p className="text-[11px] font-bold uppercase tracking-wide text-pop-sky-ink/80 mb-0.5">
 										Нийт
 									</p>
@@ -368,7 +390,10 @@ const FinishExamResultDialog = forwardRef<
 								</div>
 
 								<div className="rounded-2xl bg-pop-mint-soft p-3 sm:p-4 text-center">
-									<CheckCircle className="w-6 h-6 mx-auto mb-1.5 text-pop-mint-ink" strokeWidth={2.5} />
+									<CheckCircle
+										className="w-6 h-6 mx-auto mb-1.5 text-pop-mint-ink"
+										strokeWidth={2.5}
+									/>
 									<p className="text-[11px] font-bold uppercase tracking-wide text-pop-mint-ink/80 mb-0.5">
 										Зөв
 									</p>
@@ -378,7 +403,10 @@ const FinishExamResultDialog = forwardRef<
 								</div>
 
 								<div className="rounded-2xl bg-pop-coral-soft p-3 sm:p-4 text-center">
-									<XCircle className="w-6 h-6 mx-auto mb-1.5 text-pop-coral-ink" strokeWidth={2.5} />
+									<XCircle
+										className="w-6 h-6 mx-auto mb-1.5 text-pop-coral-ink"
+										strokeWidth={2.5}
+									/>
 									<p className="text-[11px] font-bold uppercase tracking-wide text-pop-coral-ink/80 mb-0.5">
 										Буруу
 									</p>
@@ -389,7 +417,7 @@ const FinishExamResultDialog = forwardRef<
 							</div>
 
 							<div className="flex items-center gap-3 rounded-2xl bg-pop-sun-soft p-4 text-sm">
-								<div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-pop-sun text-white">
+								<div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-pop-sun text-pop-on">
 									<Zap className="size-5" strokeWidth={2.5} />
 								</div>
 								<span className="font-bold text-pop-sun-ink">
@@ -414,7 +442,7 @@ const FinishExamResultDialog = forwardRef<
 
 		// Confirmation Dialog
 		return (
-			<Dialog open={open} onOpenChange={setOpen}>
+			<Dialog open={open} onOpenChange={handleOpenChange}>
 				<DialogTrigger asChild>{triggerButton}</DialogTrigger>
 
 				<DialogContent className="w-full sm:max-w-[550px] max-h-[92vh] overflow-y-auto p-4 sm:p-6">
@@ -448,7 +476,7 @@ const FinishExamResultDialog = forwardRef<
 
 							<div className="grid grid-cols-2 gap-3 mb-4">
 								<div className="flex items-center gap-3 rounded-2xl bg-pop-mint-soft p-3 sm:p-4">
-									<div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-pop-mint text-white">
+									<div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-pop-mint text-pop-on">
 										<CheckCircle className="size-5" strokeWidth={2.5} />
 									</div>
 									<div className="min-w-0">
@@ -462,7 +490,7 @@ const FinishExamResultDialog = forwardRef<
 								</div>
 
 								<div className="flex items-center gap-3 rounded-2xl bg-pop-coral-soft p-3 sm:p-4">
-									<div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-pop-coral text-white">
+									<div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-pop-coral text-pop-on">
 										<XCircle className="size-5" strokeWidth={2.5} />
 									</div>
 									<div className="min-w-0">
@@ -493,14 +521,17 @@ const FinishExamResultDialog = forwardRef<
 							<div className="mt-4 pt-4 border-t-2 border-dashed border-border">
 								<div className="flex items-center justify-between gap-3">
 									<span className="text-xs font-bold text-muted-foreground flex items-center gap-2">
-										<Clock className="w-4 h-4 text-pop-sky-ink" strokeWidth={2.5} />
+										<Clock
+											className="w-4 h-4 text-pop-sky-ink"
+											strokeWidth={2.5}
+										/>
 										Үргэлжилсэн хугацаа
 									</span>
 									<span className="rounded-full bg-pop-sky-soft px-3 py-1 text-sm font-extrabold text-pop-sky-ink text-right">
 										{(() => {
-											const h = Math.floor(elapsedSeconds / 3600);
-											const m = Math.floor((elapsedSeconds % 3600) / 60);
-											const s = elapsedSeconds % 60;
+											const h = Math.floor(elapsedSnapshot / 3600);
+											const m = Math.floor((elapsedSnapshot % 3600) / 60);
+											const s = elapsedSnapshot % 60;
 											if (h > 0) return `${h} цаг ${m} минут ${s} секунд`;
 											if (m > 0) return `${m} минут ${s} секунд`;
 											return `${s} секунд`;
@@ -532,18 +563,18 @@ const FinishExamResultDialog = forwardRef<
 						<Button
 							variant="outline"
 							onClick={() => setOpen(false)}
-							disabled={finishMutation.isPending}
+							disabled={isFinishing}
 							className="flex-1 h-12"
 						>
 							Үгүй, буцах
 						</Button>
 						<Button
-							onClick={handleFinish}
-							disabled={finishMutation.isPending}
+							onClick={() => void handleFinish()}
+							disabled={isFinishing}
 							variant="success"
 							className="flex-1 h-12"
 						>
-							{finishMutation.isPending ? (
+							{isFinishing ? (
 								<>
 									<Loader2 className="h-5 w-5 animate-spin" />
 									Дуусгаж байна...

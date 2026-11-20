@@ -16,13 +16,18 @@ interface NumberInputQuestionProps {
 	answers: AnswerData[];
 	selectedValues?: Record<number, string>;
 	onAnswerChange?: (questionId: number, values: AnswerValue) => void;
+	/** true үед утга өөрчлөх боломжгүй (цаг дууссан г.м.) */
+	readOnly?: boolean;
 }
+
+const EMPTY_VALUES: Record<number, string> = {};
 
 const NumberInputQuestion: React.FC<NumberInputQuestionProps> = ({
 	questionId,
 	answers,
-	selectedValues = {},
+	selectedValues = EMPTY_VALUES,
 	onAnswerChange,
+	readOnly = false,
 }) => {
 	const values = useMemo(() => {
 		const result: Record<number, string> = {};
@@ -34,11 +39,11 @@ const NumberInputQuestion: React.FC<NumberInputQuestionProps> = ({
 
 	const handleChange = useCallback(
 		(answerId: number, val: string) => {
-			if (!/^-?\d*\.?\d*$/.test(val)) return;
+			if (readOnly || !/^-?\d*\.?\d*$/.test(val)) return;
 			const newValues = { ...values, [answerId]: val };
 			onAnswerChange?.(questionId, newValues);
 		},
-		[questionId, values, onAnswerChange],
+		[questionId, values, onAnswerChange, readOnly],
 	);
 
 	return (
@@ -67,6 +72,8 @@ const NumberInputQuestion: React.FC<NumberInputQuestionProps> = ({
 								inputMode="numeric"
 								value={values[ans.answer_id]}
 								onChange={(e) => handleChange(ans.answer_id, e.target.value)}
+								readOnly={readOnly}
+								disabled={readOnly}
 								placeholder=""
 								className="h-11 max-w-xs rounded-xl border-2 bg-card text-base font-bold tabular-nums"
 							/>

@@ -1,13 +1,13 @@
 "use client";
 
-import { useMutation, useQuery } from "@tanstack/react-query";
-import { format } from "date-fns";
+import { useQuery } from "@tanstack/react-query";
 import {
 	Award,
 	CheckCircle,
 	Clock,
 	Flag,
 	Loader2,
+	RotateCw,
 	Send,
 	Target,
 	Trophy,
@@ -15,8 +15,18 @@ import {
 	Zap,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { forwardRef, useImperativeHandle, useRef, useState } from "react";
+import {
+	forwardRef,
+	useEffect,
+	useImperativeHandle,
+	useRef,
+	useState,
+} from "react";
 import { toast } from "sonner";
+import {
+	leaveIntegrationExam,
+	useExamMode,
+} from "@/app/exam/component/examUtils/integration";
 import { Button } from "@/components/ui/button";
 import {
 	Dialog,
@@ -28,26 +38,8 @@ import {
 	DialogTrigger,
 } from "@/components/ui/dialog";
 import { Progress } from "@/components/ui/progress";
-import { finishExam, getExamResults } from "@/lib/api";
+import { getExamResults } from "@/lib/api";
 import { useAuthStore } from "@/stores/useAuthStore";
-
-interface FinishExamRequest {
-	exam_id: number;
-	exam_type: number;
-	start_eid: number;
-	exam_time: string;
-	user_id: number;
-}
-
-interface FinishExamResponse {
-	RetResponse: {
-		ResponseMessage: string;
-		StatusCode: string;
-		ResponseCode: string;
-		ResponseType: boolean;
-	};
-	RetData: number;
-}
 
 interface ExamResultData {
 	test_id: number;
@@ -78,7 +70,15 @@ interface FinishExamResultDialogProps {
 	examId: number;
 	examType: number;
 	startEid: number;
-	examTime: number;
+	/** Шалгалтад зарцуулсан хугацааг "HH:mm:ss" хэлбэрээр буцаана (дуусгах мөчид дуудна). */
+	getExamTime: () => string;
+	/**
+	 * Дараалсан бүх хариултыг серверт хадгална. Бүгд хадгалагдвал true.
+	 * Дуусгахаас өмнө заавал дуудагдана.
+	 */
+	flushAnswers: () => Promise<boolean>;
+	/** Шалгалт серверт амжилттай дууссаны дараа дуудагдана. */
+	onFinished?: () => void;
 	answeredCount: number;
 	totalCount: number;
 	/**
@@ -89,6 +89,7 @@ interface FinishExamResultDialogProps {
 }
 
 export interface FinishExamDialogHandle {
+	/** Цаг дууссан үед автоматаар дуусгана (баталгаажуулалтгүй). */
 	triggerFinish: () => void;
 	/** Opens the manual "finish exam?" confirmation dialog. */
 	openConfirm: () => void;
@@ -103,84 +104,50 @@ const FinishExamResultDialog = forwardRef<
 			examId,
 			examType,
 			startEid,
-			examTime,
+			getExamTime,
+			flushAnswers,
+			onFinished,
 			answeredCount,
 			totalCount,
 			hideTrigger = false,
 		},
 		ref,
 	) => {
-		const { userId } = useAuthStore();
+		const authUserId = useAuthStore((s) => s.userId);
+		// URL-аар (dbname, userid) орж ирсэн бол integration API ашиглана
+		const { integration, api: examApi } = useExamMode();
+		const userId = integration?.userId ?? authUserId;
 		const router = useRouter();
 		const [open, setOpen] = useState(false);
 		const [finishedTestId, setFinishedTestId] = useState<number | null>(null);
-		const [isAutoSubmitting, setIsAutoSubmitting] = useState(false);
-		const autoRedirectTimerRef = useRef<NodeJS.Timeout | null>(null); // ✅ Auto-redirect timer // ✅ Auto-submit state
+		/** idle | running (автомат дуусгалт явагдаж байна) | error (дахин оролдох) */
+		const [autoState, setAutoState] = useState<"idle" | "running" | "error">(
+			"idle",
+		);
+		const [isFinishing, setIsFinishing] = useState(false);
+		const finishingRef = useRef(false);
+		const finishedRef = useRef(false);
+		const autoRedirectTimerRef = useRef<NodeJS.Timeout | null>(null);
 
 		const isDadlaga = examType === 1 || examType === 2;
 
-		const finishMutation = useMutation<
-			FinishExamResponse,
-			Error,
-			FinishExamRequest
-		>({
-			mutationFn: (payload) => {
-				console.log("📡 finishExam API дуудаж байна:", payload);
-				return finishExam(payload);
-			},
-			onSuccess: (res) => {
-				if (res.RetResponse.ResponseCode === "10") {
-					const testId = res.RetData;
-
-					if (isDadlaga) {
-						toast.success("✅ Шалгалт амжилттай дууслаа!");
-						setTimeout(() => {
-							router.push("/Lists/examResult");
-						}, 1500);
-						setIsAutoSubmitting(false);
-						return;
-					}
-
-					if (isAutoSubmitting) {
-						toast.success("⏰ Цаг дууслаа. Шалгалт автоматаар дууслаа!");
-					} else {
-						toast.success("✅ Шалгалт амжилттай дууслаа");
-					}
-
-					if (testId) {
-						setFinishedTestId(testId);
-						if (isAutoSubmitting) {
-							autoRedirectTimerRef.current = setTimeout(() => {
-								router.push("/Lists/examResult");
-							}, 500);
-						}
-					}
-
-					setIsAutoSubmitting(false);
-				} else if (res.RetResponse.ResponseMessage?.includes("илгээгдсэн")) {
-					// Аль хэдийн дуусгасан → шууд redirect
-					toast.info("Шалгалтын дүн аль хэдийн илгээгдсэн байна.");
-					setOpen(false);
-					setIsAutoSubmitting(false);
-					setTimeout(() => {
-						router.push("/Lists/examResult");
-					}, 1500);
-				} else {
-					toast.error(res.RetResponse.ResponseMessage);
-					setOpen(false);
-					setIsAutoSubmitting(false);
+		useEffect(
+			() => () => {
+				if (autoRedirectTimerRef.current) {
+					clearTimeout(autoRedirectTimerRef.current);
 				}
 			},
-			onError: () => {
-				toast.error(
-					isDadlaga
-						? "Шалгалт дуусгах үед алдаа гарлаа"
-						: "Шалгалт дуусгах үед алдаа гарлаа",
-				);
-				setOpen(false);
+			[],
+		);
+
+		const goToResults = (delay: number) => {
+			if (autoRedirectTimerRef.current) {
+				clearTimeout(autoRedirectTimerRef.current);
+			}
+			autoRedirectTimerRef.current = setTimeout(() => {
 				router.push("/Lists/examResult");
-			},
-		});
+			}, delay);
+		};
 
 		const { data: resultsData, isLoading: isLoadingResults } =
 			useQuery<ExamResultsResponse>({
@@ -194,37 +161,126 @@ const FinishExamResultDialog = forwardRef<
 				retryDelay: 1000,
 			});
 
-		const handleFinish = () => {
+		/**
+		 * Гар болон автомат дуусгалтын нэг л зам:
+		 * хариултуудыг хадгална → finishExam → үр дүн / шилжилт.
+		 * Алдаа гарвал хуудсандаа үлдэж дахин оролдох боломжтой.
+		 */
+		const runFinish = async (auto: boolean) => {
+			if (finishingRef.current || finishedRef.current) return;
 			if (!userId) {
 				toast.error("Хэрэглэгчийн мэдээлэл олдсонгүй");
+				if (auto) setAutoState("error");
 				return;
 			}
 
-			console.log("📤 finishMutation.mutate() дуудаж байна");
+			finishingRef.current = true;
+			setIsFinishing(true);
+			if (auto) {
+				setAutoState("running");
+				setOpen(true);
+			}
 
-			finishMutation.mutate({
-				exam_id: examId,
-				exam_type: examType,
-				start_eid: startEid,
-				exam_time: format(examTime, "HH:mm:ss"),
-				user_id: userId,
-			});
+			try {
+				const allSaved = await flushAnswers();
+				if (!allSaved) {
+					if (!auto) {
+						toast.error(
+							"Зарим хариулт хадгалагдаагүй байна. Интернэт холболтоо шалгаад дахин оролдоно уу.",
+						);
+						return;
+					}
+					// Цаг дууссан тул хүлээх боломжгүй — хадгалагдсан хариултаар дуусгана.
+					toast.warning("Зарим хариулт хадгалагдаж амжсангүй.");
+				}
+
+				const res = await examApi.finishExam({
+					exam_id: examId,
+					exam_type: examType,
+					start_eid: startEid,
+					exam_time: getExamTime(),
+					user_id: userId,
+				});
+
+				// Integration: үр дүн харуулахгүй, гадны систем рүү буцна
+				if (integration) {
+					const isSent =
+						res.RetResponse.ResponseCode === "10" ||
+						res.RetResponse.ResponseMessage?.includes("илгээгдсэн");
+					if (isSent) {
+						finishedRef.current = true;
+						onFinished?.();
+						setAutoState("idle");
+						toast.success("✅ Шалгалт амжилттай дууслаа");
+						leaveIntegrationExam(integration);
+						return;
+					}
+					toast.error(
+						res.RetResponse.ResponseMessage ||
+							"Шалгалт дуусгах үед алдаа гарлаа",
+					);
+					if (auto) setAutoState("error");
+					return;
+				}
+
+				if (res.RetResponse.ResponseCode === "10") {
+					finishedRef.current = true;
+					onFinished?.();
+					setAutoState("idle");
+
+					if (isDadlaga) {
+						toast.success("✅ Шалгалт амжилттай дууслаа!");
+						goToResults(1500);
+						return;
+					}
+
+					toast.success(
+						auto
+							? "⏰ Цаг дууслаа. Шалгалт автоматаар дууслаа!"
+							: "✅ Шалгалт амжилттай дууслаа",
+					);
+					const testId = res.RetData;
+					if (testId) {
+						setFinishedTestId(testId);
+						if (auto) goToResults(500);
+					} else {
+						goToResults(auto ? 500 : 1500);
+					}
+					return;
+				}
+
+				if (res.RetResponse.ResponseMessage?.includes("илгээгдсэн")) {
+					// Аль хэдийн дуусгасан → үр дүн рүү
+					finishedRef.current = true;
+					onFinished?.();
+					setAutoState("idle");
+					setOpen(false);
+					toast.info("Шалгалтын дүн аль хэдийн илгээгдсэн байна.");
+					goToResults(1500);
+					return;
+				}
+
+				toast.error(
+					res.RetResponse.ResponseMessage || "Шалгалт дуусгах үед алдаа гарлаа",
+				);
+				if (auto) setAutoState("error");
+			} catch (error) {
+				console.error("Шалгалт дуусгах алдаа:", error);
+				toast.error("Шалгалт дуусгах үед алдаа гарлаа. Дахин оролдоно уу.");
+				if (auto) setAutoState("error");
+			} finally {
+				finishingRef.current = false;
+				setIsFinishing(false);
+			}
 		};
 
-		// ✅ ЗАСВАРЛАСАН: Expose triggerFinish method - AUTO SUBMIT
+		const handleFinish = () => {
+			void runFinish(false);
+		};
+
 		useImperativeHandle(ref, () => ({
 			triggerFinish: () => {
-				console.log(
-					"🔴 triggerFinish дуудагдлаа - Автоматаар дуусгаж байна...",
-				);
-
-				setIsAutoSubmitting(true);
-				setOpen(true); // Dialog нээх (loading харуулах)
-
-				// Шууд дуусгах (confirmation харуулахгүй)
-				setTimeout(() => {
-					handleFinish();
-				}, 500); // 500ms хүлээх (UX-ийн хувьд)
+				void runFinish(true);
 			},
 			openConfirm: () => {
 				setOpen(true);
@@ -249,43 +305,49 @@ const FinishExamResultDialog = forwardRef<
 			setOpen(false);
 		};
 
-		// ✅ Auto-submitting Loading Dialog - зөвхөн API дуудаж байх үед
-		if (isAutoSubmitting && finishMutation.isPending) {
+		// Автомат дуусгалт (цаг дууссан) — хадгалах + илгээх явц, алдаа гарвал дахин оролдох
+		if (autoState !== "idle") {
 			return (
 				<Dialog open={true} onOpenChange={() => {}}>
-					{!hideTrigger && (
-					<DialogTrigger asChild>
-						<Button
-							variant="success"
-							size="lg"
-							className="flex w-full flex-1 items-center justify-center gap-2"
-						>
-							<span className="hidden sm:inline">
-								{isDadlaga ? "Шалгалт дуусгах" : "Шалгалт дуусгах"}
-							</span>
-							<span className="sm:hidden">Дуусгах</span>
-							<Send className="size-4 sm:size-5" />
-						</Button>
-					</DialogTrigger>
-					)}
-					{!hideTrigger && (
-					<Button
-						variant="outline"
-						onClick={() => router.push("/Lists/examList")}
-						className="w-full border-destructive/40 text-destructive hover:bg-destructive/10 hover:text-destructive"
+					<DialogContent
+						className="w-[95vw] max-w-[450px] p-5 sm:max-w-[520px] sm:p-6"
+						onEscapeKeyDown={(e) => e.preventDefault()}
+						onInteractOutside={(e) => e.preventDefault()}
 					>
-						Шалгалтаас гарах
-					</Button>
-					)}
-					<DialogContent className="w-[95vw] max-w-[450px] p-5 sm:max-w-[520px] sm:p-6">
-						<div className="flex flex-col items-center justify-center space-y-4 py-8">
-							<div className="flex size-20 items-center justify-center rounded-3xl bg-destructive/10">
-								<Loader2 className="size-10 animate-spin text-destructive" />
+						<DialogTitle className="sr-only">Шалгалт дуусгах</DialogTitle>
+						<DialogDescription className="sr-only">
+							Цаг дууссан тул шалгалтыг автоматаар дуусгаж байна.
+						</DialogDescription>
+						{autoState === "running" ? (
+							<div className="flex flex-col items-center justify-center space-y-4 py-8">
+								<div className="flex size-20 items-center justify-center rounded-3xl bg-destructive/10">
+									<Loader2 className="size-10 animate-spin text-destructive" />
+								</div>
+								<p className="text-center text-sm font-bold text-muted-foreground sm:text-base">
+									⏰ Цаг дууслаа. Автоматаар дуусгаж байна...
+								</p>
 							</div>
-							<p className="text-center text-sm font-bold text-muted-foreground sm:text-base">
-								⏰ Цаг дууслаа. Автоматаар дуусгаж байна...
-							</p>
-						</div>
+						) : (
+							<div className="flex flex-col items-center justify-center space-y-4 py-6">
+								<div className="flex size-20 items-center justify-center rounded-3xl bg-destructive/10">
+									<XCircle className="size-10 text-destructive" />
+								</div>
+								<p className="text-center text-sm font-bold text-muted-foreground sm:text-base">
+									Шалгалтыг дуусгаж чадсангүй. Интернэт холболтоо шалгаад дахин
+									оролдоно уу.
+								</p>
+								<Button
+									variant="success"
+									size="lg"
+									className="w-full"
+									disabled={isFinishing}
+									onClick={() => void runFinish(true)}
+								>
+									<RotateCw className="size-4" />
+									Дахин оролдох
+								</Button>
+							</div>
+						)}
 					</DialogContent>
 				</Dialog>
 			);
@@ -296,17 +358,17 @@ const FinishExamResultDialog = forwardRef<
 			return (
 				<Dialog open={open} onOpenChange={setOpen}>
 					{!hideTrigger && (
-					<DialogTrigger asChild>
-						<Button
-							variant="success"
-							size="lg"
-							className="flex w-full flex-1 items-center justify-center gap-2"
-						>
-							<span className="hidden sm:inline">Шалгалт дуусгах</span>
-							<span className="sm:hidden">Дуусгах</span>
-							<Send className="size-4 sm:size-5" />
-						</Button>
-					</DialogTrigger>
+						<DialogTrigger asChild>
+							<Button
+								variant="success"
+								size="lg"
+								className="flex w-full flex-1 items-center justify-center gap-2"
+							>
+								<span className="hidden sm:inline">Шалгалт дуусгах</span>
+								<span className="sm:hidden">Дуусгах</span>
+								<Send className="size-4 sm:size-5" />
+							</Button>
+						</DialogTrigger>
 					)}
 					<DialogContent className="w-[95vw] max-w-[450px] p-5 sm:max-w-[520px] sm:p-6">
 						<div className="flex flex-col items-center justify-center space-y-4 py-8">
@@ -322,13 +384,6 @@ const FinishExamResultDialog = forwardRef<
 				</Dialog>
 			);
 		}
-		<Button
-			variant="outline"
-			onClick={() => router.push("/Lists/examList")}
-			className="w-full border-destructive/40 text-destructive hover:bg-destructive/10 hover:text-destructive"
-		>
-			Шалгалтаас гарах
-		</Button>;
 		// Result Dialog - No Data
 		if (finishedTestId && !isDadlaga && !isLoadingResults && !resultInfo) {
 			return (
@@ -336,7 +391,10 @@ const FinishExamResultDialog = forwardRef<
 					<DialogContent className="w-[95vw] max-w-[400px] p-5 sm:max-w-[450px] sm:p-6">
 						<DialogHeader className="space-y-3 text-center sm:text-center">
 							<div className="mx-auto flex size-16 items-center justify-center rounded-3xl bg-destructive/10">
-								<XCircle className="size-8 text-destructive" strokeWidth={2.5} />
+								<XCircle
+									className="size-8 text-destructive"
+									strokeWidth={2.5}
+								/>
 							</div>
 							<DialogTitle className="text-lg font-black sm:text-xl">
 								Үр дүн олдсонгүй
@@ -346,11 +404,7 @@ const FinishExamResultDialog = forwardRef<
 							</DialogDescription>
 						</DialogHeader>
 						<DialogFooter className="mt-4">
-							<Button
-								onClick={handleCloseResults}
-								size="lg"
-								className="w-full"
-							>
+							<Button onClick={handleCloseResults} size="lg" className="w-full">
 								Хаах
 							</Button>
 						</DialogFooter>
@@ -511,7 +565,11 @@ const FinishExamResultDialog = forwardRef<
 							<Button
 								variant="default"
 								size="lg"
-								onClick={() => router.push("/Lists/examList")}
+								onClick={() =>
+									integration
+										? leaveIntegrationExam(integration)
+										: router.push("/Lists/examList")
+								}
 								className="w-full"
 							>
 								Гарах
@@ -524,21 +582,26 @@ const FinishExamResultDialog = forwardRef<
 
 		// Confirmation Dialog (Manual Submit)
 		return (
-			<Dialog open={open} onOpenChange={setOpen}>
+			<Dialog
+				open={open}
+				onOpenChange={(next) => {
+					if (!isFinishing) setOpen(next);
+				}}
+			>
 				{!hideTrigger && (
-				<DialogTrigger asChild>
-					<Button
-						variant="success"
-						size="lg"
-						className="flex w-full flex-1 items-center justify-center gap-2"
-					>
-						<span className="hidden sm:inline">
-							{isDadlaga ? "Шалгалт дуусгах" : "Шалгалт дуусгах"}
-						</span>
-						<span className="sm:hidden">Дуусгах</span>
-						<Send className="size-4 sm:size-5" />
-					</Button>
-				</DialogTrigger>
+					<DialogTrigger asChild>
+						<Button
+							variant="success"
+							size="lg"
+							className="flex w-full flex-1 items-center justify-center gap-2"
+						>
+							<span className="hidden sm:inline">
+								{isDadlaga ? "Шалгалт дуусгах" : "Шалгалт дуусгах"}
+							</span>
+							<span className="sm:hidden">Дуусгах</span>
+							<Send className="size-4 sm:size-5" />
+						</Button>
+					</DialogTrigger>
 				)}
 
 				<DialogContent className="max-h-[90vh] w-[95vw] max-w-[500px] overflow-y-auto p-5 sm:max-w-[560px] sm:p-6">
@@ -602,10 +665,7 @@ const FinishExamResultDialog = forwardRef<
 							</div>
 
 							<div className="space-y-2">
-								<Progress
-									value={progressPercentage}
-									className="h-3"
-								/>
+								<Progress value={progressPercentage} className="h-3" />
 							</div>
 						</div>
 
@@ -630,12 +690,12 @@ const FinishExamResultDialog = forwardRef<
 					<DialogFooter className="flex flex-col gap-2 pt-1 sm:flex-row sm:gap-3">
 						<Button
 							onClick={handleFinish}
-							disabled={finishMutation.isPending}
+							disabled={isFinishing}
 							variant="success"
 							size="lg"
 							className="order-1 w-full sm:order-2"
 						>
-							{finishMutation.isPending ? (
+							{isFinishing ? (
 								<>
 									<Loader2 className="size-4 animate-spin sm:size-5" />
 									<span className="text-sm sm:text-base">Дуусгаж байна...</span>

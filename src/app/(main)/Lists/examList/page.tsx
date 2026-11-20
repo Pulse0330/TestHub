@@ -1,7 +1,6 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import axios from "axios";
 import {
 	AlertCircle,
 	CalendarClock,
@@ -11,13 +10,25 @@ import {
 	X,
 	Zap,
 } from "lucide-react";
-import { type ReactNode, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
+import { type ReactNode, useCallback, useMemo, useState } from "react";
+import {
+	ExamDetailDialog,
+	type ExamDetailStatus,
+	parseExamDate,
+} from "@/components/ExamDetailDialog";
 import LessonFilter from "@/components/LessonFilter";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import QPayDialog from "@/features/qpay";
 import { useServerTime } from "@/hooks/useServerTime";
-import { getexamfiltertlists, getTestFilter } from "@/lib/api";
+import {
+	createExamInvoice,
+	getexamfiltertlists,
+	getTestFilter,
+} from "@/lib/api";
+import { queryKeys } from "@/lib/queryKeys";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/stores/useAuthStore";
 import type {
@@ -25,8 +36,7 @@ import type {
 	ExamlistsData,
 } from "@/types/exam/examList";
 import type { QPayInvoiceResponse } from "@/types/Qpay/qpayinvoice";
-import ExamCard, { parseExamDate } from "./examcard";
-import QPayDialog from "./qpayDialog";
+import ExamCard from "./examcard";
 
 interface Lesson {
 	lesson_id: number;
@@ -51,8 +61,24 @@ const isPaidExam = (exam: ExamlistsData) =>
 const isExpiredExam = (exam: ExamlistsData) =>
 	exam.flag === 3 || exam.flag_name === "Хугацаа дууссан";
 
+/** Дэлгэрэнгүй dialog-ийн төлөв — хуучин Sheet-ийн логиктой ижил. */
+const getDetailStatus = (exam: ExamlistsData): ExamDetailStatus => {
+	const isPaid = isPaidExam(exam);
+	const isExpired = isExpiredExam(exam);
+	return {
+		isLocked: isPaid,
+		isPurchased: exam.ispurchased === 1,
+		isExpired,
+		canPay: isPaid && !isExpired,
+		canTakeExam: !isPaid && !isExpired && exam.flag === 1,
+	};
+};
+
 /** Status from flags first, refined by server time vs. ognoo/enddate. */
-const getExamStatus = (exam: ExamlistsData, nowMs: number | null): ExamStatus => {
+const getExamStatus = (
+	exam: ExamlistsData,
+	nowMs: number | null,
+): ExamStatus => {
 	if (isExpiredExam(exam) || exam.flag >= 2) return "ended";
 	const endMs = parseExamDate(exam.enddate);
 	if (nowMs !== null && endMs !== null && endMs < nowMs) return "ended";
@@ -62,6 +88,7 @@ const getExamStatus = (exam: ExamlistsData, nowMs: number | null): ExamStatus =>
 
 export default function ExamListPage() {
 	const { userId } = useAuthStore();
+	const router = useRouter();
 	const { isLoading: isTimeLoading, currentTime } = useServerTime();
 	const [searchTerm, setSearchTerm] = useState("");
 	const [selectedLessonId, setSelectedLessonId] = useState<number>(0);
@@ -71,6 +98,8 @@ export default function ExamListPage() {
 	const [qpayDialogOpen, setQpayDialogOpen] = useState(false);
 	const [qpayData, setQpayData] = useState<QPayInvoiceResponse | null>(null);
 	const [isCreatingInvoice, setIsCreatingInvoice] = useState(false);
+	// Нэг л дэлгэрэнгүй dialog — карт дээр дарахад нээгдэнэ
+	const [detailExam, setDetailExam] = useState<ExamlistsData | null>(null);
 
 	const { data: lessonData } = useQuery<TestFilterResponse>({
 		queryKey: ["testFilter", userId],
@@ -83,7 +112,7 @@ export default function ExamListPage() {
 		isPending,
 		refetch,
 	} = useQuery<ApiExamlistsResponse>({
-		queryKey: ["examlists", userId, selectedLessonId],
+		queryKey: queryKeys.exams.list(userId, selectedLessonId),
 		queryFn: () => getexamfiltertlists(userId || 0, selectedLessonId),
 		enabled: !!userId,
 	});
@@ -144,17 +173,10 @@ export default function ExamListPage() {
 		try {
 			setIsCreatingInvoice(true);
 
-			const response = await axios.post("/api/examqpay/invoice", {
-				amount: exam.amount?.toString() || "0",
-				userid: userId.toString(),
-				device_token: "",
-				orderid: exam.bill_type?.toString() || "0",
-				bilid: exam.exam_id.toString(),
-				classroom_id: "0",
-			});
+			const invoice = await createExamInvoice(exam, userId);
 
-			if (response.data) {
-				setQpayData(response.data);
+			if (invoice) {
+				setQpayData(invoice);
 				setQpayDialogOpen(true);
 			}
 		} catch (error) {
@@ -168,6 +190,24 @@ export default function ExamListPage() {
 	const handlePaymentSuccess = () => {
 		refetch();
 	};
+
+	const handleDetailOpenChange = useCallback((open: boolean) => {
+		if (!open) setDetailExam(null);
+	}, []);
+
+	// QPay нэхэмжлэх хүсэлт дууссаны дараа (амжилттай эсэхээс үл хамааран) dialog-ийг хаана
+	const handlePayFromDetail = async (exam: ExamlistsData) => {
+		await handleCreateInvoice(exam);
+		setDetailExam(null);
+	};
+
+	const handleStartExam = useCallback(
+		(exam: ExamlistsData) => {
+			setDetailExam(null);
+			router.replace(`/exam/${exam.exam_id}`);
+		},
+		[router],
+	);
 
 	if (isTimeLoading) {
 		return (
@@ -188,8 +228,7 @@ export default function ExamListPage() {
 			exam={exam}
 			isPaid={isPaidExam(exam)}
 			isExpired={isExpiredExam(exam)}
-			onPayClick={() => handleCreateInvoice(exam)}
-			isCreatingInvoice={isCreatingInvoice}
+			onSelect={setDetailExam}
 			variant={variant}
 			now={currentTime}
 		/>
@@ -335,12 +374,23 @@ export default function ExamListPage() {
 				</div>
 			</div>
 
+			<ExamDetailDialog
+				exam={detailExam}
+				getStatus={getDetailStatus}
+				onOpenChange={handleDetailOpenChange}
+				onPay={handlePayFromDetail}
+				onStart={handleStartExam}
+				isCreatingInvoice={isCreatingInvoice}
+				now={currentTime}
+			/>
+
 			<QPayDialog
 				open={qpayDialogOpen}
 				onOpenChange={setQpayDialogOpen}
 				qpayData={qpayData}
 				userId={userId}
 				onPaymentSuccess={handlePaymentSuccess}
+				successMessage="Таны төлбөр амжилттай төлөгдлөө. Та шалгалт өгөх боломжтой боллоо."
 			/>
 		</TooltipProvider>
 	);

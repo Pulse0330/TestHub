@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
 	Bookmark,
 	BookmarkCheck,
@@ -21,17 +21,16 @@ import {
 	Send,
 } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+	formatIntegrationExamTime,
+	leaveIntegrationExam,
+	useExamMode,
+} from "@/app/exam/component/examUtils/integration";
 import FinishExamResultDialog, {
 	type FinishExamDialogHandle,
 } from "@/app/exam/component/finish";
 import ExamMinimap from "@/app/exam/component/minimap";
-import FillInTheBlankQuestion from "@/app/exam/component/question/fillblank";
-import MatchingByLine from "@/app/exam/component/question/matching";
-import MultiSelectQuestion from "@/app/exam/component/question/multiselect";
-import NumberInputQuestion from "@/app/exam/component/question/numberinput";
-import DragAndDropQuestion from "@/app/exam/component/question/order";
-import SingleSelectQuestion from "@/app/exam/component/question/singleSelect";
 import FixedScrollButton from "@/components/FixedScrollButton";
 import {
 	AlertDialog,
@@ -60,15 +59,27 @@ import {
 	SheetHeader,
 	SheetTitle,
 } from "@/components/ui/sheet";
-import { deleteExamAnswer, getExamById, saveExamAnswer } from "@/lib/api";
 import { useAuthStore } from "@/stores/useAuthStore";
 import type { AnswerValue } from "@/types/exam/exam";
 import { AdvancedExamProctor } from "../component/examguard";
+import {
+	computeElapsedSeconds,
+	formatHMS,
+	getServerNowMs,
+} from "../component/examTime";
 import { ExamHeader } from "../component/examUtils/examInfo";
 import MathContent from "../component/examUtils/MathContent";
-import { SourceBlock } from "../component/examUtils/sourceCard";
 import ExamTimer from "../component/Itime";
-import QuestionImage from "../component/question/questionImage";
+import {
+	type PreparedQuestion,
+	prepareQuestions,
+	QuestionBody,
+} from "../component/QuestionBody";
+import {
+	TextSizeControl,
+	useExamTextScale,
+} from "../component/TextSizeControl";
+import { isAnswerFilled, useAnswerSync } from "../component/useAnswerSync";
 
 const SAVE_DELAYS = {
 	DEFAULT: 1000,
@@ -78,773 +89,248 @@ const SAVE_DELAYS = {
 	TYPE_6_MATCH: 3000,
 } as const;
 
-const BATCH_SIZE = 5;
+const getExamSaveDelay = (queTypeId: number): number => {
+	switch (queTypeId) {
+		case 6:
+			return SAVE_DELAYS.TYPE_6_MATCH;
+		case 5:
+			return SAVE_DELAYS.TYPE_5_ORDER;
+		case 4:
+			return SAVE_DELAYS.TYPE_4_FILL;
+		case 3:
+			return SAVE_DELAYS.TYPE_3_NUMBER;
+		default:
+			return SAVE_DELAYS.DEFAULT;
+	}
+};
+
 /** Minimum horizontal travel (px) for a swipe to change the question. */
 const SWIPE_THRESHOLD = 60;
 /** Drag-based question types: swipe navigation is disabled for them. */
 const SWIPE_DISABLED_TYPES = [5, 6];
 
-/** Same "answered" rule as `answeredCount` below. */
-const isAnswerFilled = (ans: AnswerValue | undefined): boolean => {
-	if (ans == null) return false;
-	if (Array.isArray(ans)) return ans.length > 0;
-	if (typeof ans === "string") return ans.trim() !== "";
-	if (typeof ans === "number") return ans !== 0 && !Number.isNaN(ans);
-	return Object.keys(ans).length > 0;
-};
-const TYPING_INDICATOR_DELAY = 1500;
-interface PendingAnswer {
-	questionId: number;
-	answer: AnswerValue;
-	queTypeId: number;
-	rowNum: number;
-	timestamp: number;
+interface ExamQuestionCardProps {
+	question: PreparedQuestion;
+	index: number;
+	isFocus: boolean;
+	answer: AnswerValue | undefined;
+	isBookmarked: boolean;
+	isTyping: boolean;
+	disabled: boolean;
+	onToggleBookmark: (questionId: number) => void;
+	onAnswerChange: (questionId: number, answer: AnswerValue) => void;
 }
 
-const normalizeMatchingAnswer = (
-	answer: Record<number, number | number[]>,
-): Map<number, number[]> => {
-	const normalized = new Map<number, number[]>();
+/**
+ * Нэг асуултын карт. Зөвхөн өөрийн хариулт/төлөв өөрчлөгдөхөд re-render
+ * хийнэ (жагсаалт горимд бусад картууд дахин зурагдахгүй).
+ */
+const ExamQuestionCard = memo(function ExamQuestionCard({
+	question: q,
+	index,
+	isFocus,
+	answer,
+	isBookmarked,
+	isTyping,
+	disabled,
+	onToggleBookmark,
+	onAnswerChange,
+}: ExamQuestionCardProps) {
+	const isAnswered = isAnswerFilled(answer);
+	const borderClass = isTyping
+		? "border-pop-sky shadow-[0_4px_0_0_color-mix(in_oklch,var(--pop-sky)_45%,transparent)]"
+		: isAnswered && isBookmarked
+			? "border-warning shadow-[0_4px_0_0_color-mix(in_oklch,var(--warning)_55%,transparent)]"
+			: isAnswered
+				? "border-primary-soft-shade/50 shadow-[0_1px_3px_rgb(0_0_0/0.05)]"
+				: isBookmarked
+					? "border-warning/70 shadow-[0_4px_0_0_color-mix(in_oklch,var(--warning)_40%,transparent)]"
+					: "border-border";
 
-	Object.entries(answer).forEach(([qRefIdStr, value]) => {
-		const qRefId = Number(qRefIdStr);
-		const aRefIds = Array.isArray(value) ? value : [value];
-
-		// Filter out invalid IDs
-		const validIds = aRefIds.filter(
-			(id) => id && id !== 0 && !Number.isNaN(id),
-		);
-
-		if (validIds.length > 0) {
-			normalized.set(qRefId, validIds);
-		}
-	});
-
-	return normalized;
-};
-
-const extractAnswerIds = (matches: Map<number, number[]>): Set<number> => {
-	const ids = new Set<number>();
-
-	for (const aRefIds of matches.values()) {
-		for (const id of aRefIds) {
-			ids.add(id);
-		}
-	}
-	return ids;
-};
-
-const areAnswersEqual = (
-	a: AnswerValue | undefined,
-	b: AnswerValue | undefined,
-): boolean => {
-	if (a === b) return true;
-	if (a === undefined || b === undefined) return false;
-
-	const aType = Array.isArray(a) ? "array" : typeof a;
-	const bType = Array.isArray(b) ? "array" : typeof b;
-	if (aType !== bType) return false;
-
-	if (Array.isArray(a) && Array.isArray(b)) {
-		if (a.length !== b.length) return false;
-		return a.every((v, i) => v === b[i]);
-	}
-
-	if (
-		typeof a === "object" &&
-		typeof b === "object" &&
-		a !== null &&
-		b !== null
-	) {
-		const aKeys = Object.keys(a);
-		const bKeys = Object.keys(b);
-		if (aKeys.length !== bKeys.length) return false;
-
-		const aRecord = a as Record<number, number | number[] | string>;
-		const bRecord = b as Record<number, number | number[] | string>;
-
-		return aKeys.every((key) => {
-			const numKey = Number(key);
-			const aVal = aRecord[numKey];
-			const bVal = bRecord[numKey];
-
-			if (Array.isArray(aVal) && Array.isArray(bVal)) {
-				if (aVal.length !== bVal.length) return false;
-				return aVal.every((v, i) => v === bVal[i]);
-			}
-
-			return aVal === bVal;
-		});
-	}
-
-	return false;
-};
+	return (
+		<Card className={`gap-0 py-0 transition-colors ${borderClass}`}>
+			<CardContent className={isFocus ? "p-4 sm:p-6" : "p-4 sm:p-5 xl:p-6"}>
+				<div className="mb-3 flex items-center justify-between gap-2">
+					<span className="inline-flex items-center rounded-full bg-primary/10 px-3 py-1 text-xs font-extrabold text-primary">
+						Асуулт {index + 1}
+					</span>
+					<div className="flex shrink-0 items-center gap-2">
+						{isTyping && (
+							<div className="flex items-center gap-1 rounded-full bg-pop-sky-soft px-2.5 py-1.5">
+								<div className="flex gap-0.5">
+									<span
+										className="size-1.5 animate-bounce rounded-full bg-pop-sky"
+										style={{ animationDelay: "0ms" }}
+									/>
+									<span
+										className="size-1.5 animate-bounce rounded-full bg-pop-sky"
+										style={{ animationDelay: "150ms" }}
+									/>
+									<span
+										className="size-1.5 animate-bounce rounded-full bg-pop-sky"
+										style={{ animationDelay: "300ms" }}
+									/>
+								</div>
+							</div>
+						)}
+						<Button
+							variant="ghost"
+							size="icon"
+							onClick={() => onToggleBookmark(q.question_id)}
+							className="size-9 shrink-0 rounded-xl"
+							title={isBookmarked ? "Тэмдэглэгээ хасах" : "Тэмдэглэх"}
+						>
+							{isBookmarked ? (
+								<BookmarkCheck className="size-5 fill-warning text-warning" />
+							) : (
+								<Bookmark className="size-5 text-muted-foreground" />
+							)}
+						</Button>
+					</div>
+				</div>
+				<div className="mb-5 min-w-0">
+					<div
+						className={`prose prose-sm dark:prose-invert max-w-none font-semibold leading-relaxed text-foreground ${
+							isFocus ? "text-base sm:text-lg" : "text-base lg:text-lg"
+						}`}
+					>
+						<MathContent html={q.question_name} />
+					</div>
+				</div>
+				<div className="min-w-0">
+					<QuestionBody
+						question={q}
+						answer={answer}
+						onAnswerChange={onAnswerChange}
+						disabled={disabled}
+					/>
+				</div>
+			</CardContent>
+		</Card>
+	);
+});
 
 export default function ExamPage() {
-	const { userId } = useAuthStore();
+	const authUserId = useAuthStore((s) => s.userId);
+	// URL-аар (dbname, userid) орж ирсэн бол integration API ашиглана
+	const { integration, api: examApi } = useExamMode();
+	const userId = integration?.userId ?? authUserId;
 	const { id } = useParams();
+	const router = useRouter();
+	const queryClient = useQueryClient();
 
 	const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-	const [saveError, _setSaveError] = useState<string | null>(null);
 	const [bookmarkedQuestions, setBookmarkedQuestions] = useState<Set<number>>(
-		new Set(),
-	);
-	const [selectedAnswers, setSelectedAnswers] = useState<
-		Record<number, AnswerValue>
-	>({});
-	const [isSaving, setIsSaving] = useState(false);
-	const [typingQuestions, setTypingQuestions] = useState<Set<number>>(
-		new Set(),
+		() => new Set(),
 	);
 	const [isTimeUp, setIsTimeUp] = useState(false);
+	const [isFinished, setIsFinished] = useState(false);
 	const [showMobileMinimapOverlay, setShowMobileMinimapOverlay] =
 		useState(false);
-	const router = useRouter();
-	const savingQuestions = useRef<Set<number>>(new Set());
 	const finishDialogRef = useRef<FinishExamDialogHandle>(null);
-	const hasAutoFinished = useRef(false);
-	const isAutoSubmitting = useRef(false);
-	const typingTimers = useRef<Map<number, NodeJS.Timeout>>(new Map());
-	const pendingAnswers = useRef<Map<number, PendingAnswer>>(new Map());
-	const saveTimer = useRef<NodeJS.Timeout | null>(null);
-	const lastSavedAnswers = useRef<Map<number, AnswerValue>>(new Map());
-	const isSavingRef = useRef(false);
+	const [pageLoadedAt] = useState(() => Date.now());
 	const [showExitConfirm, setShowExitConfirm] = useState(false);
 	// Focus mode (one question at a time) is the default; list mode is optional.
 	const [viewMode, setViewMode] = useState<"focus" | "list">("focus");
+	const textScale = useExamTextScale();
 	const [showReview, setShowReview] = useState(false);
-	const swipeStart = useRef<{ x: number; y: number; id: number } | null>(
-		null,
-	);
+	const swipeStart = useRef<{ x: number; y: number; id: number } | null>(null);
 	const programmaticScrollUntil = useRef(0);
 	const {
 		data: examData,
 		isLoading,
 		error,
 	} = useQuery({
-		queryKey: ["exam", userId, id],
-		queryFn: () => getExamById(userId || 0, Number(id)),
+		queryKey: ["exam", integration?.dbname ?? null, userId, id],
+		queryFn: () => examApi.getExamById(userId || 0, Number(id)),
 		enabled: !!userId && !!id,
+		// Шалгалтын явцад дахин татахгүй (focus/reconnect refetch локал
+		// хариултыг дарж бичдэг байсан). gcTime 0 → дахин орох бүрт шинээр татна.
+		staleTime: Number.POSITIVE_INFINITY,
+		gcTime: 0,
+		refetchOnWindowFocus: false,
+		refetchOnReconnect: false,
 	});
 
-	const saveQuestion = useCallback(
-		async (pending: PendingAnswer, examId: number): Promise<boolean> => {
-			const { questionId, answer, queTypeId, rowNum } = pending;
+	const isLocked = isTimeUp || isFinished;
+	const {
+		selectedAnswers,
+		typingQuestions,
+		isSaving,
+		pendingCount,
+		hasSaveError,
+		handleAnswerChange,
+		flush,
+		lock,
+	} = useAnswerSync({
+		userId,
+		examData,
+		locked: isLocked,
+		getSaveDelay: getExamSaveDelay,
+		api: examApi,
+	});
 
-			// Prevent race conditions
-			if (savingQuestions.current.has(questionId)) {
-				console.log(`⚠️ Q${questionId} already saving, skipping...`);
-				return false;
-			}
-
-			try {
-				savingQuestions.current.add(questionId);
-				const previousAnswer = lastSavedAnswers.current.get(questionId);
-				if (
-					queTypeId === 1 &&
-					typeof previousAnswer === "number" &&
-					previousAnswer !== 0
-				) {
-					try {
-						await deleteExamAnswer(
-							userId || 0,
-							examId,
-							questionId,
-							previousAnswer,
-						);
-					} catch (error) {
-						console.error(`Failed to delete Type 1 Q${questionId}:`, error);
-					}
-				}
-
-				if (
-					queTypeId === 2 &&
-					Array.isArray(previousAnswer) &&
-					previousAnswer.length > 0
-				) {
-					try {
-						await Promise.allSettled(
-							previousAnswer.map((answerId) =>
-								deleteExamAnswer(userId || 0, examId, questionId, answerId),
-							),
-						);
-					} catch (error) {
-						console.error(`Failed to delete Type 2 Q${questionId}:`, error);
-					}
-				}
-
-				if (queTypeId === 3 && previousAnswer !== undefined) {
-					try {
-						if (
-							typeof previousAnswer === "object" &&
-							previousAnswer !== null &&
-							!Array.isArray(previousAnswer)
-						) {
-							const prevMap = previousAnswer as Record<number, string>;
-							const prevIds = Object.keys(prevMap)
-								.map((k) => Number(k))
-								.filter((id) => id && id !== 0 && prevMap[id]?.trim());
-
-							if (prevIds.length > 0) {
-								await Promise.allSettled(
-									prevIds.map((answerId) =>
-										deleteExamAnswer(userId || 0, examId, questionId, answerId),
-									),
-								);
-							}
-						}
-					} catch (error) {
-						console.error(`Failed to delete Type 3 Q${questionId}:`, error);
-					}
-				}
-
-				if (queTypeId === 4 && previousAnswer !== undefined) {
-					try {
-						const type4Answer = examData?.Answers?.find(
-							(ans) => ans.question_id === questionId && ans.answer_type === 4,
-						);
-						if (type4Answer) {
-							await deleteExamAnswer(
-								userId || 0,
-								examId,
-								questionId,
-								type4Answer.answer_id,
-							);
-						}
-					} catch (error) {
-						console.error(`Failed to delete Type 4 Q${questionId}:`, error);
-					}
-				}
-
-				if (
-					queTypeId === 5 &&
-					Array.isArray(previousAnswer) &&
-					previousAnswer.length > 0
-				) {
-					try {
-						const validPrevAnswers = previousAnswer.filter(
-							(id) => id && id !== 0 && !Number.isNaN(id),
-						);
-
-						if (validPrevAnswers.length > 0) {
-							await Promise.allSettled(
-								validPrevAnswers.map((answerId) =>
-									deleteExamAnswer(userId || 0, examId, questionId, answerId),
-								),
-							);
-						}
-					} catch (error) {
-						console.error(`Failed to delete Type 5 Q${questionId}:`, error);
-					}
-				}
-
-				if (
-					queTypeId === 6 &&
-					typeof answer === "object" &&
-					answer !== null &&
-					!Array.isArray(answer)
-				) {
-					const currentMatches = normalizeMatchingAnswer(
-						answer as Record<number, number | number[]>,
-					);
-					const currentAnswerIds = extractAnswerIds(currentMatches);
-
-					const previousAnswerIds = new Set<number>();
-					if (
-						typeof previousAnswer === "object" &&
-						previousAnswer !== null &&
-						!Array.isArray(previousAnswer)
-					) {
-						const previousMatches = normalizeMatchingAnswer(
-							previousAnswer as Record<number, number | number[]>,
-						);
-
-						for (const aRefIds of previousMatches.values()) {
-							for (const id of aRefIds) {
-								previousAnswerIds.add(id);
-							}
-						}
-					}
-
-					const answersToDelete = Array.from(previousAnswerIds).filter(
-						(id) => !currentAnswerIds.has(id),
-					);
-
-					if (answersToDelete.length > 0) {
-						console.log(
-							`🗑️ Type 6 Q${questionId}: Deleting ${answersToDelete.length} changed answers`,
-						);
-						try {
-							await Promise.allSettled(
-								answersToDelete.map((answerId) =>
-									deleteExamAnswer(userId || 0, examId, questionId, answerId),
-								),
-							);
-						} catch (error) {
-							console.error(`Failed to delete Type 6 Q${questionId}:`, error);
-						}
-					}
-				}
-
-				if (queTypeId === 1 && typeof answer === "number" && answer !== 0) {
-					await saveExamAnswer(
-						userId || 0,
-						examId,
-						questionId,
-						answer,
-						queTypeId,
-						"1",
-						rowNum,
-					);
-				}
-
-				if (queTypeId === 2 && Array.isArray(answer) && answer.length > 0) {
-					await Promise.all(
-						answer.map((answerId) =>
-							saveExamAnswer(
-								userId || 0,
-								examId,
-								questionId,
-								answerId,
-								queTypeId,
-								"1",
-								rowNum,
-							),
-						),
-					);
-				}
-
-				if (
-					queTypeId === 3 &&
-					typeof answer === "object" &&
-					answer !== null &&
-					!Array.isArray(answer)
-				) {
-					const valuesMap = answer as Record<number, string>;
-					const entries = Object.entries(valuesMap)
-						.map(([k, v]) => [Number(k), v as string] as [number, string])
-						.filter(([aid, val]) => aid && aid !== 0 && val.trim());
-
-					if (entries.length > 0) {
-						await Promise.all(
-							entries.map(([answerId, val]) =>
-								saveExamAnswer(
-									userId || 0,
-									examId,
-									questionId,
-									answerId,
-									queTypeId,
-									val,
-									rowNum,
-								),
-							),
-						);
-					}
-				}
-
-				if (queTypeId === 4 && typeof answer === "string" && answer.trim()) {
-					const type4Answer = examData?.Answers?.find(
-						(ans) => ans.question_id === questionId && ans.answer_type === 4,
-					);
-					if (type4Answer) {
-						await saveExamAnswer(
-							userId || 0,
-							examId,
-							questionId,
-							type4Answer.answer_id,
-							queTypeId,
-							answer,
-							rowNum,
-						);
-					}
-				}
-
-				if (queTypeId === 5 && Array.isArray(answer) && answer.length > 0) {
-					const validAnswers = answer.filter(
-						(id) =>
-							id && id !== 0 && !Number.isNaN(id) && typeof id === "number",
-					);
-
-					if (validAnswers.length > 0) {
-						await Promise.all(
-							validAnswers.map((answerId, index) =>
-								saveExamAnswer(
-									userId || 0,
-									examId,
-									questionId,
-									answerId,
-									queTypeId,
-									(index + 1).toString(),
-									rowNum,
-								),
-							),
-						);
-					}
-				}
-
-				if (
-					queTypeId === 6 &&
-					typeof answer === "object" &&
-					answer !== null &&
-					!Array.isArray(answer)
-				) {
-					const currentMatches = normalizeMatchingAnswer(
-						answer as Record<number, number | number[]>,
-					);
-					const savePromises: Promise<unknown>[] = [];
-
-					for (const [qRefId, aRefIds] of currentMatches.entries()) {
-						for (const aRefId of aRefIds) {
-							savePromises.push(
-								saveExamAnswer(
-									userId || 0,
-									examId,
-									questionId,
-									aRefId,
-									queTypeId,
-									String(qRefId),
-									rowNum,
-								),
-							);
-						}
-					}
-
-					if (savePromises.length > 0) {
-						await Promise.all(savePromises);
-					}
-				}
-
-				lastSavedAnswers.current.set(questionId, answer);
-				return true;
-			} catch (error) {
-				console.error(`❌ Failed to save Q${questionId}:`, error);
-				return false;
-			} finally {
-				savingQuestions.current.delete(questionId);
-			}
-		},
-		[userId, examData],
-	);
-
-	const processPendingAnswers = useCallback(async () => {
-		if (
-			isSavingRef.current ||
-			pendingAnswers.current.size === 0 ||
-			!examData?.ExamInfo?.[0]?.id
-		) {
-			return;
-		}
-
-		isSavingRef.current = true;
-		setIsSaving(true);
-
-		const examId = examData.ExamInfo[0].id;
-		const answersToSave = Array.from(pendingAnswers.current.entries());
-		const failedSaves: [number, PendingAnswer][] = [];
-
-		answersToSave.sort((a, b) => a[1].timestamp - b[1].timestamp);
-
-		for (let i = 0; i < answersToSave.length; i += BATCH_SIZE) {
-			const batch = answersToSave.slice(i, i + BATCH_SIZE);
-			const results = await Promise.allSettled(
-				batch.map(([_, pending]) => saveQuestion(pending, examId)),
-			);
-
-			results.forEach((result, index) => {
-				const [questionId, pending] = batch[index];
-				if (result.status === "fulfilled" && result.value) {
-					pendingAnswers.current.delete(questionId);
-				} else {
-					failedSaves.push([questionId, pending]);
-				}
-			});
-		}
-
-		isSavingRef.current = false;
-		setIsSaving(false);
-	}, [examData, saveQuestion]);
-
-	const scheduleAutoSave = useCallback(
-		(delay: number = SAVE_DELAYS.DEFAULT) => {
-			if (saveTimer.current) clearTimeout(saveTimer.current);
-			saveTimer.current = setTimeout(() => {
-				processPendingAnswers();
-			}, delay);
-		},
-		[processPendingAnswers],
-	);
-
-	const handleAnswerChange = useCallback(
-		(questionId: number, answer: AnswerValue) => {
-			if (!examData) return;
-
-			const question = examData.Questions.find(
-				(q) => q.question_id === questionId,
-			);
-			if (!question) return;
-
-			const lastSaved = lastSavedAnswers.current.get(questionId);
-			if (areAnswersEqual(lastSaved, answer)) return;
-
-			const rowNum = Number(question.row_num);
-			const queTypeId = question.que_type_id;
-			const existingTimer = typingTimers.current.get(questionId);
-			if (existingTimer) {
-				clearTimeout(existingTimer);
-			}
-
-			setTypingQuestions((prev) => new Set(prev).add(questionId));
-
-			const typingTimer = setTimeout(() => {
-				setTypingQuestions((prev) => {
-					const newSet = new Set(prev);
-					newSet.delete(questionId);
-					return newSet;
-				});
-				typingTimers.current.delete(questionId);
-			}, TYPING_INDICATOR_DELAY);
-
-			typingTimers.current.set(questionId, typingTimer);
-
-			setSelectedAnswers((prev) => ({ ...prev, [questionId]: answer }));
-
-			pendingAnswers.current.set(questionId, {
-				questionId,
-				answer,
-				queTypeId,
-				rowNum,
-				timestamp: Date.now(),
-			});
-
-			const delay =
-				queTypeId === 6
-					? SAVE_DELAYS.TYPE_6_MATCH
-					: queTypeId === 5
-						? SAVE_DELAYS.TYPE_5_ORDER
-						: queTypeId === 4
-							? SAVE_DELAYS.TYPE_4_FILL
-							: queTypeId === 3
-								? SAVE_DELAYS.TYPE_3_NUMBER
-								: SAVE_DELAYS.DEFAULT;
-
-			scheduleAutoSave(delay);
-		},
-		[examData, scheduleAutoSave],
-	);
+	const examInfo = examData?.ExamInfo?.[0];
+	const startedDate = examInfo?.starteddate;
+	const examMinutes = examInfo?.minut;
 
 	const handleManualSave = useCallback(() => {
-		if (saveTimer.current) clearTimeout(saveTimer.current);
-		processPendingAnswers();
-	}, [processPendingAnswers]);
+		void flush();
+	}, [flush]);
 
-	const handleAutoSubmit = useCallback(async () => {
-		if (hasAutoFinished.current || isAutoSubmitting.current) {
-			console.log("⚠️ Auto-submit already in progress");
-			return;
-		}
+	const handleTimeUp = useCallback(
+		(timeUp: boolean) => {
+			if (!timeUp) return;
+			lock();
+			setIsTimeUp(true);
+		},
+		[lock],
+	);
 
-		hasAutoFinished.current = true;
-		isAutoSubmitting.current = true;
+	// Цаг дуусахад: хариултыг түгжиж, хадгалаад, автоматаар дуусгана.
+	// Дуусгах dialog үргэлж mount хийгдсэн тул ref хэзээ ч null биш.
+	const handleAutoSubmit = useCallback(() => {
+		lock();
+		setIsTimeUp(true);
+		setShowReview(false);
+		finishDialogRef.current?.triggerFinish();
+	}, [lock]);
 
-		console.log("🔴 Time's up - Auto-submitting...");
+	const handleFinished = useCallback(() => {
+		lock();
+		setIsFinished(true);
+	}, [lock]);
 
-		try {
-			if (pendingAnswers.current.size > 0) {
-				console.log(
-					`💾 Saving ${pendingAnswers.current.size} pending answers...`,
-				);
-				await processPendingAnswers();
-				console.log("✅ All answers saved");
-			}
-
-			const examInfo = examData?.ExamInfo?.[0];
-			if (!examInfo) {
-				console.error("❌ Exam info not found");
-				return;
-			}
-
-			console.log("📤 Submitting exam...");
-			finishDialogRef.current?.triggerFinish();
-		} catch (error) {
-			console.error("❌ Auto submit error:", error);
-			hasAutoFinished.current = false;
-			isAutoSubmitting.current = false;
-		}
-	}, [processPendingAnswers, examData]);
-	useEffect(() => {
-		const url = window.location.href;
-
-		// Stack дүүргэх
-		for (let i = 0; i < 50; i++) {
-			window.history.pushState(null, "", url);
-		}
-
-		function blockBack() {
-			window.history.pushState(null, "", url);
-		}
-
-		window.addEventListener("popstate", blockBack);
-
-		return () => {
-			window.removeEventListener("popstate", blockBack);
-		};
-	}, []);
-
-	useEffect(() => {
-		if (isLoading || !examData?.ChoosedAnswer) return;
-
-		const answersMap: Record<number, AnswerValue> = {};
-
-		const groupedAnswers = examData.ChoosedAnswer.reduce(
-			(acc, item) => {
-				const key = `${item.QueID}_${item.QueType}`;
-				if (!acc[key]) acc[key] = [];
-				acc[key].push(item);
-				return acc;
-			},
-			{} as Record<string, typeof examData.ChoosedAnswer>,
-		);
-
-		Object.values(groupedAnswers).forEach((items) => {
-			if (items.length === 0) return;
-
-			const { QueID, QueType } = items[0];
-			if (QueID == null) return;
-
-			switch (QueType) {
-				case 1: {
-					const lastItem = items[items.length - 1];
-					const ansId = lastItem.AnsID ?? null;
-					answersMap[QueID] = ansId && ansId !== 0 ? ansId : null;
-					break;
-				}
-				case 2: {
-					const uniqueIds = [
-						...new Set(
-							items
-								.map((i) => i.AnsID)
-								.filter((id): id is number => id !== null && id !== 0),
-						),
-					];
-					answersMap[QueID] = uniqueIds;
-					break;
-				}
-
-				case 3: {
-					const map: Record<number, string> = {};
-					items.forEach((it) => {
-						const ansId = it.AnsID ?? 0;
-						const val = (it as { Answer?: string }).Answer ?? "";
-						if (ansId && ansId !== 0) {
-							map[ansId] = val;
-						}
-					});
-					answersMap[QueID] = map;
-					break;
-				}
-
-				case 4: {
-					const lastItem = items[items.length - 1];
-					answersMap[QueID] = (lastItem as { Answer?: string }).Answer || "";
-					break;
-				}
-
-				case 5: {
-					// Drag and drop
-					const sortedItems = [...items].sort((a, b) => {
-						const aOrder = Number((a as { Answer?: string }).Answer) || 999;
-						const bOrder = Number((b as { Answer?: string }).Answer) || 999;
-						return aOrder - bOrder;
-					});
-					answersMap[QueID] = sortedItems
-						.map((i) => i.AnsID)
-						.filter((id): id is number => id !== null && id !== 0);
-					break;
-				}
-
-				case 6: {
-					// Matching
-					const matchMap: Record<number, number[]> = {};
-					items.forEach((item) => {
-						const qRefId = Number((item as { Answer?: string }).Answer);
-						const aRefId = item.AnsID;
-
-						if (qRefId && aRefId) {
-							if (!matchMap[qRefId]) {
-								matchMap[qRefId] = [];
-							}
-							matchMap[qRefId].push(aRefId);
-						}
-					});
-					answersMap[QueID] = matchMap;
-					break;
-				}
-			}
+	const getExamTime = useCallback(() => {
+		const elapsed = computeElapsedSeconds({
+			startedDate,
+			serverNowMs: getServerNowMs(queryClient),
+			localNowMs: Date.now(),
+			fallbackStartMs: pageLoadedAt,
+			maxSeconds: examMinutes ? examMinutes * 60 : undefined,
 		});
+		// Integration API нь "мм:сс", системийн API нь "ЦЦ:мм:сс" хүлээнэ
+		return integration
+			? formatIntegrationExamTime(elapsed)
+			: formatHMS(elapsed);
+	}, [startedDate, examMinutes, queryClient, pageLoadedAt, integration]);
 
-		setSelectedAnswers(answersMap);
-		lastSavedAnswers.current = new Map(
-			Object.entries(answersMap).map(([k, v]) => [Number(k), v]),
-		);
-	}, [examData, isLoading]);
+	const handleLeaveExam = useCallback(() => {
+		if (integration) leaveIntegrationExam(integration);
+		else router.push("/Lists/examList");
+	}, [integration, router]);
 
-	const allQuestions = useMemo(() => {
-		if (!examData?.Questions || !examData?.Answers) return [];
-
-		const answersByQuestionId = new Map<number, typeof examData.Answers>();
-
-		for (const answer of examData.Answers) {
-			if (!answersByQuestionId.has(answer.question_id)) {
-				answersByQuestionId.set(answer.question_id, []);
-			}
-			answersByQuestionId.get(answer.question_id)?.push(answer);
-		}
-
-		return examData.Questions.filter((q) =>
-			[1, 2, 3, 4, 5, 6].includes(q.que_type_id),
-		).map((q) => {
-			const questionAnswers = answersByQuestionId.get(q.question_id) || [];
-			const filteredAnswers = questionAnswers
-				.filter((a) => a.answer_type === q.que_type_id)
-				.map((a) => ({
-					...a,
-					answer_img: a.answer_img || undefined,
-					is_true: false,
-				}));
-
-			return {
-				...q,
-				question_img: q.question_img || "",
-				answers: filteredAnswers,
-			};
-		});
-	}, [examData?.Questions, examData?.Answers]);
+	const allQuestions = useMemo(() => prepareQuestions(examData), [examData]);
 
 	const totalCount = allQuestions.length;
 
 	const answeredCount = useMemo(() => {
 		let count = 0;
-
-		for (const key in selectedAnswers) {
-			if (!Object.hasOwn(selectedAnswers, key)) continue;
-
-			const ans = selectedAnswers[key];
-			if (ans == null) continue;
-
-			if (Array.isArray(ans)) {
-				if (ans.length > 0) count++;
-			} else if (typeof ans === "string") {
-				if (ans.trim()) count++;
-			} else if (typeof ans === "number") {
-				if (ans !== 0 && !Number.isNaN(ans)) count++;
-			} else {
-				// Object - has at least one property
-				if (Object.keys(ans).length > 0) count++;
-			}
+		for (const q of allQuestions) {
+			if (isAnswerFilled(selectedAnswers[q.question_id])) count++;
 		}
-
 		return count;
-	}, [selectedAnswers]);
+	}, [allQuestions, selectedAnswers]);
 
 	const toggleBookmark = useCallback((questionId: number) => {
 		setBookmarkedQuestions((prev) => {
@@ -928,180 +414,6 @@ export default function ExamPage() {
 		setTimeout(() => finishDialogRef.current?.openConfirm(), 200);
 	}, []);
 
-	const getCardBorderClass = useCallback(
-		(questionId: number) => {
-			const answer = selectedAnswers[questionId];
-
-			let isAnswered = false;
-			if (Array.isArray(answer)) {
-				isAnswered = answer.length > 0;
-			} else if (typeof answer === "string") {
-				isAnswered = answer.trim() !== "";
-			} else if (typeof answer === "number") {
-				isAnswered = !Number.isNaN(answer) && answer !== 0;
-			} else if (typeof answer === "object" && answer !== null) {
-				isAnswered = Object.keys(answer).length > 0;
-			}
-
-			const isBookmarked = bookmarkedQuestions.has(questionId);
-			const isTypingNow = typingQuestions.has(questionId);
-
-			if (isTypingNow)
-				return "border-pop-sky shadow-[0_4px_0_0_color-mix(in_oklch,var(--pop-sky)_45%,transparent)]";
-			if (isAnswered && isBookmarked)
-				return "border-warning shadow-[0_4px_0_0_color-mix(in_oklch,var(--warning)_55%,transparent)]";
-			if (isAnswered)
-				return "border-primary/50 shadow-[0_4px_0_0_color-mix(in_oklch,var(--primary)_35%,transparent)]";
-			if (isBookmarked)
-				return "border-warning/70 shadow-[0_4px_0_0_color-mix(in_oklch,var(--warning)_40%,transparent)]";
-			return "border-border";
-		},
-		[selectedAnswers, bookmarkedQuestions, typingQuestions],
-	);
-
-	const renderQuestion = useCallback(
-		(q: (typeof allQuestions)[0]) => {
-			const header = (
-				<>
-					{q.question_img && (
-						<QuestionImage src={q.question_img} alt="Асуултын зураг" />
-					)}
-					<SourceBlock
-						sourceName={q.source_name}
-						sourceTitle={q.source_title}
-						sourceImg={q.source_img}
-						srcAudio={q.src_audio}
-					/>
-				</>
-			);
-
-			if (q.que_type_id === 1) {
-				return (
-					<>
-						{header}
-						<SingleSelectQuestion
-							questionId={q.question_id}
-							questionText={q.question_name}
-							answers={q.answers}
-							selectedAnswer={selectedAnswers[q.question_id] as number | null}
-							onAnswerChange={handleAnswerChange}
-						/>
-					</>
-				);
-			}
-
-			if ([2, 3, 4, 6].includes(q.que_type_id)) {
-				return (
-					<>
-						{header}
-						{q.que_type_id === 2 && (
-							<MultiSelectQuestion
-								questionId={q.question_id}
-								questionText={q.question_name}
-								answers={q.answers}
-								mode="exam"
-								selectedAnswers={
-									(selectedAnswers[q.question_id] as number[]) || []
-								}
-								onAnswerChange={handleAnswerChange}
-							/>
-						)}
-						{q.que_type_id === 3 && (
-							<NumberInputQuestion
-								questionId={q.question_id}
-								questionText={q.question_name}
-								answers={q.answers}
-								selectedValues={
-									selectedAnswers[q.question_id] as Record<number, string>
-								}
-								onAnswerChange={(qId, values) =>
-									handleAnswerChange(qId, values as AnswerValue)
-								}
-							/>
-						)}
-						{q.que_type_id === 4 && (
-							<FillInTheBlankQuestion
-								questionId={q.question_id}
-								questionText={q.question_name}
-								value={(selectedAnswers[q.question_id] as string) || ""}
-								onAnswerChange={handleAnswerChange}
-							/>
-						)}
-						{q.que_type_id === 6 && (
-							<MatchingByLine
-								answers={q.answers.map((a) => ({
-									refid: a.refid,
-									answer_id: a.answer_id,
-									question_id: a.question_id,
-									answer_name_html: a.answer_name_html,
-									answer_descr: a.answer_descr,
-									answer_img: a.answer_img || null,
-									ref_child_id: a.ref_child_id,
-									is_true: a.is_true,
-								}))}
-								onMatchChange={(matches) =>
-									handleAnswerChange(q.question_id, matches)
-								}
-								userAnswers={
-									(selectedAnswers[q.question_id] as Record<
-										number,
-										number[]
-									>) || {}
-								}
-							/>
-						)}
-					</>
-				);
-			}
-
-			if (q.que_type_id === 5) {
-				return (
-					<>
-						{header}
-						<DragAndDropQuestion
-							questionId={q.question_id}
-							examId={examData?.ExamInfo?.[0]?.id}
-							userId={userId || 0}
-							answers={q.answers.map((a) => ({
-								answer_id: a.answer_id,
-								answer_name_html: a.answer_name_html || a.answer_name || "",
-							}))}
-							userAnswers={(selectedAnswers[q.question_id] as number[]) || []}
-							onOrderChange={(orderedIds) =>
-								handleAnswerChange(q.question_id, orderedIds)
-							}
-						/>
-					</>
-				);
-			}
-
-			return null;
-		},
-		[selectedAnswers, handleAnswerChange, examData, userId],
-	);
-
-	useEffect(() => {
-		return () => {
-			for (const timer of typingTimers.current.values()) {
-				clearTimeout(timer);
-			}
-			typingTimers.current.clear();
-			savingQuestions.current.clear();
-
-			if (saveTimer.current) clearTimeout(saveTimer.current);
-		};
-	}, []);
-
-	useEffect(() => {
-		return () => {
-			if (saveTimer.current) clearTimeout(saveTimer.current);
-			if (pendingAnswers.current.size > 0) {
-				processPendingAnswers();
-			}
-		};
-	}, [processPendingAnswers]);
-
-
 	// ── Review groups (answered / unanswered / bookmarked) ──
 	const reviewGroups = useMemo(() => {
 		const answered: number[] = [];
@@ -1150,10 +462,8 @@ export default function ExamPage() {
 				optionIndex = e.key.toUpperCase().charCodeAt(0) - 65;
 			if (optionIndex < 0 || optionIndex >= q.answers.length) return;
 			e.preventDefault();
-			const answerId = q.answers[optionIndex].answer_id;
-			// Same guard as SingleSelectQuestion's click handler
-			if (selectedAnswers[q.question_id] === answerId) return;
-			handleAnswerChange(q.question_id, answerId);
+			// useAnswerSync ижил утгыг (болон түгжигдсэн үед) өөрөө алгасна
+			handleAnswerChange(q.question_id, q.answers[optionIndex].answer_id);
 		};
 		window.addEventListener("keydown", onKeyDown);
 		return () => window.removeEventListener("keydown", onKeyDown);
@@ -1161,7 +471,6 @@ export default function ExamPage() {
 		viewMode,
 		allQuestions,
 		currentQuestionIndex,
-		selectedAnswers,
 		handleAnswerChange,
 		goToPreviousQuestion,
 		goToNextQuestion,
@@ -1244,8 +553,6 @@ export default function ExamPage() {
 
 	const currentQuestion = allQuestions[currentQuestionIndex];
 	const isLastQuestion = currentQuestionIndex === totalCount - 1;
-	const pendingCount = pendingAnswers.current.size;
-	const examInfo = examData?.ExamInfo?.[0];
 	const swipeEnabled =
 		viewMode === "focus" &&
 		!!currentQuestion &&
@@ -1287,68 +594,21 @@ export default function ExamPage() {
 	};
 
 	const renderQuestionCard = (
-		q: (typeof allQuestions)[0],
+		q: PreparedQuestion,
 		index: number,
 		isFocus: boolean,
 	) => (
-		<Card
-			className={`gap-0 py-0 transition-colors ${getCardBorderClass(q.question_id)}`}
-		>
-			<CardContent className={isFocus ? "p-4 sm:p-6" : "p-4 sm:p-5 xl:p-6"}>
-				<div className="mb-3 flex items-center justify-between gap-2">
-					<span className="inline-flex items-center rounded-full bg-primary/10 px-3 py-1 text-xs font-extrabold text-primary">
-						Асуулт {index + 1}
-					</span>
-					<div className="flex shrink-0 items-center gap-2">
-						{typingQuestions.has(q.question_id) && (
-							<div className="flex items-center gap-1 rounded-full bg-pop-sky-soft px-2.5 py-1.5">
-								<div className="flex gap-0.5">
-									<span
-										className="size-1.5 animate-bounce rounded-full bg-pop-sky"
-										style={{ animationDelay: "0ms" }}
-									/>
-									<span
-										className="size-1.5 animate-bounce rounded-full bg-pop-sky"
-										style={{ animationDelay: "150ms" }}
-									/>
-									<span
-										className="size-1.5 animate-bounce rounded-full bg-pop-sky"
-										style={{ animationDelay: "300ms" }}
-									/>
-								</div>
-							</div>
-						)}
-						<Button
-							variant="ghost"
-							size="icon"
-							onClick={() => toggleBookmark(q.question_id)}
-							className="size-9 shrink-0 rounded-xl"
-							title={
-								bookmarkedQuestions.has(q.question_id)
-									? "Тэмдэглэгээ хасах"
-									: "Тэмдэглэх"
-							}
-						>
-							{bookmarkedQuestions.has(q.question_id) ? (
-								<BookmarkCheck className="size-5 fill-warning text-warning" />
-							) : (
-								<Bookmark className="size-5 text-muted-foreground" />
-							)}
-						</Button>
-					</div>
-				</div>
-				<div className="mb-5 min-w-0">
-					<div
-						className={`prose prose-sm dark:prose-invert max-w-none font-semibold leading-relaxed text-foreground ${
-							isFocus ? "text-base sm:text-lg" : "text-base lg:text-lg"
-						}`}
-					>
-						<MathContent html={q.question_name} />
-					</div>
-				</div>
-				<div className="min-w-0">{renderQuestion(q)}</div>
-			</CardContent>
-		</Card>
+		<ExamQuestionCard
+			question={q}
+			index={index}
+			isFocus={isFocus}
+			answer={selectedAnswers[q.question_id]}
+			isBookmarked={bookmarkedQuestions.has(q.question_id)}
+			isTyping={typingQuestions.has(q.question_id)}
+			disabled={isLocked}
+			onToggleBookmark={toggleBookmark}
+			onAnswerChange={handleAnswerChange}
+		/>
 	);
 
 	const reviewChip = (index: number, tone: "mint" | "coral" | "sun") => {
@@ -1375,10 +635,13 @@ export default function ExamPage() {
 
 	return (
 		<div className="flex min-h-screen flex-col bg-page-gradient">
-			{saveError && (
-				<div className="fixed top-4 right-4 z-50 animate-pop-in rounded-2xl bg-destructive px-5 py-3 font-bold text-white shadow-[0_4px_0_0_color-mix(in_oklch,var(--destructive)_70%,black)]">
-					{saveError}
-				</div>
+			{hasSaveError && (
+				<output
+					aria-live="polite"
+					className="fixed top-4 right-4 z-50 max-w-[90vw] animate-pop-in rounded-2xl bg-destructive px-5 py-3 font-bold text-white shadow-[0_4px_0_0_color-mix(in_oklch,var(--destructive)_70%,black)]"
+				>
+					Зарим хариулт хадгалагдсангүй. Дахин оролдож байна...
+				</output>
 			)}
 
 			{/* ───────── Top bar ───────── */}
@@ -1411,22 +674,19 @@ export default function ExamPage() {
 									examEndTime={examInfo.end_time}
 									examMinutes={examInfo.minut}
 									startedDate={examInfo.starteddate}
-									onTimeUp={setIsTimeUp}
+									onTimeUp={handleTimeUp}
 									onAutoFinish={handleAutoSubmit}
 								/>
 							)}
 						</div>
 
 						{/* View toggle */}
-						<div
-							role="radiogroup"
-							aria-label="Харагдац"
-							className="order-5 hidden shrink-0 rounded-xl border-2 border-border bg-muted p-0.5 sm:flex md:order-3"
-						>
+						<fieldset className="order-5 m-0 hidden min-w-0 shrink-0 rounded-xl border-2 border-border bg-muted p-0.5 sm:flex md:order-3">
+							<legend className="sr-only">Харагдац</legend>
 							<button
 								type="button"
-								role="radio"
-								aria-checked={viewMode === "focus"}
+								aria-pressed={viewMode === "focus"}
+								aria-label="Нэг нэгээр"
 								onClick={() => switchViewMode("focus")}
 								title="Нэг нэгээр"
 								className={`flex size-9 items-center justify-center rounded-lg transition-colors ${
@@ -1439,8 +699,8 @@ export default function ExamPage() {
 							</button>
 							<button
 								type="button"
-								role="radio"
-								aria-checked={viewMode === "list"}
+								aria-pressed={viewMode === "list"}
+								aria-label="Жагсаалтаар"
 								onClick={() => switchViewMode("list")}
 								title="Жагсаалтаар"
 								className={`flex size-9 items-center justify-center rounded-lg transition-colors ${
@@ -1451,7 +711,13 @@ export default function ExamPage() {
 							>
 								<List className="size-4" strokeWidth={2.5} />
 							</button>
-						</div>
+						</fieldset>
+
+						{/* Бичвэрийн хэмжээ */}
+						<TextSizeControl
+							textScale={textScale}
+							className="order-5 hidden sm:flex md:order-3"
+						/>
 
 						{/* Navigator drawer trigger (rail replaces it on xl) */}
 						<Button
@@ -1488,7 +754,7 @@ export default function ExamPage() {
 									<button
 										type="button"
 										onClick={handleManualSave}
-										disabled={isTimeUp}
+										disabled={isLocked}
 										className="flex items-center gap-1.5 rounded-full border-2 border-warning/60 bg-pop-sun-soft px-2.5 py-0.5 text-[11px] font-extrabold text-pop-sun-ink transition-transform hover:-translate-y-0.5 disabled:opacity-60"
 									>
 										<Save className="size-3.5" />
@@ -1518,7 +784,7 @@ export default function ExamPage() {
 										key={q.question_id}
 										className={`min-w-0 flex-1 rounded-full transition-all ${
 											isCurrent
-												? "h-2.5 bg-primary"
+												? "h-2.5 bg-pop-sky"
 												: marked
 													? "h-1.5 bg-warning"
 													: answered
@@ -1536,14 +802,28 @@ export default function ExamPage() {
 			{/* ───────── Body ───────── */}
 			<div className="mx-auto flex w-full max-w-7xl flex-1 gap-8 px-3 sm:px-6 xl:grid xl:grid-cols-[minmax(0,1fr)_16rem] xl:px-8">
 				<div className="flex min-w-0 flex-1 flex-col">
-					<main className="mx-auto w-full max-w-3xl flex-1 py-3">
+					{/* Утсан дээрх бичвэрийн хэмжээ (том дэлгэцэд header-т байна) */}
+					<div className="mx-auto flex w-full max-w-3xl items-center justify-end gap-2 pt-3 sm:hidden">
+						<span className="text-xs font-bold text-muted-foreground">
+							Бичвэр
+						</span>
+						<TextSizeControl textScale={textScale} />
+					</div>
+					<main
+						className="mx-auto w-full max-w-3xl flex-1 py-3"
+						style={{ zoom: textScale.scale }}
+					>
 						{viewMode === "focus" ? (
 							currentQuestion && (
 								<div
 									onPointerDown={onSwipePointerDown}
 									onPointerUp={onSwipePointerUp}
 									onPointerCancel={onSwipePointerCancel}
-									style={swipeEnabled ? { touchAction: "pan-y pinch-zoom" } : undefined}
+									style={
+										swipeEnabled
+											? { touchAction: "pan-y pinch-zoom" }
+											: undefined
+									}
 								>
 									<div
 										key={currentQuestion.question_id}
@@ -1610,7 +890,7 @@ export default function ExamPage() {
 								<ChevronLeft className="size-5" />
 								Өмнөх
 							</Button>
-							{examInfo && !isTimeUp && (
+							{examInfo && !isLocked && (
 								<Button
 									onClick={() => setShowReview(true)}
 									variant="success"
@@ -1798,7 +1078,7 @@ export default function ExamPage() {
 							<ChevronLeft className="size-4" />
 							Буцах
 						</Button>
-						{examInfo && !isTimeUp && (
+						{examInfo && !isLocked && (
 							<Button
 								variant="success"
 								size="lg"
@@ -1829,16 +1109,16 @@ export default function ExamPage() {
 							</span>
 
 							<span className="block rounded-2xl border-2 border-destructive/30 bg-destructive/10 p-3 font-bold text-destructive">
-								Шалгалтыг нэг эхлүүлсэн тохиолдолд системийн хугацаа
-								үргэлжлэн тоологдох бөгөөд шалгалтаас гарах эсвэл цонх
-								хаасан ч хугацаа зогсохгүйг анхаарна уу.
+								Шалгалтыг нэг эхлүүлсэн тохиолдолд системийн хугацаа үргэлжлэн
+								тоологдох бөгөөд шалгалтаас гарах эсвэл цонх хаасан ч хугацаа
+								зогсохгүйг анхаарна уу.
 							</span>
 						</AlertDialogDescription>
 					</AlertDialogHeader>
 					<AlertDialogFooter>
 						<AlertDialogCancel>Болих</AlertDialogCancel>
 						<AlertDialogAction
-							onClick={() => router.push("/Lists/examList")}
+							onClick={handleLeaveExam}
 							className="bg-destructive text-white shadow-[0_4px_0_0_color-mix(in_oklch,var(--destructive)_70%,black)] active:shadow-[0_1px_0_0_color-mix(in_oklch,var(--destructive)_70%,black)]"
 						>
 							Тийм, гарах
@@ -1847,14 +1127,17 @@ export default function ExamPage() {
 				</AlertDialogContent>
 			</AlertDialog>
 
-			{/* Existing finish flow (confirm + result + auto-submit). Single instance. */}
-			{examInfo && !isTimeUp && (
+			{/* Finish flow (confirm + result + auto-submit). Single instance, always
+			    mounted so the time-up auto-submit can always reach it. */}
+			{examInfo && (
 				<FinishExamResultDialog
 					ref={finishDialogRef}
 					examId={examInfo.id}
 					examType={examInfo.exam_type}
 					startEid={examInfo.start_eid}
-					examTime={examInfo.minut}
+					getExamTime={getExamTime}
+					flushAnswers={flush}
+					onFinished={handleFinished}
 					answeredCount={answeredCount}
 					totalCount={totalCount}
 					hideTrigger

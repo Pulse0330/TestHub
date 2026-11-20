@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import {
 	ArrowRight,
 	BookOpen,
@@ -74,7 +74,7 @@ export const CourseCard = ({
 	if (variant === "row") {
 		const tint = ROW_TINTS[index % ROW_TINTS.length];
 		return (
-			<motion.div
+			<m.div
 				initial={{ opacity: 0, y: 12 }}
 				animate={{ opacity: 1, y: 0 }}
 				transition={{ duration: 0.3, delay: Math.min(index * 0.04, 0.4) }}
@@ -88,7 +88,7 @@ export const CourseCard = ({
 				>
 					{/* Ripple Effect */}
 					{ripple.show && (
-						<motion.span
+						<m.span
 							initial={{ scale: 0, opacity: 1 }}
 							animate={{ scale: 4, opacity: 0 }}
 							transition={{ duration: 0.6 }}
@@ -156,7 +156,7 @@ export const CourseCard = ({
 					</div>
 
 					{/* CTA */}
-					<span className="hidden sm:inline-flex shrink-0 items-center gap-1.5 rounded-xl bg-primary px-4 py-2 text-sm font-extrabold text-primary-foreground shadow-[0_3px_0_0_var(--primary-shade)] transition-transform group-hover:-translate-y-0.5">
+					<span className="hidden sm:inline-flex shrink-0 items-center gap-1.5 rounded-xl bg-primary-soft px-4 py-2 text-sm font-extrabold text-primary-soft-foreground shadow-[0_3px_0_0_var(--primary-soft-shade)] transition-transform group-hover:-translate-y-0.5">
 						{isNavigating ? (
 							<Loader2 className="size-4 animate-spin" />
 						) : (
@@ -164,7 +164,7 @@ export const CourseCard = ({
 						)}
 						Үзэх
 					</span>
-					<span className="sm:hidden flex size-9 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-[0_3px_0_0_var(--primary-shade)]">
+					<span className="sm:hidden flex size-9 shrink-0 items-center justify-center rounded-xl bg-primary-soft text-primary-soft-foreground shadow-[0_3px_0_0_var(--primary-soft-shade)]">
 						{isNavigating ? (
 							<Loader2 className="size-4 animate-spin" />
 						) : (
@@ -173,18 +173,18 @@ export const CourseCard = ({
 						<span className="sr-only">Үзэх</span>
 					</span>
 				</button>
-			</motion.div>
+			</m.div>
 		);
 	}
 
 	return (
-		<motion.div
+		<m.div
 			initial={{ opacity: 0, y: 20 }}
 			animate={{ opacity: 1, y: 0 }}
 			transition={{ duration: 0.4, delay: index * 0.05 }}
 			className="h-full"
 		>
-			<motion.button
+			<m.button
 				type="button"
 				onClick={handleClick}
 				disabled={isNavigating}
@@ -195,7 +195,7 @@ export const CourseCard = ({
 			>
 				{/* Ripple Effect */}
 				{ripple.show && (
-					<motion.span
+					<m.span
 						initial={{ scale: 0, opacity: 1 }}
 						animate={{ scale: 4, opacity: 0 }}
 						transition={{ duration: 0.6 }}
@@ -212,7 +212,7 @@ export const CourseCard = ({
 
 				{/* Loading Overlay */}
 				{isNavigating && (
-					<motion.div
+					<m.div
 						initial={{ opacity: 0 }}
 						animate={{ opacity: 1 }}
 						className="absolute inset-0 bg-card/90 z-50 flex flex-col items-center justify-center gap-3"
@@ -221,7 +221,7 @@ export const CourseCard = ({
 						<span className="text-xs sm:text-sm font-bold text-foreground">
 							Хичээл нээж байна...
 						</span>
-					</motion.div>
+					</m.div>
 				)}
 
 				{/* Image Header - Fixed aspect ratio */}
@@ -258,7 +258,7 @@ export const CourseCard = ({
 								Төлбөр төлсөн
 							</Badge>
 						) : (
-							<motion.div
+							<m.div
 								initial={{ scale: 0 }}
 								animate={{ scale: 1 }}
 								transition={{ delay: 0.2 }}
@@ -267,7 +267,7 @@ export const CourseCard = ({
 								{/* <Badge className="border-0 px-1 sm:px-1.5 md:px-2 py-0 text-[7px] sm:text-[8px] md:text-[9px] shadow-lg whitespace-nowrap bg-orange-500">
 									{course.amount.toLocaleString()}₮
 								</Badge> */}
-							</motion.div>
+							</m.div>
 						)}
 					</div>
 				</div>
@@ -301,7 +301,7 @@ export const CourseCard = ({
 					</div>
 
 					{/* Action Button - Responsive with enhanced animation */}
-					<motion.div
+					<m.div
 						className="absolute bottom-2.5 right-2.5 sm:bottom-3 sm:right-3 size-7 sm:size-8 rounded-xl bg-pop-pink-soft flex items-center justify-center group-hover:bg-pop-pink transition-colors duration-200"
 						whileHover={{ scale: 1.1 }}
 						whileTap={{ scale: 0.95 }}
@@ -310,9 +310,9 @@ export const CourseCard = ({
 							className="size-3.5 sm:size-4 text-pop-pink-ink group-hover:text-primary-foreground group-hover:translate-x-0.5 transition-all"
 							strokeWidth={2.75}
 						/>
-					</motion.div>
+					</m.div>
 				</div>
-			</motion.button>
-		</motion.div>
+			</m.button>
+		</m.div>
 	);
 };

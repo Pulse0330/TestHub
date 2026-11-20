@@ -8,16 +8,16 @@ import {
 	Plus,
 } from "lucide-react";
 import { memo, useCallback, useEffect, useRef } from "react";
-import { Button } from "@/components/ui/button";
 import { FlagIcon } from "@/components/FlagIcon";
-import { getLessonVisual } from "@/lib/lessonVisual";
-import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 import {
 	Tooltip,
 	TooltipContent,
 	TooltipProvider,
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { getLessonVisual } from "@/lib/lessonVisual";
+import { cn } from "@/lib/utils";
 
 import type { TestGroupItem } from "@/types/exercise/testGroup";
 
@@ -93,7 +93,10 @@ export const LessonCard = memo(
 					"group relative flex h-full w-full flex-col items-center gap-3 overflow-hidden rounded-3xl border-2 bg-card px-3 pt-6 pb-4 text-center transition-all duration-150 animate-pop-in hover:-translate-y-1 active:translate-y-0.5",
 					hasSelection
 						? cn(v.solid, v.shadow)
-						: cn("border-border shadow-[0_4px_0_0_var(--border)]", v.hoverBorder),
+						: cn(
+								"border-border shadow-[0_4px_0_0_var(--border)]",
+								v.hoverBorder,
+							),
 				)}
 				aria-label={`${lesson.lesson_name}${hasSelection ? `, ${totalQuestions} асуулт сонгосон` : ""}`}
 			>
@@ -109,7 +112,11 @@ export const LessonCard = memo(
 						hasSelection ? "bg-white/25" : v.soft,
 					)}
 				>
-					{v.flag ? <FlagIcon code={v.flag} className="h-7 w-[42px] sm:h-8 sm:w-12" /> : v.emoji}
+					{v.flag ? (
+						<FlagIcon code={v.flag} className="h-7 w-[42px] sm:h-8 sm:w-12" />
+					) : (
+						v.emoji
+					)}
 				</span>
 				<h3 className="line-clamp-2 text-sm leading-tight font-extrabold sm:text-base">
 					{lesson.lesson_name}
@@ -119,7 +126,12 @@ export const LessonCard = memo(
 						{totalQuestions} асуулт сонгосон
 					</span>
 				) : (
-					<span className={cn("inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-bold opacity-0 transition-opacity group-hover:opacity-100", v.soft)}>
+					<span
+						className={cn(
+							"inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-bold opacity-0 transition-opacity group-hover:opacity-100",
+							v.soft,
+						)}
+					>
 						Сонгох
 						<ArrowRight className="size-3" strokeWidth={3} />
 					</span>
@@ -156,7 +168,7 @@ export const CategoryCard = memo(
 					"group card-pop lift rounded-3xl p-4 sm:p-5 text-left relative overflow-hidden w-full h-full animate-pop-in hover:border-pop-mint",
 					hasSelection && "border-pop-mint bg-pop-mint-soft/40",
 					checked &&
-						"border-primary bg-primary/10 shadow-[0_4px_0_0_var(--primary)]",
+						"border-primary/45 bg-primary-soft/40 shadow-[0_4px_0_0_var(--primary-soft-shade)]",
 				)}
 				aria-pressed={isCheckable ? checked : undefined}
 				aria-label={`${category.ulesson_name}, ${category.items.length} бүлэг тест${hasSelection ? `, ${categoryTotalQuestions} асуулт сонгосон` : ""}`}
@@ -182,7 +194,7 @@ export const CategoryCard = memo(
 									className={cn(
 										"flex size-7 items-center justify-center rounded-xl border-2 transition-colors",
 										checked
-											? "border-primary bg-primary text-primary-foreground"
+											? "border-primary-soft-shade bg-primary-soft text-primary-soft-foreground"
 											: "border-border bg-card text-transparent",
 									)}
 									aria-hidden="true"

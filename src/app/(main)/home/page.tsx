@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import {
 	ArrowRight,
 	BookOpen,
@@ -17,6 +17,10 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { memo, useCallback, useEffect, useMemo, useState } from "react";
+import {
+	type SorilDetail,
+	SorilDetailDialog,
+} from "@/components/SorilDetailDialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -26,29 +30,20 @@ import {
 	TooltipProvider,
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
-import {
-	getHomeScreen,
-	getMNPrint,
-	getmnExamUserCheck,
-	getUserProfile,
-} from "@/lib/api";
-import { getExamTime } from "@/lib/dash.api";
+import { getHomeScreen, getUserProfile } from "@/lib/api";
+import { queryKeys } from "@/lib/queryKeys";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/stores/useAuthStore";
 import { useUserStore } from "@/stores/useUserStore";
-import type { Exam1111 } from "@/types/dashboard/exam.types";
-import {
-	type HomeResponseType,
-	isSorilCompleted,
-	type PastExam,
-} from "@/types/home";
+import type { HomeResponseType, PastExam } from "@/types/home";
 import type { UserProfileResponseType } from "@/types/user";
 import ExamLists, { NextExamHero, pickNextExam } from "./homeExamCard";
 
 const ANIMATION_STAGGER = 0.04;
 
-// Bento tile base: 2px border + 3D bottom shadow
-const TILE = "rounded-3xl border-2 border-border bg-card shadow-[0_4px_0_0_var(--border)]";
+// Bento tile base: тайван нимгэн хүрээ + зөөлөн сүүдэр
+const TILE =
+	"rounded-3xl border border-border bg-card shadow-[0_1px_2px_rgb(0_0_0/0.04)]";
 
 // ============================================================================
 // BENTO TILE — motion wrapper with grid placement
@@ -60,20 +55,28 @@ interface BentoTileProps {
 }
 
 const BentoTile = ({ className, delay = 0, children }: BentoTileProps) => (
-	<motion.div
+	<m.div
 		initial={{ opacity: 0, y: 10, scale: 0.98 }}
 		animate={{ opacity: 1, y: 0, scale: 1 }}
 		transition={{ duration: 0.35, delay }}
 		className={cn("min-w-0", className)}
 	>
 		{children}
-	</motion.div>
+	</m.div>
 );
 
 // ============================================================================
-// GREETING TILE — compact, name + date + friendly line
+// TODAY — огноо (мэндчилгээ header дээр)
 // ============================================================================
-const MN_WEEKDAYS = ["Ням", "Даваа", "Мягмар", "Лхагва", "Пүрэв", "Баасан", "Бямба"] as const;
+const MN_WEEKDAYS = [
+	"Ням",
+	"Даваа",
+	"Мягмар",
+	"Лхагва",
+	"Пүрэв",
+	"Баасан",
+	"Бямба",
+] as const;
 
 function useToday() {
 	const [today, setToday] = useState<Date | null>(null);
@@ -81,46 +84,26 @@ function useToday() {
 	return today;
 }
 
-const GreetingTile = memo(({ username }: { username: string }) => {
+/** Өнөөдрийн огноо + урам өгөх мөр (мэндчилгээ header-т шилжсэн). */
+const TodayLine = memo(() => {
 	const today = useToday();
-	const dateLabel = today
-		? `${today.getFullYear()} оны ${today.getMonth() + 1}-р сарын ${today.getDate()}, ${MN_WEEKDAYS[today.getDay()]}`
-		: "";
-
+	if (!today) return <div className="h-5" />;
 	return (
-		<div className={cn(TILE, "relative flex h-full items-center gap-4 overflow-hidden p-4 sm:p-5")}>
-			<div aria-hidden className="pointer-events-none absolute inset-0 bg-dots opacity-40" />
-			<div aria-hidden className="relative hidden size-14 shrink-0 items-center justify-center rounded-2xl bg-pop-sun-soft text-3xl shadow-[0_4px_0_0_color-mix(in_oklch,var(--pop-sun)_35%,transparent)] min-[400px]:flex animate-float">
-				👋
-			</div>
-			<div className="relative min-w-0 flex-1 space-y-0.5">
-				<p className="text-xs font-bold text-muted-foreground">
-					Тавтай морилно уу
-					{dateLabel && <span className="tabular-nums"> · {dateLabel}</span>}
-				</p>
-				<h1 className="truncate text-xl font-black tracking-tight sm:text-2xl">{username}</h1>
-				<p className="text-sm font-semibold text-muted-foreground">
-					Өнөөдөр бас нэг алхам урагшилъя ✨
-				</p>
-			</div>
-			<Link href="/Lists/paymentCoureList" className="relative hidden shrink-0 sm:block">
-				<Button size="sm" variant="outline" className="gap-1.5">
-					<BookOpen className="size-4 text-pop-mint-ink" strokeWidth={2.5} />
-					Сургалт үзэх
-					<ArrowRight className="size-4" strokeWidth={2.5} />
-				</Button>
-			</Link>
-			<Link
-				href="/Lists/paymentCoureList"
-				aria-label="Сургалт үзэх"
-				className="relative flex size-10 shrink-0 items-center justify-center rounded-xl bg-pop-mint-soft text-pop-mint-ink sm:hidden"
-			>
-				<BookOpen className="size-5" strokeWidth={2.5} />
-			</Link>
-		</div>
+		<p className="text-sm font-semibold text-muted-foreground">
+			<span className="font-extrabold text-foreground">
+				{MN_WEEKDAYS[today.getDay()]}
+			</span>
+			<span className="tabular-nums">
+				, {today.getMonth() + 1}-р сарын {today.getDate()}
+			</span>
+			<span className="hidden sm:inline">
+				{" "}
+				· Өнөөдөр бас нэг алхам урагшилъя
+			</span>
+		</p>
 	);
 });
-GreetingTile.displayName = "GreetingTile";
+TodayLine.displayName = "TodayLine";
 
 // ============================================================================
 // COUNT TILE
@@ -142,16 +125,39 @@ const TONE = {
 const CountTile = memo(({ label, value, hint, Icon, tone }: CountTileProps) => {
 	const t = TONE[tone];
 	return (
-		<div className={cn("flex h-full flex-col justify-between gap-3 rounded-3xl p-4", t.bg)}>
+		<div
+			className={cn(
+				"flex h-full flex-col justify-between gap-3 rounded-3xl p-4",
+				t.bg,
+			)}
+		>
 			<div className="flex items-center justify-between gap-2">
-				<p className={cn("text-[11px] font-bold uppercase leading-tight tracking-wide", t.ink)}>{label}</p>
-				<span className={cn("flex size-8 shrink-0 items-center justify-center rounded-xl bg-card", t.ink)}>
+				<p
+					className={cn(
+						"text-[11px] font-bold uppercase leading-tight tracking-wide",
+						t.ink,
+					)}
+				>
+					{label}
+				</p>
+				<span
+					className={cn(
+						"flex size-8 shrink-0 items-center justify-center rounded-xl bg-card",
+						t.ink,
+					)}
+				>
 					<Icon className="size-4" strokeWidth={2.5} />
 				</span>
 			</div>
 			<div>
-				<p className={cn("text-3xl font-black tabular-nums leading-none", t.ink)}>{value}</p>
-				<p className="mt-1 text-xs font-semibold text-muted-foreground">{hint}</p>
+				<p
+					className={cn("text-3xl font-black tabular-nums leading-none", t.ink)}
+				>
+					{value}
+				</p>
+				<p className="mt-1 text-xs font-semibold text-muted-foreground">
+					{hint}
+				</p>
 			</div>
 		</div>
 	);
@@ -166,33 +172,39 @@ const SHORTCUTS = [
 		href: "/Lists/examList",
 		label: "Шалгалтууд",
 		Icon: ClipboardCheck,
-		chip: "bg-pop-violet text-primary-foreground shadow-[0_3px_0_0_color-mix(in_oklch,var(--pop-violet)_60%,black)]",
+		chip: "bg-pop-violet-soft text-pop-violet-ink",
 		hover: "hover:border-pop-violet",
 	},
 	{
 		href: "/Lists/sorilList",
 		label: "Сорилууд",
 		Icon: FileText,
-		chip: "bg-pop-sky text-primary-foreground shadow-[0_3px_0_0_color-mix(in_oklch,var(--pop-sky)_60%,black)]",
+		chip: "bg-pop-sky-soft text-pop-sky-ink",
 		hover: "hover:border-pop-sky",
 	},
 	{
 		href: "/Lists/exerciseList",
 		label: "Дасгал ажил",
 		Icon: Dumbbell,
-		chip: "bg-pop-coral text-primary-foreground shadow-[0_3px_0_0_color-mix(in_oklch,var(--pop-coral)_60%,black)]",
+		chip: "bg-pop-coral-soft text-pop-coral-ink",
 		hover: "hover:border-pop-coral",
 	},
 	{
 		href: "/Lists/paymentCoureList",
-		label: "Сургалтууд",
+		label: "Сургалт үзэх",
 		Icon: BookOpen,
-		chip: "bg-pop-mint text-primary-foreground shadow-[0_3px_0_0_color-mix(in_oklch,var(--pop-mint)_60%,black)]",
+		chip: "bg-pop-mint-soft text-pop-mint-ink",
 		hover: "hover:border-pop-mint",
 	},
 ] as const;
 
-const ShortcutTile = ({ href, label, Icon, chip, hover }: (typeof SHORTCUTS)[number]) => (
+const ShortcutTile = ({
+	href,
+	label,
+	Icon,
+	chip,
+	hover,
+}: (typeof SHORTCUTS)[number]) => (
 	<Link
 		href={href}
 		className={cn(
@@ -201,12 +213,20 @@ const ShortcutTile = ({ href, label, Icon, chip, hover }: (typeof SHORTCUTS)[num
 			hover,
 		)}
 	>
-		<span className={cn("flex size-11 items-center justify-center rounded-xl", chip)}>
+		<span
+			className={cn(
+				"flex size-11 items-center justify-center rounded-xl",
+				chip,
+			)}
+		>
 			<Icon className="size-5" strokeWidth={2.5} />
 		</span>
 		<span className="flex items-center justify-between gap-2">
 			<span className="text-sm font-extrabold leading-tight">{label}</span>
-			<ArrowRight className="size-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:text-primary" strokeWidth={2.75} />
+			<ArrowRight
+				className="size-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:text-primary"
+				strokeWidth={2.75}
+			/>
 		</span>
 	</Link>
 );
@@ -222,30 +242,45 @@ interface TileHeaderProps {
 	chipClass?: string;
 }
 
-const TileHeader = memo(({ title, href, count, icon, chipClass = "bg-pop-violet-soft text-pop-violet-ink" }: TileHeaderProps) => (
-	<div className="flex items-center justify-between gap-3">
-		<div className="flex min-w-0 items-center gap-2.5">
-			{icon && (
-				<span className={`flex size-9 shrink-0 items-center justify-center rounded-xl ${chipClass}`}>
-					{icon}
-				</span>
-			)}
-			<h2 className="truncate text-base font-black tracking-tight sm:text-lg">{title}</h2>
-			{count !== undefined && count > 0 && (
-				<span className="shrink-0 rounded-full bg-primary px-2 py-0.5 text-[11px] font-extrabold text-primary-foreground">
-					{count}
-				</span>
-			)}
+const TileHeader = memo(
+	({
+		title,
+		href,
+		count,
+		icon,
+		chipClass = "bg-pop-violet-soft text-pop-violet-ink",
+	}: TileHeaderProps) => (
+		<div className="flex items-center justify-between gap-3">
+			<div className="flex min-w-0 items-center gap-2.5">
+				{icon && (
+					<span
+						className={`flex size-9 shrink-0 items-center justify-center rounded-xl ${chipClass}`}
+					>
+						{icon}
+					</span>
+				)}
+				<h2 className="truncate text-base font-black tracking-tight sm:text-lg">
+					{title}
+				</h2>
+				{count !== undefined && count > 0 && (
+					<span className="shrink-0 rounded-full bg-primary-soft px-2 py-0.5 text-[11px] font-extrabold text-primary-soft-foreground">
+						{count}
+					</span>
+				)}
+			</div>
+			<Link
+				href={href}
+				className="group flex shrink-0 items-center gap-1 rounded-full px-2 py-1 text-xs font-bold text-primary transition-colors hover:bg-accent"
+			>
+				<span className="hidden min-[400px]:inline">Бүгдийг харах</span>
+				<ArrowRight
+					className="size-3.5 transition-transform group-hover:translate-x-0.5"
+					strokeWidth={2.75}
+				/>
+			</Link>
 		</div>
-		<Link
-			href={href}
-			className="group flex shrink-0 items-center gap-1 rounded-full px-2 py-1 text-xs font-bold text-primary transition-colors hover:bg-accent"
-		>
-			<span className="hidden min-[400px]:inline">Бүгдийг харах</span>
-			<ArrowRight className="size-3.5 transition-transform group-hover:translate-x-0.5" strokeWidth={2.75} />
-		</Link>
-	</div>
-));
+	),
+);
 TileHeader.displayName = "TileHeader";
 
 // ============================================================================
@@ -254,6 +289,7 @@ TileHeader.displayName = "TileHeader";
 interface SorilRowProps {
 	exam: PastExam;
 	index: number;
+	onStart: (exam: PastExam) => void;
 }
 
 function getExamLockStatus(exam: PastExam) {
@@ -270,21 +306,20 @@ const SORIL_TINTS = [
 ] as const;
 
 const SorilRow = memo(
-	({ exam, index }: SorilRowProps) => {
-		const router = useRouter();
-		const _isCompleted = isSorilCompleted(exam.isguitset);
+	({ exam, index, onStart }: SorilRowProps) => {
 		const isLocked = getExamLockStatus(exam);
 		const tint = SORIL_TINTS[index % SORIL_TINTS.length];
 
-		const handleClick = useCallback(() => {
-			router.push(isLocked ? "/Lists/paymentCoureList" : `/soril/${exam.exam_id}`);
-		}, [router, exam.exam_id, isLocked]);
+		const handleClick = useCallback(() => onStart(exam), [exam, onStart]);
 
 		return (
-			<motion.li
+			<m.li
 				initial={{ opacity: 0, x: -8 }}
 				animate={{ opacity: 1, x: 0 }}
-				transition={{ duration: 0.25, delay: Math.min(index, 12) * ANIMATION_STAGGER }}
+				transition={{
+					duration: 0.25,
+					delay: Math.min(index, 12) * ANIMATION_STAGGER,
+				}}
 			>
 				<Tooltip>
 					<TooltipTrigger asChild>
@@ -294,7 +329,9 @@ const SorilRow = memo(
 							className="group flex w-full items-center gap-3 rounded-2xl border-2 border-transparent p-2 text-left transition-colors hover:border-border hover:bg-accent/50"
 						>
 							{/* Thumbnail */}
-							<div className={`relative size-14 shrink-0 overflow-hidden rounded-xl ${tint}`}>
+							<div
+								className={`relative size-14 shrink-0 overflow-hidden rounded-xl ${tint}`}
+							>
 								{exam.filename ? (
 									<Image
 										src={exam.filename}
@@ -307,7 +344,10 @@ const SorilRow = memo(
 									/>
 								) : (
 									<div className="absolute inset-0 flex items-center justify-center">
-										<FileText className="size-6 opacity-70" strokeWidth={2.25} />
+										<FileText
+											className="size-6 opacity-70"
+											strokeWidth={2.25}
+										/>
 									</div>
 								)}
 								{isLocked && (
@@ -326,7 +366,10 @@ const SorilRow = memo(
 								</h3>
 								<div className="flex flex-wrap items-center gap-1.5">
 									{isLocked && (
-										<Badge variant="sun" className="border-0 px-2 py-0 text-[10px]">
+										<Badge
+											variant="sun"
+											className="border-0 px-2 py-0 text-[10px]"
+										>
 											Төлбөртэй
 										</Badge>
 									)}
@@ -341,18 +384,26 @@ const SorilRow = memo(
 								</div>
 							</div>
 
-							<ChevronRight className="size-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:text-primary" strokeWidth={2.75} />
+							<ChevronRight
+								className="size-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:text-primary"
+								strokeWidth={2.75}
+							/>
 						</button>
 					</TooltipTrigger>
 					<TooltipContent>
 						<p className="max-w-[200px]">{exam.soril_name}</p>
-						{isLocked && <p className="mt-0.5 text-xs text-pop-sun">Төлбөр шаардлагатай</p>}
+						{isLocked && (
+							<p className="mt-0.5 text-xs text-pop-sun">Төлбөр шаардлагатай</p>
+						)}
 					</TooltipContent>
 				</Tooltip>
-			</motion.li>
+			</m.li>
 		);
 	},
-	(prev, next) => prev.exam === next.exam && prev.index === next.index,
+	(prev, next) =>
+		prev.exam === next.exam &&
+		prev.index === next.index &&
+		prev.onStart === next.onStart,
 );
 SorilRow.displayName = "SorilRow";
 
@@ -365,21 +416,58 @@ interface SorilListsProps {
 }
 
 const SorilLists = memo(({ pastExams, className }: SorilListsProps) => {
+	const router = useRouter();
+	const [startSoril, setStartSoril] = useState<PastExam | null>(null);
+
+	const handleStart = useCallback(
+		(soril: SorilDetail) => {
+			setStartSoril(null);
+			router.push(`/soril/${soril.exam_id}`);
+		},
+		[router],
+	);
+
+	const handlePay = useCallback(() => {
+		setStartSoril(null);
+		router.push("/Lists/paymentCoureList");
+	}, [router]);
+
+	const handleStartOpenChange = useCallback((open: boolean) => {
+		if (!open) setStartSoril(null);
+	}, []);
+
 	if (!pastExams?.length) {
 		return (
 			<div className="flex flex-col items-center gap-3 py-16 text-center">
-				<div className="flex size-16 items-center justify-center rounded-full bg-pop-sky-soft text-3xl">📝</div>
-				<p className="text-sm font-bold text-muted-foreground">Сорил олдсонгүй</p>
+				<div className="flex size-16 items-center justify-center rounded-full bg-pop-sky-soft text-3xl">
+					📝
+				</div>
+				<p className="text-sm font-bold text-muted-foreground">
+					Сорил олдсонгүй
+				</p>
 			</div>
 		);
 	}
 
 	return (
-		<ul className={cn("-mx-1 space-y-1 overflow-y-auto px-1", className)}>
-			{pastExams.map((exam, index) => (
-				<SorilRow key={exam.exam_id} exam={exam} index={index} />
-			))}
-		</ul>
+		<>
+			<ul className={cn("-mx-1 space-y-1 overflow-y-auto px-1", className)}>
+				{pastExams.map((exam, index) => (
+					<SorilRow
+						key={exam.exam_id}
+						exam={exam}
+						index={index}
+						onStart={setStartSoril}
+					/>
+				))}
+			</ul>
+			<SorilDetailDialog
+				soril={startSoril}
+				onOpenChange={handleStartOpenChange}
+				onStart={handleStart}
+				onPay={handlePay}
+			/>
+		</>
 	);
 });
 SorilLists.displayName = "SorilLists";
@@ -388,7 +476,12 @@ SorilLists.displayName = "SorilLists";
 // HERO FALLBACKS — loading / no exam
 // ============================================================================
 const HeroLoading = () => (
-	<div className={cn(TILE, "flex h-full min-h-72 flex-col items-center justify-center gap-3 p-6")}>
+	<div
+		className={cn(
+			TILE,
+			"flex h-full min-h-72 flex-col items-center justify-center gap-3 p-6",
+		)}
+	>
 		<div className="flex size-14 items-center justify-center rounded-2xl bg-pop-violet-soft text-pop-violet-ink">
 			<Loader2 className="size-7 animate-spin" strokeWidth={2.5} />
 		</div>
@@ -397,13 +490,27 @@ const HeroLoading = () => (
 );
 
 const HeroEmpty = () => (
-	<div className={cn(TILE, "relative flex h-full min-h-72 flex-col items-center justify-center gap-4 overflow-hidden p-6 text-center")}>
-		<div aria-hidden className="pointer-events-none absolute inset-0 bg-dots opacity-40" />
-		<div className="relative flex size-20 items-center justify-center rounded-full bg-pop-sun-soft text-4xl animate-float">🗓️</div>
+	<div
+		className={cn(
+			TILE,
+			"relative flex h-full min-h-72 flex-col items-center justify-center gap-4 overflow-hidden p-6 text-center",
+		)}
+	>
+		<div
+			aria-hidden
+			className="pointer-events-none absolute inset-0 bg-dots opacity-40"
+		/>
+		<div className="relative flex size-20 items-center justify-center rounded-full bg-pop-sun-soft text-4xl animate-float">
+			🗓️
+		</div>
 		<div className="relative space-y-1">
-			<p className="text-xs font-extrabold uppercase tracking-wide text-muted-foreground">Дараагийн шалгалт</p>
+			<p className="text-xs font-extrabold uppercase tracking-wide text-muted-foreground">
+				Дараагийн шалгалт
+			</p>
 			<p className="text-lg font-black">Идэвхтэй шалгалт алга</p>
-			<p className="text-sm font-semibold text-muted-foreground">Сорил ажиллаад бэлтгэлээ хангаарай</p>
+			<p className="text-sm font-semibold text-muted-foreground">
+				Сорил ажиллаад бэлтгэлээ хангаарай
+			</p>
 		</div>
 		<div className="relative flex flex-wrap justify-center gap-2">
 			<Link href="/Lists/sorilList">
@@ -425,12 +532,8 @@ const HeroEmpty = () => (
 // ============================================================================
 // HOME PAGE
 // ============================================================================
-export function isBurtguulsen(list: Exam1111[]) {
-	return list.some((item) => item.burtguulsen === 1);
-}
-
 export default function HomePage() {
-	const { userId, user } = useAuthStore();
+	const userId = useAuthStore((s) => s.userId);
 	const { setProfile } = useUserStore();
 
 	const { data: profileData, isLoading: isProfileLoading } =
@@ -445,7 +548,7 @@ export default function HomePage() {
 
 	const { data: homeData, isLoading: isHomeLoading } =
 		useQuery<HomeResponseType>({
-			queryKey: ["homeScreen", userId],
+			queryKey: queryKeys.home.screen(userId),
 			queryFn: () => getHomeScreen(userId ?? 0),
 			enabled: !!userId,
 			retry: 2,
@@ -453,56 +556,21 @@ export default function HomePage() {
 			refetchOnWindowFocus: false,
 		});
 
-	void useQuery({
-		queryKey: ["get_exam_v2", userId],
-		queryFn: () =>
-			getExamTime({
-				userId: Number(userId),
-				examinee_number: user?.examinee_number || "",
-			}),
-		enabled: !!userId && !!user?.examinee_number,
-		select: (res) => res.RetData || [],
-	});
-
-	const { data: myExamInfo } = useQuery({
-		queryKey: ["myExamInfo", userId, user?.examinee_number],
-		queryFn: () =>
-			getmnExamUserCheck(user?.examinee_number ?? "", Number(userId)),
-		enabled: !!userId && !!user?.examinee_number,
-		select: (res) => res.RetData ?? [],
-	});
-
-	const examDateId = myExamInfo?.[0]?.exam_date_id;
-
-	//biome-ignore lint/correctness/noUnusedVariables: ExamVerifyDialog, MnExamPrint-д ашиглана
-	const { data: printData } = useQuery({
-		queryKey: ["mn_print", userId, user?.examinee_number, examDateId],
-		queryFn: () =>
-			getMNPrint({
-				userId: Number(userId),
-				examineeNumber: String(user?.examinee_number ?? ""),
-				examDateId: Number(examDateId),
-			}),
-		enabled: !!userId && !!user?.examinee_number,
-		select: (res) => {
-			console.log("✅ printData:", res);
-			return res.RetData ?? [];
-		},
-	});
-
 	useEffect(() => {
 		if (profileData?.RetData?.length) {
 			setProfile(profileData.RetData[0]);
 		}
 	}, [profileData, setProfile]);
 
-	const username = profileData?.RetData?.[0]?.username ?? "Хэрэглэгч";
 	const hasExams = Boolean(homeData?.RetDataThirt?.length);
 	const hasSorils = Boolean(homeData?.RetDataFourth?.length);
 	const examCount = homeData?.RetDataThirt?.length ?? 0;
 	const sorilCount = homeData?.RetDataFourth?.length ?? 0;
 
-	const nextExam = useMemo(() => pickNextExam(homeData?.RetDataThirt), [homeData?.RetDataThirt]);
+	const nextExam = useMemo(
+		() => pickNextExam(homeData?.RetDataThirt),
+		[homeData?.RetDataThirt],
+	);
 	const isLoading = isHomeLoading || isProfileLoading;
 	// Сорилын tile баруун талд 2 мөр эзлэх эсэх — үгүй бол бусад tile бүтэн өргөнөөр
 	const hasSideTile = isLoading || (hasExams && hasSorils);
@@ -516,8 +584,12 @@ export default function HomePage() {
 		<TooltipProvider>
 			{/* Bento grid. DOM order = mobile priority; md+ uses dense auto-placement. */}
 			<div className="grid w-full grid-flow-row-dense grid-cols-2 gap-3 sm:gap-4 md:grid-cols-6">
-				{/* 1. Дараагийн шалгалт — hero (2x2) */}
-				<BentoTile className="col-span-2 md:col-span-3 md:row-span-2">
+				<div className="col-span-2 md:col-span-6">
+					<TodayLine />
+				</div>
+
+				{/* 1. Дараагийн шалгалт — бүтэн өргөнтэй hero */}
+				<BentoTile className="col-span-2 md:col-span-6">
 					{isLoading ? (
 						<HeroLoading />
 					) : nextExam ? (
@@ -527,13 +599,8 @@ export default function HomePage() {
 					)}
 				</BentoTile>
 
-				{/* 2. Greeting */}
-				<BentoTile className="col-span-2 md:col-span-3" delay={0.05}>
-					<GreetingTile username={username} />
-				</BentoTile>
-
 				{/* 3. Count tiles */}
-				<BentoTile delay={0.1}>
+				<BentoTile className="md:col-span-2" delay={0.1}>
 					<CountTile
 						label="Идэвхтэй шалгалт"
 						value={examCount}
@@ -542,7 +609,7 @@ export default function HomePage() {
 						tone="violet"
 					/>
 				</BentoTile>
-				<BentoTile delay={0.13}>
+				<BentoTile className="md:col-span-2" delay={0.13}>
 					<CountTile
 						label="Сорилын сан"
 						value={sorilCount}
@@ -551,7 +618,7 @@ export default function HomePage() {
 						tone="sky"
 					/>
 				</BentoTile>
-				<BentoTile className="col-span-2 md:col-span-1" delay={0.16}>
+				<BentoTile className="col-span-2 md:col-span-2" delay={0.16}>
 					<CountTile
 						label="Хандалт"
 						value="24/7"
@@ -562,7 +629,7 @@ export default function HomePage() {
 				</BentoTile>
 
 				{/* 4. Shortcuts */}
-				<div className={cn("col-span-2 grid min-w-0 grid-cols-2 gap-3 sm:gap-4 md:grid-cols-4", wideCol)}>
+				<div className="col-span-2 grid min-w-0 grid-cols-2 gap-3 sm:gap-4 md:col-span-6 md:grid-cols-4">
 					{SHORTCUTS.map((sc, i) => (
 						<BentoTile key={sc.href} delay={0.18 + i * 0.03}>
 							<ShortcutTile {...sc} />
@@ -582,14 +649,19 @@ export default function HomePage() {
 						</div>
 					</BentoTile>
 				) : (
-					hasExams && homeData?.RetDataThirt && (
+					hasExams &&
+					homeData?.RetDataThirt && (
 						<BentoTile className={cn("col-span-2", wideCol)} delay={0.25}>
-							<section className={cn(TILE, "@container h-full space-y-4 p-4 sm:p-5")}>
+							<section
+								className={cn(TILE, "@container h-full space-y-4 p-4 sm:p-5")}
+							>
 								<TileHeader
 									title="Идэвхтэй шалгалтууд"
 									href="/Lists/examList"
 									count={examCount}
-									icon={<ClipboardCheck className="size-[18px]" strokeWidth={2.5} />}
+									icon={
+										<ClipboardCheck className="size-[18px]" strokeWidth={2.5} />
+									}
 									chipClass="bg-pop-violet-soft text-pop-violet-ink"
 								/>
 								<div className="grid grid-cols-1 gap-3 @sm:grid-cols-2 @3xl:grid-cols-3">
@@ -611,12 +683,18 @@ export default function HomePage() {
 						</div>
 					</BentoTile>
 				) : (
-					hasSorils && homeData?.RetDataFourth && (
+					hasSorils &&
+					homeData?.RetDataFourth && (
 						<BentoTile
-							className={cn("col-span-2", hasExams ? "md:row-span-2" : "md:col-span-6")}
+							className={cn(
+								"col-span-2",
+								hasExams ? "md:row-span-2" : "md:col-span-6",
+							)}
 							delay={0.3}
 						>
-							<section className={cn(TILE, "flex h-full flex-col gap-3 p-4 sm:p-5")}>
+							<section
+								className={cn(TILE, "flex h-full flex-col gap-3 p-4 sm:p-5")}
+							>
 								<TileHeader
 									title="Элсэлтийн шалгалтын сорилууд"
 									href="/Lists/sorilList"
@@ -641,8 +719,15 @@ export default function HomePage() {
 				{/* Хоосон */}
 				{!isLoading && !hasExams && !hasSorils && (
 					<BentoTile className="col-span-2 md:col-span-6" delay={0.25}>
-						<div className={cn(TILE, "flex flex-col items-center justify-center gap-3 px-6 py-16 text-center")}>
-							<div className="flex size-20 items-center justify-center rounded-full bg-pop-sun-soft text-4xl">🗂️</div>
+						<div
+							className={cn(
+								TILE,
+								"flex flex-col items-center justify-center gap-3 px-6 py-16 text-center",
+							)}
+						>
+							<div className="flex size-20 items-center justify-center rounded-full bg-pop-sun-soft text-4xl">
+								🗂️
+							</div>
 							<p className="text-lg font-black">Мэдээлэл олдсонгүй</p>
 						</div>
 					</BentoTile>

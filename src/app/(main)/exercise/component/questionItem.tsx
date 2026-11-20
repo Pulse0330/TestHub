@@ -120,8 +120,7 @@ const QuestionItem = memo(function QuestionItem({
 
 	const typeConfig = QUESTION_TYPE_CONFIG[questionType];
 	const typeName = typeConfig?.name || `Тодорхойгүй (${questionType})`;
-	const typeColor =
-		typeConfig?.color || "bg-muted text-muted-foreground";
+	const typeColor = typeConfig?.color || "bg-muted text-muted-foreground";
 
 	const showAnswerFeedback =
 		((questionType === 1 || questionType === 2 || questionType === 4) &&
@@ -199,7 +198,7 @@ const QuestionItem = memo(function QuestionItem({
 		>
 			{/* Question Header */}
 			<div className="flex items-start gap-3 sm:gap-4 mb-4 sm:mb-6">
-				<div className="size-9 sm:size-11 bg-primary text-primary-foreground rounded-2xl flex items-center justify-center shrink-0 font-black text-sm sm:text-lg shadow-[0_3px_0_0_var(--primary-shade)]">
+				<div className="size-9 sm:size-11 bg-primary-soft text-primary-soft-foreground rounded-2xl flex items-center justify-center shrink-0 font-black text-sm sm:text-lg shadow-[0_3px_0_0_var(--primary-soft-shade)]">
 					{index + 1}
 				</div>
 				<div className="flex-1 min-w-0">
@@ -219,8 +218,7 @@ const QuestionItem = memo(function QuestionItem({
 					/>
 					<div className="mt-3 flex flex-wrap items-center gap-2">
 						<span className="text-xs sm:text-sm font-bold text-pop-sun-ink bg-pop-sun-soft px-3 py-1 rounded-full">
-							⭐{" "}
-							Оноо: {question.que_onoo}
+							⭐ Оноо: {question.que_onoo}
 						</span>
 						<span
 							className={`text-xs sm:text-sm font-bold px-3 py-1 rounded-full ${typeColor}`}

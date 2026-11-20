@@ -1,212 +1,93 @@
-# TestHub — Онлайн Шалгалтын Платформ
+# Skuul — Онлайн шалгалтын платформ
 
-[![Next.js](https://img.shields.io/badge/Next.js-16.2.7-black?logo=next.js)](https://nextjs.org/)
-[![React](https://img.shields.io/badge/React-19.2.0-61DAFB?logo=react)](https://react.dev/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.9.3-3178C6?logo=typescript)](https://www.typescriptlang.org/)
-[![TailwindCSS](https://img.shields.io/badge/TailwindCSS-4.3.0-06B6D4?logo=tailwindcss)](https://tailwindcss.com/)
-[![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
-
-TestHub нь сурагч, оюутан болон мэргэжилтнүүдэд зориулсан **онлайн шалгалт, сорил, дасгал** зохион байгуулах бүрэн цогц платформ юм. Next.js App Router дээр суурилсан, орчин үеийн full-stack веб аппликейшн.
-
----
+Сурагчдад зориулсан **онлайн шалгалт, сорил, дасгал, хичээл**-ийн веб аппликейшн. Next.js App Router дээр суурилсан.
 
 ## ✨ Үндсэн боломжууд
 
 | Модуль | Тайлбар |
 |---|---|
-| 📝 **Шалгалт** | Шалгалт үүсгэх, хуваарилах, онлайнаар өгөх |
-| 📚 **Сорил** | Монгол болон олон улсын сорилын санг ашиглах |
-| 🏋️ **Дасгал** | Дасгал бодох, дахин давтах |
-| 🎓 **Курс** | Сургалтын агуулга, хичээлийн удирдлага |
-| 🏫 **Өрөө** | Онлайн шалгалтын өрөө, хяналт |
-| 💳 **Төлбөр** | QPay, MN QPay интеграц |
-| 👤 **Хэрэглэгч** | Бүртгэл, нэвтрэлт, OTP баталгаажуулалт |
-| 📊 **Үр дүн** | Шалгалт, сорилын үр дүн, дүн шинжилгээ |
+| 📝 **Шалгалт** | Хяналттай (proctored) онлайн шалгалт, автоматаар хадгалах, хугацаа дуусахад автоматаар илгээх |
+| 📚 **Сорил** | Элсэлтийн шалгалтын сорилын сан |
+| 🏋️ **Дасгал** | Хичээл, сэдвээр дасгал бодох |
+| 🎓 **Хичээл** | Цахим хичээлийн агуулга, төлбөртэй хичээл |
+| 💳 **Төлбөр** | QPay |
+| 👤 **Хэрэглэгч** | Бүртгэл, нэвтрэлт, OTP, профайл |
+| 📊 **Үр дүн** | Шалгалт, сорилын дэлгэрэнгүй үр дүн, rank |
 
----
+## 🛠 Технологи
 
-## 🛠 Технологийн стек
+- **Framework:** Next.js 16 (App Router, Turbopack), React 19, TypeScript
+- **UI:** Tailwind CSS v4, Radix UI / shadcn/ui, framer-motion (`LazyMotion`)
+- **Өгөгдөл:** TanStack Query v5 (`src/lib/queryKeys.ts` key factory), Zustand
+- **Контент:** MathJax 3 (CDN), DOMPurify (`src/lib/sanitize.ts`)
+- **Хэрэгсэл:** Bun, Biome (lint/format), Vitest, Playwright
 
-### Frontend
-- **Framework:** Next.js 16.2.7 (App Router, Turbopack)
-- **UI Library:** React 19, Radix UI, shadcn/ui
-- **Styling:** Tailwind CSS v4, tw-animate-css
-- **State Management:** Zustand, TanStack Query v5
-- **Forms:** React Hook Form + Zod validation
-- **Rich Text:** Tiptap editor
-- **Charts:** Recharts
-- **Drag & Drop:** @dnd-kit, @hello-pangea/dnd
-- **Real-time:** Socket.IO Client
-- **PDF/Export:** jsPDF, modern-screenshot
+## 🚀 Эхлүүлэх
 
-### Хөгжүүлэлтийн хэрэгсэл
-- **Runtime:** Bun
-- **Language:** TypeScript 5.9
-- **Linter/Formatter:** Biome
-- **Icons:** Tabler Icons, Lucide React
-
----
-
-## 🚀 Суулгах заавар
-
-### Шаардлага
-- [Bun](https://bun.sh/) >= 1.0
-- Node.js >= 18
-
-### 1. Repository clone хийх
-
-```bash
-git clone https://github.com/Pulse0330/TestHub.git
-cd TestHub
-```
-
-### 2. Dependency суулгах
+Шаардлага: [Bun](https://bun.sh/) 1.4+
 
 ```bash
 bun install
+bun run dev          # http://localhost:3000
 ```
 
-### 3. Environment тохируулах
+Backend-ийн хаягууд `next.config.ts`-ийн `env` хэсэгт тохируулагдсан.
 
-```bash
-cp .env.example .env.local
-```
+## 🧪 Скриптүүд
 
-`.env.local` файлд дараах утгуудыг оруулна:
-
-```env
-NEXT_PUBLIC_API_URL=https://your-api-url.com
-NEXT_PUBLIC_SOCKET_URL=https://your-socket-url.com
-QPAY_CLIENT_ID=your_qpay_client_id
-QPAY_CLIENT_SECRET=your_qpay_client_secret
-```
-
-### 4. Хөгжүүлэлтийн сервер ажиллуулах
-
-```bash
-bun run dev
-```
-
-[http://localhost:3000](http://localhost:3000) дээр нээгдэнэ.
-
-### 5. Production build
-
-```bash
-bun run build
-bun run start
-```
-
----
-
-## 📁 Төслийн бүтэц
-
-```
-Front-ecmexam/
-├── app/                        # Next.js App Router
-│   ├── (auth)/
-│   │   ├── login/              # Нэвтрэх
-│   │   ├── sign/               # Бүртгүүлэх
-│   │   └── forgot/             # Нууц үг сэргээх
-│   ├── exam/[id]/              # Шалгалт өгөх
-│   ├── exam-create/            # Шалгалт үүсгэх
-│   ├── exam-schedule/          # Шалгалтын хуваарь
-│   ├── soril/[id]/             # Сорил өгөх
-│   ├── exercise/               # Дасгал
-│   ├── course/[id]/            # Курс
-│   ├── room/[room_id]/         # Шалгалтын өрөө
-│   ├── Lists/                  # Жагсаалтын хуудсууд
-│   │   ├── examList/
-│   │   ├── sorilList/
-│   │   ├── courseList/
-│   │   └── examResult/
-│   ├── api/                    # API routes
-│   │   ├── qpay/               # QPay төлбөр
-│   │   ├── mnqpay/             # MN QPay төлбөр
-│   │   ├── otp/                # OTP баталгаажуулалт
-│   │   └── sign/               # Бүртгэлийн API
-│   └── userProfile/            # Хэрэглэгчийн профайл
-├── components/                 # Дахин ашиглах компонентууд
-├── lib/                        # Utility функцууд
-├── hooks/                      # Custom React hooks
-├── store/                      # Zustand store
-├── types/                      # TypeScript type definitions
-└── public/                     # Статик файлууд
-```
-
----
-
-## 🔗 API Интеграц
-
-| Endpoint | Тайлбар |
+| Команд | Тайлбар |
 |---|---|
-| `/api/qpay/*` | QPay төлбөрийн систем |
-| `/api/mnqpay/*` | MN QPay төлбөрийн систем |
-| `/api/otp/*` | SMS OTP баталгаажуулалт |
-| `/api/sign/*` | Бүртгэл, сургууль, аймаг, дүүргийн мэдээлэл |
-| `/api/forgetpass` | Нууц үг сэргээх |
+| `bun run dev` | Хөгжүүлэлтийн сервер |
+| `bun run build` / `bun run start` | Production build / ажиллуулах |
+| `bun run typecheck` | TypeScript шалгалт |
+| `bun run lint` | Biome lint + format шалгалт (`lint:fix` — автоматаар засах) |
+| `bun run test` | Vitest unit тест (`test:watch`) |
+| `bun run test:e2e` | Playwright e2e тест (`bunx playwright install chromium` эхлээд) |
 
----
+E2E-ийн бүтэн урсгалын тест зөвхөн `E2E_USERNAME`, `E2E_PASSWORD` env тохируулсан үед ажиллана (тусгай сурагчийн бүртгэл ашиглана уу — тест сорилыг бодитоор эхлүүлдэг).
 
-## 🧪 Хөгжүүлэлт
+CI (`.github/workflows/ci.yml`) PR бүр дээр typecheck → lint → test → build ажиллуулна.
 
-```bash
-# Linting
-bun run lint
+## 🔌 API
 
-# Type check
-bun run typecheck
+Backend: `https://clickup.ecm.mn/api` (`NEXT_PUBLIC_API_URL`). Бүх хүсэлт POST, DB холболтыг backend өөрийн `.env`-ээс авдаг тул **body-д `conn` явуулахгүй**. Хариу: `RetResponse.ResponseCode` `"10"` амжилттай, `"11"` алдаа/хоосон.
 
-# Format
-bun run format
+Бүх API `@/lib/api`-аас импортлогдоно:
+
+| Модуль | Агуулга |
+|---|---|
+| `src/lib/api.ts` | Апп-д ашиглагдаж буй endpoint-ууд (нэвтрэх, шалгалт, сорил, дасгал, хичээл, профайл, QPay, байршил, integration) |
+| `studentApi` (`src/lib/student-api.ts`) | Суралцагчийн бусад endpoint-ууд (мэдэгдэл, захидал, баннер, төлбөр, үр дүн ...) |
+| `teacherApi` (`src/lib/teacher-api.ts`) | Багшийн API (сургууль, хичээл, багш, суралцагч, даалгаврын сан, шалгалт, live, цахим хичээл ...) — UI хараахан байхгүй |
+
+```ts
+import { teacherApi, isApiSuccess } from "@/lib/api";
+const res = await teacherApi.lesson.list({ school_id: 3 });
+if (isApiSuccess(res)) console.log(res.RetData);
 ```
 
----
-
-## 📦 Deployment
-
-Vercel дээр deploy хийхэд бэлэн:
-
-```bash
-vercel deploy
-```
-
-Эсвэл Docker ашиглан:
-
-```bash
-docker build -t testhub .
-docker run -p 3000:3000 testhub
-```
-
----
-
-## 🤝 Хувь нэмэр оруулах
-
-1. Repository-г fork хийнэ
-2. Feature branch үүсгэнэ (`git checkout -b feature/шинэ-функц`)
-3. Өөрчлөлтөө commit хийнэ (`git commit -m 'feat: шинэ функц нэмэв'`)
-4. Branch руу push хийнэ (`git push origin feature/шинэ-функц`)
-5. Pull Request үүсгэнэ
-
-### Commit convention
+## 📁 Бүтэц
 
 ```
-feat:     Шинэ функц
-fix:      Алдаа засах
-docs:     Баримт бичиг
-style:    Форматлах
-refactor: Кодын бүтэц өөрчлөх
-test:     Тест нэмэх
+src/
+├── app/
+│   ├── (auth)/             # login, sign, forgot
+│   ├── (main)/             # home, Lists/*, exercise, examResult, sorilResult, userProfile
+│   ├── exam/               # Шалгалт өгөх (+ component/useAnswerSync.ts — хариулт хадгалах)
+│   ├── soril/              # Сорил өгөх
+│   ├── course/[id]/        # Хичээл
+│   └── api/                # qpay, examqpay, otp, sign route handlers
+├── features/
+│   ├── result-detail/      # Шалгалт/сорилын үр дүнгийн хуваалцсан view + scoring.ts
+│   ├── result-list/        # Үр дүнгийн жагсаалтын хуваалцсан хэсэг
+│   └── qpay/               # QPay dialog
+├── components/             # Хуваалцсан компонентууд (MathContent, Soril/ExamDetailDialog, ...)
+├── lib/                    # api, auth, sanitize, mathjax, queryKeys
+├── hooks/  stores/  types/
+e2e/                        # Playwright тестүүд
 ```
 
----
+## 🤝 Хувь нэмэр
 
-## 📄 Лиценз
-
-Энэхүү төсөл [MIT License](LICENSE)-ийн дагуу нийтлэгдсэн.
-
----
-
-## 📬 Холбоо барих
-
-- GitHub: [@Pulse0330](https://github.com/Pulse0330)
-- Repository: [TestHub](https://github.com/Pulse0330/TestHub)
+Feature branch дээр ажиллаж, PR нээнэ. Commit: `feat:`, `fix:`, `refactor:`, `test:`, `docs:`, `ci:`.
+Мөр төгсгөл LF (`.gitattributes`), формат Biome (tab).

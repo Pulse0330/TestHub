@@ -30,11 +30,18 @@ interface ConnectionConfig {
 export async function POST(request: NextRequest) {
 	try {
 		const body = await request.json();
-		console.log("=== CLASS API: Received body ===", body);
 
 		const { database, serverip } = body;
 
-		if (!database || !serverip) {
+		// Зөвхөн дотоод сүлжээний сургуулийн DB сервер, энгийн DB нэр —
+		// гадны сервер рүү нууц үгтэй холболт үүсгэхээс (SSRF) хамгаална.
+		const isValidTarget =
+			typeof database === "string" &&
+			/^[A-Za-z0-9_]{1,64}$/.test(database) &&
+			typeof serverip === "string" &&
+			/^172\.16\.\d{1,3}\.\d{1,3}$/.test(serverip);
+
+		if (!database || !serverip || !isValidTarget) {
 			return NextResponse.json(
 				{
 					RetResponse: {
@@ -62,25 +69,16 @@ export async function POST(request: NextRequest) {
 			},
 		};
 
-		console.log("=== CLASS API: Connection config ===", {
-			database: conn.database,
-			server: conn.server,
-		});
-
 		// Prepare payload for backend
 		const payload = {
 			conn,
 		};
 
-		console.log("=== CLASS API: Sending to backend ===", payload);
-
-		const classResponse = await fetch("https://backend.skuul.mn/api/class", {
+		const classResponse = await fetch("https://clickup.ecm.mn/api/class", {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
 			body: JSON.stringify(payload),
 		});
-
-		console.log("=== CLASS API: Backend status ===", classResponse.status);
 
 		if (!classResponse.ok) {
 			const errorText = await classResponse.text();
@@ -89,7 +87,6 @@ export async function POST(request: NextRequest) {
 		}
 
 		const classData = (await classResponse.json()) as ClassResponse;
-		console.log("=== CLASS API: Success ===", classData);
 
 		return NextResponse.json(classData);
 	} catch (error) {

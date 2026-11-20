@@ -1,9 +1,6 @@
 "use client";
-import Link from "next/link";
-import Image from "next/image";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
-import axios from "axios";
 import {
 	ArrowLeft,
 	Eye,
@@ -16,11 +13,12 @@ import {
 	ShieldCheck,
 	X,
 } from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
 
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
-import { UAParser } from "ua-parser-js";
 import * as z from "zod";
 import {
 	AUTH_CLOSE_BUTTON_CLASS,
@@ -38,7 +36,7 @@ import {
 	FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Forgotpassword } from "@/lib/api";
+import { checkOtpCode, Forgotpassword, requestOtpCode } from "@/lib/api";
 
 const formSchema = z
 	.object({
@@ -57,33 +55,22 @@ const formSchema = z
 		path: ["confirmPassword"],
 	});
 
-const getDeviceInfo = () => {
-	const parser = new UAParser();
-	const device = parser.getDevice();
-	const os = parser.getOS();
-	const browser = parser.getBrowser();
-	if (device.model) return device.model;
-	return `${os.name || "Unknown"} - ${browser.name || "Unknown"}`;
-};
-
-const isMobileDevice = () => {
-	const parser = new UAParser();
-	const device = parser.getDevice();
-	return device.type === "mobile" || device.type === "tablet" ? 1 : 0;
-};
-
 interface ForgotFormProps {
 	onClose?: () => void;
 }
 
 export default function ForgotForm({ onClose }: ForgotFormProps) {
+	/** Dialog дотор байвал хуудас солихгүй, зөвхөн dialog-ийг хаана. */
+	const backToLogin = (e: React.MouseEvent) => {
+		if (!onClose) return;
+		e.preventDefault();
+		onClose();
+	};
 	const [isSubmitted, setIsSubmitted] = useState(false);
 	const [showPassword, setShowPassword] = useState(false);
 	const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 	const [isWaitingForSMS, setIsWaitingForSMS] = useState(false);
-	const [isVerified, setIsVerified] = useState(
-		process.env.NODE_ENV === "development",
-	);
+	const [isVerified, setIsVerified] = useState(false);
 	const [isChecking, setIsChecking] = useState(false);
 	const [verificationCode, setVerificationCode] = useState("");
 	const [timeLeft, setTimeLeft] = useState(0);
@@ -113,22 +100,15 @@ export default function ForgotForm({ onClose }: ForgotFormProps) {
 		if (!phoneValidation) return;
 		setIsChecking(true);
 		try {
-			const response = await axios.post("/api/otp/getcode", {
-				phone: Number(form.getValues("phone")),
-				conftype: "1",
-				bundleid: "ikh_skuul.mn",
-				devicemodel: getDeviceInfo(),
-				ismob: isMobileDevice(),
-			});
-			if (response.data.RetResponse?.ResponseType) {
-				setVerificationCode(response.data.RetResponse.RtrGenCode);
-				setTimeLeft(Number(response.data.RetResponse.RtrGenCodeSeconds || 180));
+			const data = await requestOtpCode(Number(form.getValues("phone")));
+			if (data.RetResponse?.ResponseType) {
+				setVerificationCode(data.RetResponse.RtrGenCode ?? "");
+				setTimeLeft(Number(data.RetResponse.RtrGenCodeSeconds || 180));
 				setIsWaitingForSMS(true);
-				toast.success(response.data.RetResponse.ResponseMessage);
+				toast.success(data.RetResponse.ResponseMessage);
 			} else {
 				toast.error(
-					response.data.RetResponse?.ResponseMessage ||
-						"Код үүсгэхэд алдаа гарлаа",
+					data.RetResponse?.ResponseMessage || "Код үүсгэхэд алдаа гарлаа",
 				);
 			}
 		} catch {
@@ -145,11 +125,11 @@ export default function ForgotForm({ onClose }: ForgotFormProps) {
 		}
 		setIsChecking(true);
 		try {
-			const response = await axios.post("/api/otp/smscheck", {
-				phone: Number(form.getValues("phone")),
-				code: Number(verificationCode),
-			});
-			if (response.data.RetResponse?.ResponseType) {
+			const data = await checkOtpCode(
+				Number(form.getValues("phone")),
+				Number(verificationCode),
+			);
+			if (data.RetResponse?.ResponseType) {
 				toast.success("Утасны дугаар баталгаажлаа!");
 				setIsVerified(true);
 				setIsWaitingForSMS(false);
@@ -225,9 +205,9 @@ export default function ForgotForm({ onClose }: ForgotFormProps) {
 				<div className="flex flex-1 flex-col items-center justify-center px-6 py-8 text-center sm:px-8">
 					<Image
 						src="/image/logoLogin.png"
-						alt="EXMO logo"
-						width={120}
-						height={40}
+						alt="Skuul"
+						width={177}
+						height={142}
 						className="mx-auto mb-6 h-9 w-auto"
 					/>
 					<div className="relative mx-auto mb-5 flex size-20 animate-pop-in items-center justify-center rounded-full bg-success/15 text-success shadow-[0_4px_0_0_color-mix(in_oklch,var(--success)_35%,transparent)]">
@@ -246,7 +226,10 @@ export default function ForgotForm({ onClose }: ForgotFormProps) {
 								d="M5 13l4 4L19 7"
 							/>
 						</svg>
-						<span aria-hidden="true" className="absolute -top-2 -right-3 animate-float text-2xl">
+						<span
+							aria-hidden="true"
+							className="absolute -top-2 -right-3 animate-float text-2xl"
+						>
 							🎉
 						</span>
 					</div>
@@ -258,7 +241,7 @@ export default function ForgotForm({ onClose }: ForgotFormProps) {
 						болно.
 					</p>
 					<Button asChild size="lg" className="mt-6 w-full">
-						<Link href="/login">
+						<Link href="/login" onClick={backToLogin}>
 							<ArrowLeft className="size-5" strokeWidth={2.5} />
 							Нэвтрэх хуудас руу буцах
 						</Link>
@@ -282,13 +265,6 @@ export default function ForgotForm({ onClose }: ForgotFormProps) {
 			)}
 
 			<div className="px-6 pt-6 pr-14 pb-2 sm:px-8 sm:pt-8 sm:pr-14">
-				<Image
-					src="/image/logoLogin.png"
-					alt="EXMO logo"
-					width={120}
-					height={40}
-					className="mb-5 hidden h-8 w-auto md:block"
-				/>
 				<div className="flex items-center gap-3">
 					<div className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-pop-sun-soft text-2xl shadow-[0_4px_0_0_color-mix(in_oklch,var(--pop-sun)_40%,transparent)]">
 						<span aria-hidden="true">🔑</span>
@@ -335,7 +311,10 @@ export default function ForgotForm({ onClose }: ForgotFormProps) {
 												}}
 											/>
 										</FormControl>
-										<Phone className={AUTH_INPUT_ICON_CLASS} strokeWidth={2.5} />
+										<Phone
+											className={AUTH_INPUT_ICON_CLASS}
+											strokeWidth={2.5}
+										/>
 									</div>
 									<FormMessage />
 								</FormItem>
@@ -368,7 +347,7 @@ export default function ForgotForm({ onClose }: ForgotFormProps) {
 										<AlertDescription className="py-2">
 											<div className="space-y-4">
 												<div className="flex gap-3">
-													<div className="flex size-7 shrink-0 items-center justify-center rounded-full bg-pop-sky text-xs font-black text-primary-foreground">
+													<div className="flex size-7 shrink-0 items-center justify-center rounded-full bg-pop-sky text-xs font-black text-pop-on">
 														1
 													</div>
 													<p className="text-sm font-semibold text-foreground">
@@ -385,7 +364,7 @@ export default function ForgotForm({ onClose }: ForgotFormProps) {
 													</span>
 												</div>
 												<div className="flex gap-3 pt-2">
-													<div className="flex size-7 shrink-0 items-center justify-center rounded-full bg-pop-sky text-xs font-black text-primary-foreground">
+													<div className="flex size-7 shrink-0 items-center justify-center rounded-full bg-pop-sky text-xs font-black text-pop-on">
 														2
 													</div>
 													<div className="flex-1 space-y-3">
@@ -445,7 +424,10 @@ export default function ForgotForm({ onClose }: ForgotFormProps) {
 														className="peer pr-11 pl-11"
 													/>
 												</FormControl>
-												<Lock className={AUTH_INPUT_ICON_CLASS} strokeWidth={2.5} />
+												<Lock
+													className={AUTH_INPUT_ICON_CLASS}
+													strokeWidth={2.5}
+												/>
 												<Button
 													type="button"
 													variant="ghost"
@@ -484,7 +466,10 @@ export default function ForgotForm({ onClose }: ForgotFormProps) {
 														className="peer pr-11 pl-11"
 													/>
 												</FormControl>
-												<KeyRound className={AUTH_INPUT_ICON_CLASS} strokeWidth={2.5} />
+												<KeyRound
+													className={AUTH_INPUT_ICON_CLASS}
+													strokeWidth={2.5}
+												/>
 												<Button
 													type="button"
 													variant="ghost"
@@ -538,7 +523,7 @@ export default function ForgotForm({ onClose }: ForgotFormProps) {
 					</div>
 				</div>
 				<Button asChild variant="link" className="w-full">
-					<Link href="/login">
+					<Link href="/login" onClick={backToLogin}>
 						<ArrowLeft className="mr-2 h-4 w-4" />
 						Нэвтрэх хуудас руу буцах
 					</Link>

@@ -16,19 +16,22 @@ import {
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
 import {
+	monthKeyOf,
+	monthLabelOf,
+	ResultSummaryStrip,
+} from "@/features/result-list/shared";
+import {
 	getexamFinishFiltertLists,
 	getexamresultlists,
 	getTestFilter,
 } from "@/lib/api";
+import { queryKeys } from "@/lib/queryKeys";
 import { useAuthStore } from "@/stores/useAuthStore";
 import type { ExamresultListResponseType } from "@/types/exam/examResultList";
-import {
-	ExamListItem,
-	monthKeyOf,
-	monthLabelOf,
-	ResultSummaryStrip,
-} from "./card";
-import RankModal from "./rank";
+import { ExamListItem } from "./card";
+
+// Чансааны modal — зөвхөн нээх үед ачаална
+const RankModal = dynamic(() => import("./rank"), { ssr: false });
 
 // Dynamic import for Result Modal
 const ExamAnswersDialog = dynamic(() => import("./result"), {
@@ -85,7 +88,7 @@ export default function ExamResultList() {
 
 	// Fetch exam results
 	const { data, isLoading } = useQuery<ExamresultListResponseType>({
-		queryKey: ["examResults", userId, selectedLessonId],
+		queryKey: queryKeys.results.examList(userId, selectedLessonId),
 		queryFn: async (): Promise<ExamresultListResponseType> => {
 			if (selectedLessonId === 0) {
 				return getexamresultlists(userId || 0);

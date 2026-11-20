@@ -84,9 +84,15 @@ export default function FillInTheBlankQuestion({
 					{isReviewMode && isCorrect !== null && (
 						<div className="absolute right-4 top-1/2 -translate-y-1/2">
 							{isCorrect ? (
-								<CheckCircle2 className="size-6 text-success" strokeWidth={2.75} />
+								<CheckCircle2
+									className="size-6 text-success"
+									strokeWidth={2.75}
+								/>
 							) : (
-								<XCircle className="size-6 text-destructive" strokeWidth={2.75} />
+								<XCircle
+									className="size-6 text-destructive"
+									strokeWidth={2.75}
+								/>
 							)}
 						</div>
 					)}
@@ -103,7 +109,9 @@ export default function FillInTheBlankQuestion({
 
 				{isReviewMode && isCorrect === true && (
 					<div className="p-3 bg-success/10 border-2 border-success rounded-2xl animate-pop-in">
-						<p className="text-sm text-success font-extrabold">✓ Зөв хариулт!</p>
+						<p className="text-sm text-success font-extrabold">
+							✓ Зөв хариулт!
+						</p>
 					</div>
 				)}
 			</div>

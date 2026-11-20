@@ -1,6 +1,5 @@
 "use client";
 import { useQueryClient } from "@tanstack/react-query";
-import Cookies from "js-cookie";
 import {
 	BarChart3,
 	BookOpen,
@@ -12,6 +11,7 @@ import {
 	Home,
 	LogOut,
 	type LucideIcon,
+	Presentation,
 	School,
 	Target,
 	TrendingUp,
@@ -39,6 +39,8 @@ import {
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ThemeSwitch } from "@/components/ui/ui-theme";
+import { isTeacherGroup } from "@/features/teacher/hooks";
+import { clearSession } from "@/lib/auth";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/stores/useAuthStore";
 
@@ -57,13 +59,16 @@ type Section = {
 	links: SubLink[];
 };
 
+/** Идэвхтэй цэсний нэг өнгө (pastel цэнхэр) — бүх хэсэгт ижил */
+const ACTIVE_TONE = "bg-primary-soft text-primary-soft-foreground";
+
 export const NAV: Section[] = [
 	{
 		key: "home",
 		label: "Нүүр",
 		short: "Нүүр",
 		icon: Home,
-		tone: "bg-pop-violet text-white",
+		tone: ACTIVE_TONE,
 		links: [{ href: "/home", label: "Үндсэн хуудас", icon: Home }],
 	},
 	{
@@ -71,7 +76,7 @@ export const NAV: Section[] = [
 		label: "Шалгалт",
 		short: "Шалгалт",
 		icon: FileText,
-		tone: "bg-pop-sky text-white",
+		tone: ACTIVE_TONE,
 		links: [
 			{ href: "/Lists/examList", label: "Шалгалтын жагсаалт", icon: FileText },
 			{ href: "/Lists/examResult", label: "Шалгалтын үр дүн", icon: BarChart3 },
@@ -82,9 +87,13 @@ export const NAV: Section[] = [
 		label: "Сорил",
 		short: "Сорил",
 		icon: Target,
-		tone: "bg-pop-sun text-[oklch(0.3_0.08_70)]",
+		tone: ACTIVE_TONE,
 		links: [
-			{ href: "/Lists/sorilList", label: "Сорилын жагсаалт", icon: ClipboardList },
+			{
+				href: "/Lists/sorilList",
+				label: "Сорилын жагсаалт",
+				icon: ClipboardList,
+			},
 			{ href: "/Lists/sorilResult", label: "Сорилын үр дүн", icon: TrendingUp },
 		],
 	},
@@ -93,18 +102,24 @@ export const NAV: Section[] = [
 		label: "Дасгал ажил",
 		short: "Дасгал",
 		icon: Dumbbell,
-		tone: "bg-pop-mint text-white",
-		links: [{ href: "/Lists/exerciseList", label: "Дасгал ажил", icon: Dumbbell }],
+		tone: ACTIVE_TONE,
+		links: [
+			{ href: "/Lists/exerciseList", label: "Дасгал ажил", icon: Dumbbell },
+		],
 	},
 	{
 		key: "course",
 		label: "Цахим сургалт",
 		short: "Хичээл",
 		icon: BookOpen,
-		tone: "bg-pop-pink text-white",
+		tone: ACTIVE_TONE,
 		links: [
 			{ href: "/Lists/courseList", label: "Хичээл", icon: School },
-			{ href: "/Lists/paymentCoureList", label: "Төлбөртэй хичээл", icon: CreditCard },
+			{
+				href: "/Lists/paymentCoureList",
+				label: "Төлбөртэй хичээл",
+				icon: CreditCard,
+			},
 		],
 	},
 ];
@@ -130,14 +145,17 @@ const UserAvatar: React.FC<{
 				alt={userName}
 				width={dim}
 				height={dim}
-				className={cn("flex-shrink-0 rounded-full object-cover ring-2 ring-pop-violet/40 ring-offset-2 ring-offset-card", cls)}
+				className={cn(
+					"flex-shrink-0 rounded-full object-cover ring-2 ring-pop-violet/40 ring-offset-2 ring-offset-card",
+					cls,
+				)}
 			/>
 		);
 	}
 	return (
 		<div
 			className={cn(
-				"flex flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-pop-violet to-pop-pink font-black text-white",
+				"flex flex-shrink-0 items-center justify-center rounded-full bg-pop-sky-soft font-black text-pop-sky-ink",
 				cls,
 				size === "sm" ? "text-sm" : "text-base",
 			)}
@@ -150,25 +168,29 @@ const UserAvatar: React.FC<{
 // ── Logo ─────────────────────────────────────────────────────────
 const Logo = () => (
 	<Link href="/home" className="group flex shrink-0 items-center gap-2.5">
-		<span className="flex size-10 items-center justify-center rounded-2xl bg-gradient-to-br from-pop-violet via-pop-pink to-pop-sun p-[2px] transition-transform group-hover:rotate-6">
-			<span className="flex size-full items-center justify-center rounded-[14px] bg-card">
-				<Image
-					src="/image/asd.png"
-					alt="EXMO"
-					width={24}
-					height={24}
-					priority
-					style={{ width: 24, height: 24, objectFit: "contain" }}
-				/>
-			</span>
+		<Image
+			src="/image/logoLogin.png"
+			alt=""
+			width={177}
+			height={142}
+			priority
+			className="h-8 w-auto transition-transform group-hover:-rotate-6"
+		/>
+		<span className="text-xl font-black tracking-tight text-foreground">
+			Skuul
 		</span>
-		<span className="text-xl font-black tracking-tight text-gradient">EXMO</span>
 	</Link>
 );
 
 // ── User menu (shared desktop/mobile) ────────────────────────────
 const UserMenu: React.FC<{
-	userInfo: { userName: string; userImage: string; schoolName: string; userEmail: string };
+	userInfo: {
+		userName: string;
+		userImage: string;
+		schoolName: string;
+		userEmail: string;
+		isTeacher?: boolean;
+	};
 	onLogout: () => void;
 	compact?: boolean;
 }> = ({ userInfo, onLogout, compact }) => {
@@ -181,32 +203,34 @@ const UserMenu: React.FC<{
 					aria-label="Хэрэглэгчийн цэс"
 					className={cn(
 						"flex items-center gap-2.5 rounded-full transition-colors",
-						compact ? "p-0.5" : "border-2 border-border bg-card py-1 pr-3 pl-1 hover:bg-accent",
+						compact
+							? "p-0.5"
+							: "border-2 border-border bg-card py-1 pr-3 pl-1 hover:bg-accent",
 					)}
 				>
-					<UserAvatar userImage={userInfo.userImage} userName={userInfo.userName} size="sm" />
-					{!compact && (
-						<>
-							<span className="hidden max-w-32 truncate text-sm font-extrabold xl:block">
-								{userInfo.userName}
-							</span>
-							<ChevronDown className="size-4 text-muted-foreground" />
-						</>
-					)}
+					<UserAvatar
+						userImage={userInfo.userImage}
+						userName={userInfo.userName}
+						size="sm"
+					/>
+					{!compact && <ChevronDown className="size-4 text-muted-foreground" />}
 				</button>
 			</DropdownMenuTrigger>
 			<DropdownMenuContent align="end" sideOffset={10} className="w-64 p-2">
-				<div className="mb-2 flex items-center gap-3 rounded-xl bg-muted p-3">
-					<UserAvatar userImage={userInfo.userImage} userName={userInfo.userName} />
-					<div className="min-w-0">
-						<p className="truncate text-sm font-extrabold">{userInfo.userName}</p>
-						{(userInfo.schoolName || userInfo.userEmail) && (
+				{(userInfo.schoolName || userInfo.userEmail) && (
+					<div className="mb-2 space-y-0.5 rounded-xl bg-muted px-3 py-2.5">
+						{userInfo.schoolName && (
+							<p className="truncate text-xs font-bold text-foreground">
+								{userInfo.schoolName}
+							</p>
+						)}
+						{userInfo.userEmail && (
 							<p className="truncate text-xs font-semibold text-muted-foreground">
-								{userInfo.schoolName || userInfo.userEmail}
+								{userInfo.userEmail}
 							</p>
 						)}
 					</div>
-				</div>
+				)}
 				<DropdownMenuItem
 					onClick={() => router.push("/userProfile")}
 					className="cursor-pointer gap-3 rounded-xl px-3 py-2.5 text-sm font-bold"
@@ -214,8 +238,20 @@ const UserMenu: React.FC<{
 					<UserCircle className="size-4" />
 					Профайл
 				</DropdownMenuItem>
+				{userInfo.isTeacher && (
+					<DropdownMenuItem
+						onClick={() => router.push("/teacher")}
+						className="cursor-pointer gap-3 rounded-xl px-3 py-2.5 text-sm font-bold"
+					>
+						<Presentation className="size-4" />
+						Багшийн хэсэг
+					</DropdownMenuItem>
+				)}
 				<div className="flex items-center rounded-xl px-1.5 py-1 transition-colors hover:bg-accent">
-					<ThemeSwitch showLabels className="h-9 min-w-0 justify-start gap-3 rounded-xl px-1.5 text-sm font-bold" />
+					<ThemeSwitch
+						showLabels
+						className="h-9 min-w-0 justify-start gap-3 rounded-xl px-1.5 text-sm font-bold"
+					/>
 				</div>
 				<DropdownMenuSeparator className="my-1.5" />
 				<DropdownMenuItem
@@ -246,12 +282,14 @@ export const SectionTabs: React.FC = () => {
 							key={l.href}
 							href={l.href}
 							className={cn(
-								"flex flex-1 items-center justify-center gap-2 rounded-xl px-4 py-2 text-sm font-extrabold whitespace-nowrap transition-all sm:flex-none",
-								active ? section.tone : "text-muted-foreground hover:bg-muted hover:text-foreground",
+								"flex min-w-0 flex-1 items-center justify-center gap-1.5 rounded-xl px-2 py-2 text-[13px] font-extrabold whitespace-nowrap transition-all sm:flex-none sm:gap-2 sm:px-4 sm:text-sm",
+								active
+									? section.tone
+									: "text-muted-foreground hover:bg-muted hover:text-foreground",
 							)}
 						>
-							<Icon className="size-4" strokeWidth={2.5} />
-							{l.label}
+							<Icon className="size-4 shrink-0" strokeWidth={2.5} />
+							<span className="truncate">{l.label}</span>
 						</Link>
 					);
 				})}
@@ -266,7 +304,9 @@ export const Navbar01: React.FC = () => {
 	const router = useRouter();
 	const pathname = usePathname();
 	const queryClient = useQueryClient();
-	const { user, firstname, imgUrl, clearAuth } = useAuthStore();
+	const user = useAuthStore((s) => s.user);
+	const firstname = useAuthStore((s) => s.firstname);
+	const imgUrl = useAuthStore((s) => s.imgUrl);
 	const current = findSection(pathname);
 
 	const userInfo = React.useMemo(
@@ -275,18 +315,14 @@ export const Navbar01: React.FC = () => {
 			userEmail: user?.email || "",
 			userImage: imgUrl || user?.img_url || "",
 			schoolName: user?.sch_name || "",
+			isTeacher: isTeacherGroup(user?.ugroup),
 		}),
 		[user, firstname, imgUrl],
 	);
 
 	const handleLogout = async () => {
 		try {
-			for (const c of ["auth-token", "user-id", "firstname", "img-url"]) {
-				Cookies.remove(c, { path: "/" });
-			}
-			clearAuth();
-			localStorage.clear();
-			sessionStorage.clear();
+			clearSession({ wipeStorage: true });
 			queryClient.clear();
 			router.push("/login");
 		} catch {
@@ -298,11 +334,19 @@ export const Navbar01: React.FC = () => {
 		<>
 			{/* ── Top bar (desktop + mobile) ── */}
 			<header className="fixed inset-x-0 top-0 z-40 border-b-2 border-border bg-card/90 backdrop-blur-xl">
-				<div className="mx-auto flex h-16 max-w-7xl items-center gap-4 px-4 md:px-6 lg:px-10">
+				<div className="mx-auto flex h-16 max-w-7xl items-center gap-3 px-4 md:px-6 lg:px-6 xl:gap-4 xl:px-10">
 					<Logo />
 
+					{/* Мэндчилгээ — логоны хажууд */}
+					<p className="min-w-0 max-w-56 shrink truncate border-l-2 border-border pl-3 text-sm font-semibold text-muted-foreground lg:max-w-40 xl:max-w-64 xl:pl-4">
+						Сайн уу,{" "}
+						<span className="font-extrabold text-foreground">
+							{userInfo.userName}
+						</span>
+					</p>
+
 					{/* Desktop nav */}
-					<nav className="ml-4 hidden flex-1 items-center gap-1 lg:flex">
+					<nav className="hidden flex-1 items-center gap-0.5 lg:ml-1 lg:flex xl:ml-4 xl:gap-1">
 						{NAV.map((s) => {
 							const Icon = s.icon;
 							const active = current?.key === s.key;
@@ -311,25 +355,32 @@ export const Navbar01: React.FC = () => {
 									key={s.key}
 									href={s.links[0].href}
 									className={cn(
-										"flex items-center gap-2 rounded-full px-4 py-2 text-sm font-extrabold transition-all",
+										"flex shrink-0 items-center gap-2 rounded-full px-3 py-2 text-sm font-extrabold whitespace-nowrap transition-all xl:px-4",
 										active
-											? `${s.tone} shadow-[0_3px_0_0_rgb(0_0_0/0.15)]`
+											? s.tone
 											: "text-muted-foreground hover:bg-muted hover:text-foreground",
 									)}
 								>
-									<Icon className="size-4" strokeWidth={2.5} />
+									<Icon className="size-4 lg:max-xl:hidden" strokeWidth={2.5} />
 									{s.label}
 								</Link>
 							);
 						})}
 					</nav>
 
-					<div className="ml-auto flex items-center gap-2">
-						<div className="hidden lg:block">
-							<UserMenu userInfo={userInfo} onLogout={() => setShowLogoutDialog(true)} />
+					<div className="ml-auto flex shrink-0 items-center gap-2.5">
+						<div className="hidden shrink-0 lg:block">
+							<UserMenu
+								userInfo={userInfo}
+								onLogout={() => setShowLogoutDialog(true)}
+							/>
 						</div>
-						<div className="lg:hidden">
-							<UserMenu compact userInfo={userInfo} onLogout={() => setShowLogoutDialog(true)} />
+						<div className="shrink-0 lg:hidden">
+							<UserMenu
+								compact
+								userInfo={userInfo}
+								onLogout={() => setShowLogoutDialog(true)}
+							/>
 						</div>
 					</div>
 				</div>
@@ -353,7 +404,9 @@ export const Navbar01: React.FC = () => {
 								<span
 									className={cn(
 										"flex h-8 w-14 items-center justify-center rounded-full transition-all",
-										active ? s.tone : "text-muted-foreground group-active:scale-90",
+										active
+											? s.tone
+											: "text-muted-foreground group-active:scale-90",
 									)}
 								>
 									<Icon className="size-5" strokeWidth={2.5} />
@@ -381,7 +434,8 @@ export const Navbar01: React.FC = () => {
 						</div>
 						<AlertDialogTitle>Системээс гарах уу?</AlertDialogTitle>
 						<AlertDialogDescription className="leading-relaxed">
-							Дахин нэвтрэхийн тулд бүртгэлтэй имэйл, нууц үгээ оруулах шаардлагатай.
+							Дахин нэвтрэхийн тулд бүртгэлтэй имэйл, нууц үгээ оруулах
+							шаардлагатай.
 						</AlertDialogDescription>
 					</AlertDialogHeader>
 					<AlertDialogFooter className="mt-2 gap-2 sm:justify-center">

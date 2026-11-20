@@ -77,7 +77,11 @@ export default function LessonFilter({
 									active ? "bg-white/25" : v.soft,
 								)}
 							>
-								{v.flag ? <FlagIcon code={v.flag} className="h-5 w-[30px]" /> : v.emoji}
+								{v.flag ? (
+									<FlagIcon code={v.flag} className="h-5 w-[30px]" />
+								) : (
+									v.emoji
+								)}
 							</span>
 							<span className="line-clamp-2 w-full text-[11px] leading-tight font-extrabold sm:text-xs">
 								{lesson.lesson_name}

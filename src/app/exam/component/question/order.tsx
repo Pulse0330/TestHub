@@ -9,10 +9,10 @@ import {
 	type DroppableProvided,
 	type DropResult,
 } from "@hello-pangea/dnd";
-import parse from "html-react-parser";
 import { HelpCircle } from "lucide-react";
 import type React from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { MathContent } from "@/components/MathContent";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
@@ -39,7 +39,11 @@ interface DragAndDropWrapperProps {
 	answers: Answer[];
 	userAnswers?: number[];
 	onOrderChange?: (orderedIds: number[]) => void;
+	/** true үед дарааллыг өөрчлөх боломжгүй (цаг дууссан г.м.) */
+	disabled?: boolean;
 }
+
+const EMPTY_IDS: number[] = [];
 
 // -----------------------------
 // DragAndDrop Component
@@ -101,7 +105,7 @@ const DragAndDrop: React.FC<DragAndDropProps> = ({
 												? "cursor-default"
 												: "cursor-grab active:cursor-grabbing",
 											snapshot.isDragging &&
-												"cursor-grabbing border-primary bg-primary/10 text-primary shadow-[0_6px_0_0_var(--primary)] ring-4 ring-primary/20",
+												"cursor-grabbing border-primary/45 bg-primary-soft/40 text-foreground shadow-[0_6px_0_0_var(--primary-soft-shade)] ring-4 ring-primary-soft/40",
 										)}
 										style={{ ...providedDraggable.draggableProps.style }}
 									>
@@ -111,9 +115,9 @@ const DragAndDrop: React.FC<DragAndDropProps> = ({
 										</div>
 
 										<div className="min-w-0 flex-1 text-sm font-bold text-foreground sm:text-base">
-											{item.answer_name_html
-												? parse(item.answer_name_html)
-												: ""}
+											{item.answer_name_html ? (
+												<MathContent html={item.answer_name_html} />
+											) : null}
 										</div>
 
 										{/* Drag indicator */}
@@ -144,8 +148,9 @@ const DragAndDrop: React.FC<DragAndDropProps> = ({
 // -----------------------------
 const DragAndDropWrapper: React.FC<DragAndDropWrapperProps> = ({
 	answers,
-	userAnswers = [],
+	userAnswers = EMPTY_IDS,
 	onOrderChange,
+	disabled = false,
 }) => {
 	const [items, setItems] = useState<Answer[]>([]);
 	const [showHelp, setShowHelp] = useState(false);
@@ -239,7 +244,7 @@ const DragAndDropWrapper: React.FC<DragAndDropWrapperProps> = ({
 					<DragAndDrop
 						answers={items}
 						onOrderChange={handleOrderChange}
-						disabled={false}
+						disabled={disabled}
 					/>
 				</div>
 			</div>
@@ -263,10 +268,8 @@ const DragAndDropWrapper: React.FC<DragAndDropWrapperProps> = ({
 								<ol className="list-inside list-decimal space-y-2 font-semibold text-foreground/80">
 									<li>
 										Хариултын хэсгийг{" "}
-										<strong className="text-pop-sky-ink">
-											чирж
-										</strong>{" "}
-										зөв байрлалд нь тавина
+										<strong className="text-pop-sky-ink">чирж</strong> зөв
+										байрлалд нь тавина
 									</li>
 									<li>Чирч байх үед элемент томорч, сүүдэртэй болно</li>
 									<li>Байрлалд нь таарч суухад гэрэлтэнэ</li>
@@ -281,9 +284,7 @@ const DragAndDropWrapper: React.FC<DragAndDropWrapperProps> = ({
 								<ol className="list-inside list-decimal space-y-2 font-semibold text-foreground/80">
 									<li>
 										Хариултыг{" "}
-										<strong className="text-pop-mint-ink">
-											удаан дарж
-										</strong>
+										<strong className="text-pop-mint-ink">удаан дарж</strong>
 										{} барьж, чирч хөдөлгөнө
 									</li>
 									<li>Зөв байрлалд нь хүргэж, гараа суллана</li>

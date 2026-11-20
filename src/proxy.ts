@@ -13,15 +13,19 @@ export async function proxy(request: NextRequest) {
 		"/guide.pdf",
 	];
 
-	// Token байгаа ч байхгүй ч үргэлж нэвтрэх боломжтой routes
-	// (шинэ хэрэглэгч бүртгүүлэх, шалгалтанд бүртгүүлэх)
-	const alwaysAllowRoutes = ["/mnUserCreate"];
-
 	const isPublicRoute = publicRoutes.some((r) => pathname.startsWith(r));
-	const isAlwaysAllow = alwaysAllowRoutes.some((r) => pathname.startsWith(r));
 
-	// Үргэлж зөвшөөрөх — token шаардахгүй
-	if (isAlwaysAllow) {
+	// Гадны системээс URL-аар орж ирсэн шалгалт (dbname, userid) болон
+	// түүний дууссан хуудас — нэвтрэлт шаардахгүй
+	const { searchParams } = request.nextUrl;
+	const isIntegrationExam =
+		pathname.startsWith("/exam/") &&
+		!!searchParams.get("dbname") &&
+		!!searchParams.get("userid");
+	// Хөгжүүлэлтийн шууд нэвтрэлт (production-д хуудас нь 404)
+	const isDevLogin =
+		process.env.NODE_ENV === "development" && pathname === "/dev-login";
+	if (isIntegrationExam || isDevLogin || pathname === "/exam/finished") {
 		return NextResponse.next();
 	}
 

@@ -3,6 +3,7 @@
 import { AlertCircle, Clock, PlayCircle } from "lucide-react";
 import { memo, useEffect, useMemo, useRef } from "react";
 import { useServerTime } from "@/hooks/useServerTime";
+import { formatHMS, parseServerDate } from "./examTime";
 
 interface ExamTimerProps {
 	examStartTime: string;
@@ -13,21 +14,6 @@ interface ExamTimerProps {
 	onAutoFinish?: () => void;
 	onTimeUpdate?: (display: string) => void;
 }
-
-const formatTime = (sec: number): string => {
-	const h = Math.floor(sec / 3600);
-	const m = Math.floor((sec % 3600) / 60);
-	const s = sec % 60;
-	return `${h.toString().padStart(2, "0")}:${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
-};
-
-const parseLocalDate = (dateStr: string): Date => {
-	if (dateStr.includes("T") || dateStr.endsWith("Z")) {
-		return new Date(dateStr);
-	}
-	const normalized = `${dateStr.replace(" ", "T")}Z`;
-	return new Date(normalized);
-};
 
 const ExamTimer = memo(function ExamTimer({
 	examEndTime,
@@ -54,8 +40,8 @@ const ExamTimer = memo(function ExamTimer({
 
 	const { endDateTime, startDateTime } = useMemo(() => {
 		return {
-			endDateTime: parseLocalDate(examEndTime),
-			startDateTime: startedDate ? parseLocalDate(startedDate) : null,
+			endDateTime: parseServerDate(examEndTime),
+			startDateTime: startedDate ? parseServerDate(startedDate) : null,
 		};
 	}, [examEndTime, startedDate]);
 
@@ -120,7 +106,7 @@ const ExamTimer = memo(function ExamTimer({
 		}
 	}, [status]);
 
-	const formattedTime = formatTime(remainingSec);
+	const formattedTime = formatHMS(remainingSec);
 
 	useEffect(() => {
 		onTimeUpdateRef.current?.(formattedTime);
@@ -136,7 +122,8 @@ const ExamTimer = memo(function ExamTimer({
 	const config = useMemo(() => {
 		if (status === "ended" || isDanger) {
 			return {
-				border: "border-destructive shadow-[0_4px_0_0_color-mix(in_oklch,var(--destructive)_45%,transparent)]",
+				border:
+					"border-destructive shadow-[0_4px_0_0_color-mix(in_oklch,var(--destructive)_45%,transparent)]",
 				bg: "bg-destructive/10",
 				icon: AlertCircle,
 				iconColor: "bg-destructive text-white",
@@ -145,10 +132,12 @@ const ExamTimer = memo(function ExamTimer({
 		}
 		if (isWarning) {
 			return {
-				border: "border-warning shadow-[0_4px_0_0_color-mix(in_oklch,var(--warning)_55%,transparent)]",
+				border:
+					"border-warning shadow-[0_4px_0_0_color-mix(in_oklch,var(--warning)_55%,transparent)]",
 				bg: "bg-pop-sun-soft",
 				icon: Clock,
-				iconColor: "bg-warning text-[color-mix(in_oklch,var(--warning)_22%,black)]",
+				iconColor:
+					"bg-warning text-[color-mix(in_oklch,var(--warning)_22%,black)]",
 				timerColor: "text-pop-sun-ink",
 			};
 		}

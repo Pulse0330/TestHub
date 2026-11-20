@@ -30,7 +30,9 @@ export function LessonSidebar({
 }: LessonSidebarProps) {
 	const completedCount = contents.filter((c) => c.stu_worked === 1).length;
 	const percent =
-		contents.length > 0 ? Math.round((completedCount / contents.length) * 100) : 0;
+		contents.length > 0
+			? Math.round((completedCount / contents.length) * 100)
+			: 0;
 
 	return (
 		<Card className="gap-0 py-0 overflow-hidden flex flex-col h-full max-h-full">
@@ -68,12 +70,12 @@ export function LessonSidebar({
 
 						return (
 							<button
-								key={item.content_id}
+								key={item.content_id ?? index}
 								onClick={() => onLessonSelect(index)}
 								type="button"
 								className={`
 									w-full text-left rounded-2xl border-2 p-2.5 transition-all
-									${isActive ? "border-primary bg-primary/10 shadow-[0_3px_0_0_var(--primary)]" : "border-transparent hover:border-border hover:bg-accent/50"}
+									${isActive ? "border-primary bg-primary/10 shadow-[0_3px_0_0_var(--primary-soft-shade)]" : "border-transparent hover:border-border hover:bg-accent/50"}
 								`}
 							>
 								<div className="flex items-start gap-3">
@@ -86,7 +88,7 @@ export function LessonSidebar({
 											<div
 												className={`flex size-9 items-center justify-center rounded-xl ${
 													isActive
-														? "bg-primary text-primary-foreground shadow-[0_3px_0_0_var(--primary-shade)]"
+														? "bg-primary-soft text-primary-soft-foreground shadow-[0_3px_0_0_var(--primary-soft-shade)]"
 														: chipColor
 												}`}
 											>

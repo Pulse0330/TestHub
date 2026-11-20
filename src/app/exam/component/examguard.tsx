@@ -21,6 +21,18 @@ interface Violation {
 	severity: "low" | "medium" | "high";
 }
 
+/** Удаан дарахыг зөрчил гэж тооцох хугацаа (ms). */
+const LONG_PRESS_MS = 500;
+/** Хуруу ийм зайнаас (px) их хөдөлбөл scroll/drag гэж үзэж long-press цуцална. */
+const LONG_PRESS_MOVE_TOLERANCE = 10;
+/** Чирэх боломжтой элементүүд (эрэмбэлэх асуулт удаан дарж чирдэг). */
+const DRAG_HANDLE_SELECTOR = "[data-rfd-drag-handle-draggable-id]";
+/** Түүхэнд нэмэх ганц "sentinel" entry-г таних түлхүүр. */
+const HISTORY_SENTINEL_KEY = "__examGuardSentinel";
+
+const countCritical = (list: Violation[]) =>
+	list.filter((v) => v.severity === "high").length;
+
 export const AdvancedExamProctor: React.FC<ExamProctorProps> = ({
 	onSubmit,
 	onLogout,
@@ -41,6 +53,9 @@ export const AdvancedExamProctor: React.FC<ExamProctorProps> = ({
 	);
 
 	const violationLockRef = useRef<boolean>(false);
+	/** Зөрчлийн жинхэнэ жагсаалт (state updater дотор side effect хийхгүйн тулд). */
+	const violationsRef = useRef<Violation[]>([]);
+	const unlockTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 	const mouseTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
 	const onSubmitRef = useRef(onSubmit);
 	const onLogoutRef = useRef(onLogout);
@@ -72,67 +87,54 @@ export const AdvancedExamProctor: React.FC<ExamProctorProps> = ({
 			if (violationLockRef.current) return;
 			violationLockRef.current = true;
 
-			const violation: Violation = {
-				type,
-				timestamp: new Date(),
-				severity,
-			};
+			const next = [
+				...violationsRef.current,
+				{ type, timestamp: new Date(), severity },
+			];
+			violationsRef.current = next;
+			setViolations(next);
 
-			setTimeout(() => {
-				setViolations((prev) => {
-					const newViolations = [...prev, violation];
-					const criticalCount = newViolations.filter(
-						(v) => v.severity === "high",
-					).length;
+			const locked = countCritical(next) >= maxViolations;
+			if (locked) {
+				// Автоматаар дуусгахгүй — зүгээр л "locked" горим
+				setLockState("locked");
+				setDialogMessage(
+					`🚫 Та ${maxViolations} удаа ноцтой дүрэм зөрчсөн тул шалгалт хаагдлаа. Багш тайлбар авна уу.`,
+				);
+			} else {
+				setLockState("warning");
+				setDialogMessage(message);
+			}
+			setBlackScreen(true);
 
-					if (criticalCount >= maxViolations) {
-						// Автоматаар дуусгахгүй — зүгээр л "locked" горим
-						setLockState("locked");
-						setDialogMessage(
-							`🚫 Та ${maxViolations} удаа ноцтой дүрэм зөрчсөн тул шалгалт хаагдлаа. Багш тайлбар авна уу.`,
-						);
-						setBlackScreen(true);
-					} else {
-						setLockState("warning");
-						setDialogMessage(message);
-						setBlackScreen(true);
-					}
-
-					return newViolations;
-				});
-
-				// warning горимд 1 секундийн дараа violationLock-г тайлна
-				// locked горимд хэзээ ч тайлахгүй
-				setTimeout(() => {
-					setViolations((current) => {
-						const critCount = current.filter(
-							(v) => v.severity === "high",
-						).length;
-						if (critCount < maxViolations) {
-							violationLockRef.current = false;
-						}
-						return current;
-					});
+			// warning горимд 1.5 секундийн дараа violationLock-г тайлна,
+			// locked горимд хэзээ ч тайлахгүй
+			if (unlockTimerRef.current) clearTimeout(unlockTimerRef.current);
+			if (!locked) {
+				unlockTimerRef.current = setTimeout(() => {
+					unlockTimerRef.current = null;
+					violationLockRef.current = false;
 				}, 1500);
-			}, 0);
+			}
 		},
 		[maxViolations],
 	);
 
+	useEffect(
+		() => () => {
+			if (unlockTimerRef.current) clearTimeout(unlockTimerRef.current);
+		},
+		[],
+	);
+
 	// Warning горимоос гарах — хэрэглэгч "Үргэлжлүүлэх" дарна
 	const handleDismissWarning = useCallback(() => {
-		setViolations((current) => {
-			const critCount = current.filter((v) => v.severity === "high").length;
-			if (critCount >= maxViolations) {
-				// locked горимоос гарахгүй
-				return current;
-			}
-			setBlackScreen(false);
-			setDialogMessage(null);
-			setLockState("none");
-			violationLockRef.current = false;
-			return current;
-		});
+		// locked горимоос гарахгүй
+		if (countCritical(violationsRef.current) >= maxViolations) return;
+		setBlackScreen(false);
+		setDialogMessage(null);
+		setLockState("none");
+		violationLockRef.current = false;
 	}, [maxViolations]);
 
 	// ========================
@@ -152,14 +154,37 @@ export const AdvancedExamProctor: React.FC<ExamProctorProps> = ({
 			}
 		};
 
-		let touchTimer: NodeJS.Timeout;
-		const handleTouchStartTimer = (e: TouchEvent) => {
-			touchTimer = setTimeout(() => {
-				e.preventDefault();
-				logViolation("LONG_PRESS", "medium", "⚠️ Удаан дарах хориотой!");
-			}, 500);
+		// Long-press: зөвхөн хуруу бараг хөдлөөгүй үед. Scroll / чирэх үед
+		// (эрэмбэлэх асуулт удаан дарж чирдэг) зөрчил бүртгэхгүй.
+		let touchTimer: ReturnType<typeof setTimeout> | null = null;
+		let touchOrigin: { x: number; y: number } | null = null;
+		const cancelLongPress = () => {
+			if (touchTimer) clearTimeout(touchTimer);
+			touchTimer = null;
+			touchOrigin = null;
 		};
-		const handleTouchEnd = () => clearTimeout(touchTimer);
+		const handleTouchStartTimer = (e: TouchEvent) => {
+			cancelLongPress();
+			if (e.touches.length !== 1) return;
+			const target = e.target as Element | null;
+			if (target?.closest?.(DRAG_HANDLE_SELECTOR)) return;
+			const touch = e.touches[0];
+			touchOrigin = { x: touch.clientX, y: touch.clientY };
+			touchTimer = setTimeout(() => {
+				touchTimer = null;
+				touchOrigin = null;
+				logViolation("LONG_PRESS", "medium", "⚠️ Удаан дарах хориотой!");
+			}, LONG_PRESS_MS);
+		};
+		const handleTouchMove = (e: TouchEvent) => {
+			if (!touchOrigin) return;
+			const touch = e.touches[0];
+			if (!touch) return;
+			const dx = touch.clientX - touchOrigin.x;
+			const dy = touch.clientY - touchOrigin.y;
+			if (Math.hypot(dx, dy) > LONG_PRESS_MOVE_TOLERANCE) cancelLongPress();
+		};
+		const handleTouchEnd = () => cancelLongPress();
 
 		const handleCopy = (e: ClipboardEvent) => {
 			e.preventDefault();
@@ -208,8 +233,14 @@ export const AdvancedExamProctor: React.FC<ExamProctorProps> = ({
 		document.addEventListener("touchstart", handleTouchStart, {
 			passive: false,
 		});
-		document.addEventListener("touchstart", handleTouchStartTimer);
-		document.addEventListener("touchend", handleTouchEnd);
+		document.addEventListener("touchstart", handleTouchStartTimer, {
+			passive: true,
+		});
+		document.addEventListener("touchmove", handleTouchMove, { passive: true });
+		document.addEventListener("touchend", handleTouchEnd, { passive: true });
+		document.addEventListener("touchcancel", handleTouchEnd, {
+			passive: true,
+		});
 		document.addEventListener("copy", handleCopy);
 		document.addEventListener("cut", handleCut);
 		document.addEventListener("paste", handlePaste);
@@ -232,9 +263,12 @@ export const AdvancedExamProctor: React.FC<ExamProctorProps> = ({
 		bodyStyle.msUserSelect = "none";
 
 		return () => {
+			cancelLongPress();
 			document.removeEventListener("touchstart", handleTouchStart);
 			document.removeEventListener("touchstart", handleTouchStartTimer);
+			document.removeEventListener("touchmove", handleTouchMove);
 			document.removeEventListener("touchend", handleTouchEnd);
+			document.removeEventListener("touchcancel", handleTouchEnd);
 			document.removeEventListener("copy", handleCopy);
 			document.removeEventListener("cut", handleCut);
 			document.removeEventListener("paste", handlePaste);
@@ -447,28 +481,41 @@ export const AdvancedExamProctor: React.FC<ExamProctorProps> = ({
 	// ========================
 	// Browser Back Button Blocker
 	// ========================
+	// Түүхэнд НЭГ л sentinel entry нэмнэ (Next.js-ийн history.state-ийг
+	// хадгалж). Буцах дарвал sentinel-ийг дахин нэмж зөрчил бүртгэнэ.
+	const logViolationRef = useRef(logViolation);
+	useEffect(() => {
+		logViolationRef.current = logViolation;
+	}, [logViolation]);
+
 	useEffect(() => {
 		if (!strictMode) return;
 
-		// Push a dummy state so there's always something to "go back" to (our trap)
-		history.pushState(null, "", window.location.href);
+		const armSentinel = () => {
+			const state = window.history.state as Record<string, unknown> | null;
+			if (state?.[HISTORY_SENTINEL_KEY]) return;
+			window.history.pushState(
+				{ ...(state ?? {}), [HISTORY_SENTINEL_KEY]: true },
+				"",
+				window.location.href,
+			);
+		};
 
 		const handlePopState = () => {
-			// Immediately push again to prevent navigation
-			history.pushState(null, "", window.location.href);
-			logViolation(
+			armSentinel();
+			logViolationRef.current(
 				"BACK_BUTTON",
 				"high",
 				"⚠️ Буцах товч дарах хориотой! Шалгалтын хуудсаас гарах оролдлого илрүүлсэн.",
 			);
 		};
 
+		armSentinel();
 		window.addEventListener("popstate", handlePopState);
-
 		return () => {
 			window.removeEventListener("popstate", handlePopState);
 		};
-	}, [logViolation, strictMode]);
+	}, [strictMode]);
 
 	// ========================
 	// Fullscreen Lock
@@ -503,6 +550,7 @@ export const AdvancedExamProctor: React.FC<ExamProctorProps> = ({
 		document.addEventListener("keydown", handleUserInteraction, { once: true });
 		document.addEventListener("touchstart", handleUserInteraction, {
 			once: true,
+			passive: true,
 		});
 		document.addEventListener("fullscreenchange", handleFullscreenChange);
 

@@ -1,4 +1,4 @@
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import { Check, Clock, Trash2 } from "lucide-react";
 import Image from "next/image";
 import { memo, useCallback, useMemo } from "react";
@@ -126,7 +126,7 @@ function CourseCard({
 	const isShelf = variant === "shelf";
 
 	return (
-		<motion.div
+		<m.div
 			onClick={handleClick}
 			className={cn(
 				"relative h-full",
@@ -150,27 +150,35 @@ function CourseCard({
 						isShelf ? "aspect-16/9" : "aspect-4/2",
 					)}
 				>
-					<Image
-						src={course.filename}
-						alt={course.title}
-						fill
-						loading="lazy"
-						placeholder="blur"
-						blurDataURL={BLUR_PLACEHOLDER}
-						className="object-cover transition-transform duration-500 group-hover:scale-105"
-					/>
+					{course.filename && (
+						<Image
+							src={course.filename}
+							alt={course.title}
+							fill
+							loading="lazy"
+							placeholder="blur"
+							blurDataURL={BLUR_PLACEHOLDER}
+							className="object-cover transition-transform duration-500 group-hover:scale-105"
+						/>
+					)}
 
 					{/* Purchased check */}
 					{isPurchased && (
 						<StatusBadge color="green">
-							<Check className="size-4 text-primary-foreground" strokeWidth={3} />
+							<Check
+								className="size-4 text-primary-foreground"
+								strokeWidth={3}
+							/>
 						</StatusBadge>
 					)}
 
 					{/* Selected check */}
 					{isSelected && !isPurchased && (
 						<StatusBadge color="blue">
-							<Check className="size-4 text-primary-foreground" strokeWidth={3} />
+							<Check
+								className="size-4 text-primary-foreground"
+								strokeWidth={3}
+							/>
 						</StatusBadge>
 					)}
 
@@ -186,8 +194,14 @@ function CourseCard({
 					{/* Expired overlay */}
 					{expiryInfo?.isExpired && (
 						<Overlay>
-							<Clock className="size-5 text-destructive mb-1" strokeWidth={2.5} />
-							<Badge variant="destructive" className="text-[10px] font-extrabold">
+							<Clock
+								className="size-5 text-destructive mb-1"
+								strokeWidth={2.5}
+							/>
+							<Badge
+								variant="destructive"
+								className="text-[10px] font-extrabold"
+							>
 								Дууссан
 							</Badge>
 						</Overlay>
@@ -221,7 +235,7 @@ function CourseCard({
 							<Button
 								size="sm"
 								onClick={handleExtend}
-								className="w-full gap-1 bg-pop-coral text-primary-foreground shadow-[0_3px_0_0_color-mix(in_oklch,var(--pop-coral)_60%,black)]"
+								className="w-full gap-1 bg-pop-coral text-pop-on shadow-[0_3px_0_0_color-mix(in_oklch,var(--pop-coral)_60%,black)]"
 							>
 								Сунгах
 							</Button>
@@ -248,7 +262,7 @@ function CourseCard({
 					</div>
 				</div>
 			</div>
-		</motion.div>
+		</m.div>
 	);
 }
 

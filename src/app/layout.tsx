@@ -19,12 +19,13 @@ interface RootLayoutProps {
 }
 
 export const metadata: Metadata = {
-	title: "EXMO",
+	title: { default: "Skuul", template: "%s | Skuul" },
+	applicationName: "Skuul",
 	icons: {
-		icon: "/image/asd.png",
-		apple: "/image/asd.png",
+		icon: "/image/logoLogin.png",
+		apple: "/image/logoLogin.png",
 	},
-	description: "Онлайн сургалтын платформ | Онлайн сургалт | ...",
+	description: "Skuul — онлайн шалгалт, сорил, дасгал, сургалтын платформ",
 };
 
 export default function RootLayout({ children }: RootLayoutProps) {
@@ -65,7 +66,7 @@ export default function RootLayout({ children }: RootLayoutProps) {
 				/>
 				{/* ✅ MathJax script — afterInteractive, config дараа ачаалагдана */}
 				<Script
-					src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"
+					src="https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-mml-chtml.js"
 					strategy="afterInteractive"
 					id="mathjax-script"
 				/>

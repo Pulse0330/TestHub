@@ -1,7 +1,6 @@
 "use client";
 
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
-import parse from "html-react-parser";
 import { CheckCircle2, ZoomIn } from "lucide-react";
 import Image from "next/image";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -12,6 +11,7 @@ import {
 	DialogTitle,
 	DialogTrigger,
 } from "@/components/ui/dialog";
+import { safeParse } from "./safeParse";
 
 interface AnswerData {
 	answer_id: number;
@@ -70,15 +70,8 @@ export default function MultiSelectQuestion({
 			unique.sort((a, b) => (a.refid ?? 0) - (b.refid ?? 0));
 		}
 
-		console.log("=== Multi Select Debug ===");
-		console.log("Question ID:", questionId);
-		console.log("Total answers:", answers.length);
-		console.log("Unique answers:", unique.length);
-		console.log("Selected:", selectedAnswers);
-		console.log("=========================");
-
 		return unique;
-	}, [answers, questionId, selectedAnswers]);
+	}, [answers]);
 
 	useEffect(() => {
 		const newSelected = Array.isArray(selectedAnswersProp)
@@ -203,7 +196,7 @@ export default function MultiSelectQuestion({
 							</div>
 							{option.answer_name_html && (
 								<p className="text-center text-lg font-bold">
-									{parse(option.answer_name_html)}
+									{safeParse(option.answer_name_html)}
 								</p>
 							)}
 						</div>
@@ -214,7 +207,7 @@ export default function MultiSelectQuestion({
 
 		return (
 			<span className="text-sm sm:text-base font-bold leading-relaxed whitespace-pre-wrap">
-				{option.answer_name_html ? parse(option.answer_name_html) : ""}
+				{option.answer_name_html ? safeParse(option.answer_name_html) : ""}
 			</span>
 		);
 	};
@@ -254,7 +247,7 @@ export default function MultiSelectQuestion({
 								hasImage ? "min-h-[100px]" : "min-h-[56px]"
 							} ${
 								selected
-									? "border-primary bg-primary/10 text-primary shadow-[0_4px_0_0_var(--primary)] hover:bg-primary/15 hover:text-primary"
+									? "border-primary/45 bg-primary-soft/40 text-foreground shadow-[0_3px_0_0_var(--primary-soft-shade)] hover:bg-primary/15 hover:text-primary"
 									: shouldHighlight
 										? "border-success bg-success/10 shadow-[0_4px_0_0_var(--success)]"
 										: "border-border bg-card shadow-[0_4px_0_0_var(--border)] hover:border-primary/40 hover:bg-accent/40 hover:-translate-y-0.5"
@@ -265,7 +258,7 @@ export default function MultiSelectQuestion({
 									hasImage ? "self-start" : ""
 								} ${
 									selected
-										? "border-primary bg-primary text-primary-foreground"
+										? "border-primary-soft-shade bg-primary-soft text-primary-soft-foreground"
 										: shouldHighlight
 											? "border-success bg-success text-primary-foreground"
 											: "border-border bg-muted text-muted-foreground group-hover:border-primary/40 group-hover:text-primary"
@@ -290,7 +283,9 @@ export default function MultiSelectQuestion({
 								)}
 							</span>
 
-							<div className="flex-1 min-w-0">{renderOptionContent(option)}</div>
+							<div className="flex-1 min-w-0">
+								{renderOptionContent(option)}
+							</div>
 
 							{/* ⭐ Show correct badge in review mode */}
 							{isReviewMode && isCorrect && (

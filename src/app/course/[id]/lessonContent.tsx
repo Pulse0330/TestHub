@@ -12,10 +12,9 @@ interface LessonContentProps {
 	isCompleted: boolean;
 	/**
 	 * Navigation handlers. The player page renders these in its sticky
-	 * bottom bar (Өмнөх / Дууссан / Дараах / Бусад хичээл); they stay part
+	 * bottom bar (Өмнөх / Дараах / Бусад хичээл); they stay part
 	 * of the props contract.
 	 */
-	onMarkComplete: () => void;
 	onPrevious: () => void;
 	onNext: () => void;
 	onFinish: () => void;
@@ -32,7 +31,7 @@ export function LessonContent({
 			{/* Lesson heading */}
 			<header className="relative border-b-2 border-border bg-gradient-to-br from-pop-violet-soft via-card to-card px-5 pt-5 pb-4 md:px-8 md:pt-7 md:pb-5">
 				<div className="flex flex-wrap items-center gap-2 mb-3">
-					<span className="inline-flex items-center rounded-full bg-pop-violet text-primary-foreground px-2.5 py-0.5 text-xs font-black tabular-nums">
+					<span className="inline-flex items-center rounded-full bg-pop-violet text-pop-on px-2.5 py-0.5 text-xs font-black tabular-nums">
 						{lessonIndex + 1} / {totalLessons}
 					</span>
 					<Badge variant="sky" className="rounded-full">

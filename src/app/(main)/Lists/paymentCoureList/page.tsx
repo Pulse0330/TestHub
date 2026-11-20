@@ -1,8 +1,7 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
-import axios from "axios";
-import { AnimatePresence, motion } from "framer-motion";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { AnimatePresence, m } from "framer-motion";
 import {
 	BookOpen,
 	Calendar,
@@ -17,12 +16,17 @@ import Image from "next/image";
 import { useCallback, useMemo, useReducer, useRef, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { getPaymentCourseList } from "@/lib/api";
+import QPayDialog from "@/features/qpay";
+import {
+	type CourseInvoicePayload,
+	createCourseInvoice,
+	getPaymentCourseList,
+} from "@/lib/api";
+import { queryKeys } from "@/lib/queryKeys";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/stores/useAuthStore";
 import type { getplaninfoCourseData } from "@/types/paymentCourse/getplaninfo";
 import type { QPayInvoiceResponse } from "@/types/Qpay/qpayinvoice";
-import QPayDialog from "./dialog";
 import CourseCard from "./form";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -151,7 +155,7 @@ function PlanButton({
 			className={cn(
 				"relative w-full p-4 rounded-2xl border-2 transition-all duration-150 text-left overflow-hidden",
 				isSelected
-					? "border-primary bg-primary/10 shadow-[0_4px_0_0_var(--primary)]"
+					? "border-primary/45 bg-primary-soft/40 shadow-[0_4px_0_0_var(--primary-soft-shade)]"
 					: "border-border bg-card shadow-[0_4px_0_0_var(--border)] hover:-translate-y-0.5 hover:border-primary/40 active:translate-y-0.5 active:shadow-[0_1px_0_0_var(--border)]",
 			)}
 		>
@@ -186,10 +190,7 @@ function PlanButton({
 
 			{isSelected && (
 				<div className="absolute bottom-3 right-3 size-7 rounded-xl bg-primary flex items-center justify-center animate-pop-in">
-					<Check
-						className="size-4 text-primary-foreground"
-						strokeWidth={3}
-					/>
+					<Check className="size-4 text-primary-foreground" strokeWidth={3} />
 				</div>
 			)}
 		</button>
@@ -234,9 +235,7 @@ function SidebarContent({
 						<ShoppingCart className="size-5" strokeWidth={2.5} />
 					</div>
 					<div>
-						<h3 className="text-lg font-black text-foreground">
-							Төлбөр төлөх
-						</h3>
+						<h3 className="text-lg font-black text-foreground">Төлбөр төлөх</h3>
 						<p className="text-sm font-semibold text-muted-foreground">
 							{selectedIds.length} хичээл сонгосон
 						</p>
@@ -261,13 +260,17 @@ function SidebarContent({
 							key={id}
 							className="flex items-center gap-3 p-2.5 rounded-2xl bg-muted border-2 border-border animate-pop-in"
 						>
-							<Image
-								src={course.filename}
-								alt={course.title}
-								width={56}
-								height={56}
-								className="size-14 rounded-xl object-cover"
-							/>
+							{course.filename ? (
+								<Image
+									src={course.filename}
+									alt={course.title}
+									width={56}
+									height={56}
+									className="size-14 rounded-xl object-cover"
+								/>
+							) : (
+								<div className="size-14 shrink-0 rounded-xl bg-pop-coral-soft" />
+							)}
 							<p className="flex-1 min-w-0 text-sm font-bold text-foreground truncate">
 								{course.title}
 							</p>
@@ -347,6 +350,7 @@ function SidebarContent({
 
 export default function PaymentCoursesPage() {
 	const { userId } = useAuthStore();
+	const queryClient = useQueryClient();
 
 	const [ui, dispatchUi] = useReducer(uiReducer, INITIAL_UI_STATE);
 	const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
@@ -364,7 +368,7 @@ export default function PaymentCoursesPage() {
 		isError,
 		error,
 	} = useQuery<getplaninfoCourseData, Error>({
-		queryKey: ["paymentCourses", userId],
+		queryKey: queryKeys.payment.courses(userId),
 		queryFn: () => {
 			if (!userId) throw new Error("User ID тодорхойгүй байна");
 			return getPaymentCourseList(userId);
@@ -450,7 +454,7 @@ export default function PaymentCoursesPage() {
 			const currentIds = [...selectedIdsRef.current];
 			const firstCourse = courseMap.get(currentIds[0]);
 
-			const payload = {
+			const payload: CourseInvoicePayload = {
 				amount: plan.amount.toString(),
 				userid: userId.toString(),
 				device_token: "",
@@ -460,14 +464,7 @@ export default function PaymentCoursesPage() {
 				urls: currentIds.map((id) => ({ topic_id: id.toString() })),
 			};
 
-			const { data } = await axios.post<QPayInvoiceResponse | string>(
-				"/api/qpay/invoice",
-				payload,
-			);
-			const parsed: QPayInvoiceResponse =
-				typeof data === "string" ? JSON.parse(data) : data;
-
-			if (!parsed?.qr_image) throw new Error("QPay хариу буруу байна");
+			const parsed = await createCourseInvoice(payload);
 
 			setQpayData(parsed);
 			dispatchUi({ type: "OPEN_QPAY" });
@@ -485,6 +482,17 @@ export default function PaymentCoursesPage() {
 			dispatchUi({ type: "SET_PROCESSING", payload: false });
 		}
 	}, [selectedPlan, userId, plans, courseMap]);
+
+	// Төлбөр амжилттай: хуудсыг reload хийлгүйгээр өгөгдлийг шинэчилнэ
+	const handlePaymentSuccess = useCallback(() => {
+		setSelectedIds(new Set());
+		setSelectedPlan(null);
+		queryClient.invalidateQueries({
+			queryKey: queryKeys.payment.courses(userId),
+		});
+		queryClient.invalidateQueries({ queryKey: queryKeys.courses.all });
+		queryClient.invalidateQueries({ queryKey: queryKeys.home.all });
+	}, [queryClient, userId]);
 
 	const sidebarProps = {
 		selectedIds: selectedIdsArray,
@@ -533,7 +541,7 @@ export default function PaymentCoursesPage() {
 
 					<div className="-mx-4 px-4 sm:mx-0 sm:px-0 flex gap-3 sm:gap-4 overflow-x-auto scrollbar-none snap-x snap-mandatory pb-3 pt-1">
 						{purchasedCourses.map((course, index) => (
-							<motion.div
+							<m.div
 								key={course.palnid}
 								initial={{ opacity: 0, y: 20 }}
 								animate={{ opacity: 1, y: 0 }}
@@ -544,7 +552,7 @@ export default function PaymentCoursesPage() {
 								className="w-52 sm:w-60 shrink-0 snap-start"
 							>
 								<CourseCard course={course} variant="shelf" />
-							</motion.div>
+							</m.div>
 						))}
 					</div>
 				</section>
@@ -604,7 +612,7 @@ export default function PaymentCoursesPage() {
 
 				{/* Error */}
 				{isError && (
-					<motion.div
+					<m.div
 						initial={{ opacity: 0, scale: 0.95 }}
 						animate={{ opacity: 1, scale: 1 }}
 						className="max-w-md mx-auto text-center py-12 sm:py-20"
@@ -624,7 +632,7 @@ export default function PaymentCoursesPage() {
 						<Button onClick={() => window.location.reload()}>
 							Дахин оролдох
 						</Button>
-					</motion.div>
+					</m.div>
 				)}
 
 				{/* Course grid */}
@@ -638,7 +646,7 @@ export default function PaymentCoursesPage() {
 				>
 					<AnimatePresence initial={false}>
 						{availableCourses.map((course, index) => (
-							<motion.div
+							<m.div
 								key={course.palnid}
 								initial={{ opacity: 0, scale: 0.9 }}
 								animate={{ opacity: 1, scale: 1 }}
@@ -657,14 +665,14 @@ export default function PaymentCoursesPage() {
 										selectedIds.size >= MAX_SELECTED
 									}
 								/>
-							</motion.div>
+							</m.div>
 						))}
 					</AnimatePresence>
 				</div>
 
 				{/* Empty state */}
 				{isSuccess && availableCourses.length === 0 && (
-					<motion.div
+					<m.div
 						initial={{ opacity: 0, scale: 0.95 }}
 						animate={{ opacity: 1, scale: 1 }}
 						className="card-pop max-w-md mx-auto text-center py-12 px-6"
@@ -681,14 +689,14 @@ export default function PaymentCoursesPage() {
 						<p className="text-sm sm:text-base font-semibold text-muted-foreground">
 							Бүх хичээлийг аль хэдийн худалдаж авсан байна
 						</p>
-					</motion.div>
+					</m.div>
 				)}
 			</section>
 
 			{/* ── Desktop sidebar ── */}
 			<AnimatePresence>
 				{hasSelection && (
-					<motion.aside
+					<m.aside
 						variants={SIDEBAR_VARIANTS}
 						initial="hidden"
 						animate="visible"
@@ -698,7 +706,7 @@ export default function PaymentCoursesPage() {
 						className="hidden lg:block fixed right-0 top-0 bottom-0 z-50 w-96 bg-card border-l-2 border-border shadow-[-6px_0_0_0_color-mix(in_oklch,var(--border)_60%,transparent)] overflow-y-auto"
 					>
 						<SidebarContent {...sidebarProps} />
-					</motion.aside>
+					</m.aside>
 				)}
 			</AnimatePresence>
 
@@ -706,7 +714,7 @@ export default function PaymentCoursesPage() {
 			<AnimatePresence>
 				{ui.showCart && hasSelection && (
 					<>
-						<motion.div
+						<m.div
 							initial={{ opacity: 0 }}
 							animate={{ opacity: 1 }}
 							exit={{ opacity: 0 }}
@@ -714,7 +722,7 @@ export default function PaymentCoursesPage() {
 							className="lg:hidden fixed inset-0 bg-foreground/40 z-40"
 							aria-hidden
 						/>
-						<motion.aside
+						<m.aside
 							variants={MOBILE_SIDEBAR_VARIANTS}
 							initial="hidden"
 							animate="visible"
@@ -742,7 +750,7 @@ export default function PaymentCoursesPage() {
 								</Button>
 							</div>
 							<SidebarContent {...sidebarProps} />
-						</motion.aside>
+						</m.aside>
 					</>
 				)}
 			</AnimatePresence>
@@ -750,7 +758,7 @@ export default function PaymentCoursesPage() {
 			{/* ── Mobile FAB ── */}
 			<AnimatePresence>
 				{hasSelection && !ui.showCart && (
-					<motion.button
+					<m.button
 						variants={FAB_VARIANTS}
 						initial="hidden"
 						animate="visible"
@@ -758,16 +766,16 @@ export default function PaymentCoursesPage() {
 						type="button"
 						aria-label={`Сагс нээх — ${selectedIds.size} хичээл`}
 						onClick={() => dispatchUi({ type: "OPEN_CART" })}
-						className="lg:hidden fixed bottom-24 right-5 size-16 bg-pop-coral text-primary-foreground rounded-2xl shadow-[0_5px_0_0_color-mix(in_oklch,var(--pop-coral)_60%,black)] active:translate-y-1 active:shadow-[0_1px_0_0_color-mix(in_oklch,var(--pop-coral)_60%,black)] flex items-center justify-center z-30"
+						className="lg:hidden fixed bottom-24 right-5 size-16 bg-pop-coral text-pop-on rounded-2xl shadow-[0_5px_0_0_color-mix(in_oklch,var(--pop-coral)_60%,black)] active:translate-y-1 active:shadow-[0_1px_0_0_color-mix(in_oklch,var(--pop-coral)_60%,black)] flex items-center justify-center z-30"
 					>
 						<ShoppingCart className="size-7" strokeWidth={2.5} />
 						<span
 							aria-hidden
-							className="absolute -top-2 -right-2 size-7 bg-primary border-2 border-card rounded-full flex items-center justify-center text-primary-foreground text-xs font-black"
+							className="absolute -top-2 -right-2 size-7 bg-primary-soft border-2 border-card rounded-full flex items-center justify-center text-primary-soft-foreground text-xs font-black"
 						>
 							{selectedIds.size}
 						</span>
-					</motion.button>
+					</m.button>
 				)}
 			</AnimatePresence>
 
@@ -779,7 +787,9 @@ export default function PaymentCoursesPage() {
 				}
 				qpayData={qpayData}
 				userId={userId ?? ""}
-				onPaymentSuccess={() => window.location.reload()}
+				onPaymentSuccess={handlePaymentSuccess}
+				successMessage="Таны төлбөр амжилттай төлөгдлөө. Хичээлүүд таны бүртгэлд нэмэгдлээ."
+				accent="coral"
 			/>
 		</div>
 	);

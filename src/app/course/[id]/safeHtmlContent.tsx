@@ -1,10 +1,65 @@
 "use client";
 
-import DOMPurify from "dompurify";
+import DOMPurify, { type DOMPurify as DOMPurifyInstance } from "dompurify";
 import { FileText, PlayCircle } from "lucide-react";
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
+
+// iframe зөвхөн эдгээр host-оос (https) зөвшөөрөгдөнө
+const ALLOWED_IFRAME_HOSTS = new Set([
+	"www.youtube.com",
+	"youtube.com",
+	"www.youtube-nocookie.com",
+	"youtube-nocookie.com",
+	"player.vimeo.com",
+]);
+
+function isAllowedIframeSrc(src: string): boolean {
+	try {
+		const url = new URL(src, window.location.href);
+		return url.protocol === "https:" && ALLOWED_IFRAME_HOSTS.has(url.hostname);
+	} catch {
+		return false;
+	}
+}
+
+let purifier: DOMPurifyInstance | null = null;
+
+/**
+ * Энэ компонентод зориулсан тусдаа DOMPurify instance (global instance-ийн
+ * hook-д нөлөөлөхгүй). Hook зөвхөн нэг удаа бүртгэгдэнэ. Server дээр эсвэл
+ * DOMPurify дэмжигдэхгүй бол null буцаана (fail-closed — юу ч оруулахгүй).
+ */
+function getPurifier(): DOMPurifyInstance | null {
+	if (typeof window === "undefined") return null;
+	if (purifier) return purifier;
+	const instance = DOMPurify(window);
+	if (!instance.isSupported) return null;
+	instance.addHook("uponSanitizeElement", (node, data) => {
+		if (data.tagName !== "iframe") return;
+		const src = (node as Element).getAttribute?.("src") ?? "";
+		if (!isAllowedIframeSrc(src)) node.parentNode?.removeChild(node);
+	});
+	purifier = instance;
+	return purifier;
+}
+
+function sanitizeLessonHtml(html: string): string {
+	const p = getPurifier();
+	if (!p) return "";
+	return p.sanitize(html, {
+		ADD_TAGS: ["iframe"],
+		ADD_ATTR: ["allowfullscreen", "frameborder", "allow"],
+		FORBID_ATTR: ["srcdoc"],
+	});
+}
+
+/** Шууд URL-д зөвхөн http(s) эсвэл relative зам зөвшөөрнө (javascript: г.м. биш) */
+function isSafeDirectUrl(url: string): boolean {
+	const scheme = url.match(/^([a-z][a-z0-9+.-]*):/i)?.[1];
+	return !scheme || /^https?$/i.test(scheme);
+}
 
 interface SafeHtmlContentProps {
 	html: string;
@@ -16,12 +71,8 @@ export function SafeHtmlContent({ html }: SafeHtmlContentProps) {
 	const [imgError, setImgError] = useState(false);
 
 	useEffect(() => {
-		if (contentRef.current && typeof window !== "undefined") {
-			const clean = DOMPurify.sanitize(html, {
-				ADD_TAGS: ["iframe"],
-				ADD_ATTR: ["allowfullscreen", "frameborder", "src", "class"],
-			});
-			contentRef.current.innerHTML = clean;
+		if (contentRef.current) {
+			contentRef.current.innerHTML = sanitizeLessonHtml(html);
 		}
 	}, [html]);
 
@@ -87,6 +138,16 @@ export function SafeHtmlContent({ html }: SafeHtmlContentProps) {
 							/>
 						</div>
 					</div>
+				</div>
+			);
+		}
+
+		if (!isSafeDirectUrl(trimmedHtml)) {
+			return (
+				<div className="p-6 bg-muted rounded-2xl border-2 border-dashed border-border">
+					<p className="text-muted-foreground text-center text-sm font-bold">
+						Агуулга байхгүй байна
+					</p>
 				</div>
 			);
 		}
@@ -225,7 +286,9 @@ export function SafeHtmlContent({ html }: SafeHtmlContentProps) {
 					<div className="bg-card rounded-2xl overflow-hidden border-2 border-border">
 						<div className="flex items-center gap-2 px-3 py-2.5 bg-pop-sky-soft border-b-2 border-border">
 							<FileText className="h-4 w-4 text-pop-sky-ink" />
-							<p className="font-extrabold text-sm text-pop-sky-ink">Word документ</p>
+							<p className="font-extrabold text-sm text-pop-sky-ink">
+								Word документ
+							</p>
 						</div>
 						<iframe
 							src={`https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(trimmedHtml)}`}
@@ -245,7 +308,9 @@ export function SafeHtmlContent({ html }: SafeHtmlContentProps) {
 						<FileText className="h-5 w-5 text-pop-violet-ink" />
 						<div>
 							<p className="font-extrabold text-sm">Файл</p>
-							<p className="text-xs font-semibold text-muted-foreground">Файлыг татаж харна уу</p>
+							<p className="text-xs font-semibold text-muted-foreground">
+								Файлыг татаж харна уу
+							</p>
 						</div>
 					</div>
 				</div>

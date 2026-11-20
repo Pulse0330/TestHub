@@ -14,13 +14,7 @@ import {
 	X,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import {
-	useCallback,
-	useEffect,
-	useMemo,
-	useState,
-	useTransition,
-} from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import StyledBackButton from "@/components/backButton";
 import { Button } from "@/components/ui/button";
 import {
@@ -49,56 +43,92 @@ import {
 // CUSTOM HOOKS
 // ============================================
 
-function useDebouncedLocalStorage<T>(
-	key: string,
+function readStorage<T>(key: string, fallback: T): T {
+	try {
+		const raw = window.localStorage.getItem(key);
+		return raw == null ? fallback : (JSON.parse(raw) as T);
+	} catch {
+		return fallback;
+	}
+}
+
+function writeStorage<T>(key: string, value: T) {
+	try {
+		if (value === null || value === undefined) {
+			window.localStorage.removeItem(key);
+		} else {
+			window.localStorage.setItem(key, JSON.stringify(value));
+		}
+	} catch {
+		// Storage дүүрсэн / хориглогдсон — state-д нөлөөлөхгүй
+	}
+}
+
+/**
+ * localStorage-тэй синк хийгдэх state (debounced бичилт).
+ * - Утгыг mount болсны дараа effect дотор уншина → hydration mismatch үгүй.
+ * - `key` нь null бол (хэрэглэгч тодорхойгүй) уншихгүй/бичихгүй.
+ * - setValue тогтвортой identity-тэй; setState updater дотор side effect байхгүй.
+ * - Key солигдох/unmount үед хүлээгдэж буй бичилтийг flush хийнэ;
+ *   `discard()` нь хүлээгдэж буй бичилтийг цуцалж key-г устгана (state хэвээр),
+ *   ингэснээр unmount-ийн flush устгасан сонголтыг сэргээхгүй.
+ */
+function usePersistentState<T>(
+	key: string | null,
 	initialValue: T,
 	delay = 500,
 ) {
-	const [storedValue, setStoredValue] = useState<T>(() => {
-		if (typeof window === "undefined") return initialValue;
-		try {
-			const item = window.localStorage.getItem(key);
-			return item ? JSON.parse(item) : initialValue;
-		} catch (error) {
-			console.error(`Error reading localStorage key "${key}":`, error);
-			return initialValue;
-		}
-	});
+	const [value, setValueState] = useState<T>(initialValue);
+	const [loadedKey, setLoadedKey] = useState<string | null>(null);
+	const valueRef = useRef(value);
+	const initialRef = useRef(initialValue);
+	const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+	const pendingRef = useRef<{ key: string; value: T } | null>(null);
 
-	const [timeoutId, setTimeoutId] = useState<NodeJS.Timeout | null>(null);
+	const flush = useCallback(() => {
+		if (timerRef.current) {
+			clearTimeout(timerRef.current);
+			timerRef.current = null;
+		}
+		const pending = pendingRef.current;
+		pendingRef.current = null;
+		if (pending) writeStorage(pending.key, pending.value);
+	}, []);
+
+	useEffect(() => {
+		if (!key) return;
+		const stored = readStorage(key, initialRef.current);
+		valueRef.current = stored;
+		setValueState(stored);
+		setLoadedKey(key);
+		return flush;
+	}, [key, flush]);
 
 	const setValue = useCallback(
-		(value: T | ((val: T) => T)) => {
-			try {
-				setStoredValue((prevValue) => {
-					const valueToStore =
-						value instanceof Function ? value(prevValue) : value;
-
-					if (timeoutId) {
-						clearTimeout(timeoutId);
-					}
-
-					const newTimeoutId = setTimeout(() => {
-						if (typeof window !== "undefined") {
-							try {
-								window.localStorage.setItem(key, JSON.stringify(valueToStore));
-							} catch (e) {
-								console.error(`Error writing to localStorage: ${e}`);
-							}
-						}
-					}, delay);
-
-					setTimeoutId(newTimeoutId);
-					return valueToStore;
-				});
-			} catch (error) {
-				console.error(`Error updating state for key "${key}":`, error);
-			}
+		(update: T | ((prev: T) => T)) => {
+			const next =
+				typeof update === "function"
+					? (update as (prev: T) => T)(valueRef.current)
+					: update;
+			valueRef.current = next;
+			setValueState(next);
+			if (!key) return;
+			pendingRef.current = { key, value: next };
+			if (timerRef.current) clearTimeout(timerRef.current);
+			timerRef.current = setTimeout(flush, delay);
 		},
-		[key, delay, timeoutId],
+		[key, delay, flush],
 	);
 
-	return [storedValue, setValue] as const;
+	const discard = useCallback(() => {
+		if (timerRef.current) clearTimeout(timerRef.current);
+		timerRef.current = null;
+		pendingRef.current = null;
+		if (key) writeStorage(key, null);
+	}, [key]);
+
+	const isLoaded = key !== null && loadedKey === key;
+	return [value, setValue, { discard, isLoaded }] as const;
 }
 
 // ============================================
@@ -142,6 +172,8 @@ const RETRY_CONFIG = {
 	backoffMultiplier: 2,
 	maxRetries: 2,
 } as const;
+
+const EMPTY_SELECTION: Record<number, number> = {};
 
 const DEFAULT_STATS: LessonStats = {
 	selectedCount: 0,
@@ -194,35 +226,32 @@ function calculateLessonStats(
 export default function TestGroupPage() {
 	const { userId } = useAuthStore();
 	const router = useRouter();
-	const [_isPending, _startTransition] = useTransition();
-	const [isMounted, setIsMounted] = useState(false);
 
-	// FIX: Зөв destructuring хэлбэр
-	const [selectedTests, setSelectedTests] = useDebouncedLocalStorage<
+	// Хэрэглэгч бүрт тусдаа storage key (нэг browser дээр олон account)
+	const storagePrefix = userId ? `exercise:${userId}:` : null;
+	const [selectedTests, setSelectedTests, testsStore] = usePersistentState<
 		Record<number, number>
-	>("selectedTests", {});
+	>(storagePrefix && `${storagePrefix}selectedTests`, EMPTY_SELECTION);
 
-	const [selectedLesson, setSelectedLesson] = useDebouncedLocalStorage<
+	const [selectedLesson, setSelectedLesson, lessonStore] = usePersistentState<
 		number | null
-	>("selectedLesson", null);
+	>(storagePrefix && `${storagePrefix}selectedLesson`, null);
 
-	const [selectedCategory, setSelectedCategory] = useDebouncedLocalStorage<
-		string | null
-	>("selectedCategory", null);
+	const [selectedCategory, setSelectedCategory, categoryStore] =
+		usePersistentState<string | null>(
+			storagePrefix && `${storagePrefix}selectedCategory`,
+			null,
+		);
+	// localStorage-оос сэргээж дуусах хүртэл wizard-ийг харуулахгүй
+	const isStorageLoaded =
+		testsStore.isLoaded && lessonStore.isLoaded && categoryStore.isLoaded;
 
 	const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
 	// Wizard UI state (presentation only)
-	const [pickedCategories, setPickedCategories] = useState<string[]>(() =>
-		selectedCategory ? [selectedCategory] : [],
-	);
+	const [pickedCategories, setPickedCategories] = useState<string[]>([]);
 	const [stepOverride, setStepOverride] = useState<2 | 3 | 4 | null>(null);
 	const [_errorMessage, setErrorMessage] = useState<string | null>(null);
-
-	// Prevent hydration mismatch
-	useEffect(() => {
-		setIsMounted(true);
-	}, []);
 
 	const skeletonKeys = useMemo(
 		() => Array.from({ length: SKELETON_COUNT }, (_, i) => `skeleton-${i}`),
@@ -290,16 +319,15 @@ export default function TestGroupPage() {
 		mutationFn: handleTestMutation,
 		onSuccess: (res) => {
 			if (res?.RetResponse?.ResponseType) {
-				localStorage.removeItem("selectedTests");
-				localStorage.removeItem("selectedLesson");
-				localStorage.removeItem("selectedCategory");
+				testsStore.discard();
+				lessonStore.discard();
+				categoryStore.discard();
 				router.push("/exercise");
 			} else {
 				setErrorMessage("Тест эхлүүлэхэд алдаа гарлаа. Дахин оролдоно уу.");
 			}
 		},
-		onError: (error) => {
-			console.error("Mutation error:", error);
+		onError: () => {
 			setErrorMessage("Сүлжээний алдаа. Дахин оролдоно уу.");
 		},
 	});
@@ -388,45 +416,13 @@ export default function TestGroupPage() {
 		[setSelectedTests],
 	);
 
-	const handleBackToLessons = useCallback(() => {
-		if (selectedCategory) {
-			if (typeof window !== "undefined") {
-				window.localStorage.removeItem("selectedCategory");
-			}
-			setSelectedCategory(null);
-		} else if (selectedLesson) {
-			if (typeof window !== "undefined") {
-				window.localStorage.removeItem("selectedLesson");
-			}
-			setSelectedLesson(null);
-		}
-	}, [
-		selectedCategory,
-		selectedLesson,
-		setSelectedCategory,
-		setSelectedLesson,
-	]);
-
 	const handleLessonClick = useCallback(
-		(lessonId: number) => {
-			if (typeof window !== "undefined") {
-				window.localStorage.setItem("selectedLesson", JSON.stringify(lessonId));
-			}
-			setSelectedLesson(lessonId);
-		},
+		(lessonId: number) => setSelectedLesson(lessonId),
 		[setSelectedLesson],
 	);
 
 	const handleCategoryClick = useCallback(
-		(categoryKey: string) => {
-			if (typeof window !== "undefined") {
-				window.localStorage.setItem(
-					"selectedCategory",
-					JSON.stringify(categoryKey),
-				);
-			}
-			setSelectedCategory(categoryKey);
-		},
+		(categoryKey: string) => setSelectedCategory(categoryKey),
 		[setSelectedCategory],
 	);
 
@@ -488,17 +484,22 @@ export default function TestGroupPage() {
 
 	const categoryKeys = useMemo(() => [...groupedData.keys()], [groupedData]);
 
-	// Pre-pick categories that already hold selected tests (e.g. after reload)
+	// Pre-pick categories that already hold selected tests (e.g. after reload).
+	// Зөвхөн өгөгдөл ачаалагдах үед ажиллана — тест сонгох бүрт биш.
+	const selectionRef = useRef({ selectedTests, selectedCategory });
+	selectionRef.current = { selectedTests, selectedCategory };
 	useEffect(() => {
 		if (categoryKeys.length === 0) return;
+		const { selectedTests: tests, selectedCategory: category } =
+			selectionRef.current;
 		setPickedCategories((prev) => {
 			const valid = prev.filter((k) => groupedData.has(k));
 			if (valid.length > 0) return valid;
-			return categoryKeys.filter((k) =>
-				groupedData.get(k)?.items.some((i) => selectedTests[i.id]),
+			return categoryKeys.filter(
+				(k) =>
+					k === category || groupedData.get(k)?.items.some((i) => tests[i.id]),
 			);
 		});
-		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [categoryKeys, groupedData]);
 
 	const step: WizardStep =
@@ -523,10 +524,6 @@ export default function TestGroupPage() {
 	}, [allPicked, categoryKeys]);
 
 	const goToLessons = useCallback(() => {
-		if (typeof window !== "undefined") {
-			window.localStorage.removeItem("selectedCategory");
-			window.localStorage.removeItem("selectedLesson");
-		}
 		setSelectedCategory(null);
 		setSelectedLesson(null);
 		setStepOverride(null);
@@ -584,8 +581,7 @@ export default function TestGroupPage() {
 	}, [step, goToStep, handleStartTest]);
 
 	const currentLessonName = useMemo(
-		() =>
-			lessonGroups.find((l) => l.lesson_id === selectedLesson)?.lesson_name,
+		() => lessonGroups.find((l) => l.lesson_id === selectedLesson)?.lesson_name,
 		[lessonGroups, selectedLesson],
 	);
 
@@ -625,7 +621,7 @@ export default function TestGroupPage() {
 						className={cn(
 							"inline-flex items-center gap-1.5 rounded-full border-2 px-4 py-1.5 text-sm font-bold transition-colors",
 							allPicked
-								? "bg-primary text-primary-foreground border-primary"
+								? "bg-primary-soft text-primary-soft-foreground border-primary"
 								: "bg-card border-border text-foreground hover:border-primary",
 						)}
 					>
@@ -707,7 +703,10 @@ export default function TestGroupPage() {
 							aria-label="Торны харагдац"
 							aria-pressed={viewMode === "grid"}
 						>
-							<div className="grid grid-cols-2 gap-0.5 size-3.5" aria-hidden="true">
+							<div
+								className="grid grid-cols-2 gap-0.5 size-3.5"
+								aria-hidden="true"
+							>
 								<div className="bg-current rounded-sm opacity-80" />
 								<div className="bg-current rounded-sm opacity-80" />
 								<div className="bg-current rounded-sm opacity-80" />
@@ -807,7 +806,7 @@ export default function TestGroupPage() {
 	const renderSummaryStep = () => (
 		<div className="mx-auto max-w-2xl space-y-4">
 			<div className="card-pop overflow-hidden animate-pop-in">
-				<div className="bg-gradient-to-br from-pop-violet to-pop-pink p-6 sm:p-8 text-primary-foreground">
+				<div className="bg-[linear-gradient(135deg,var(--pop-sky-soft),var(--pop-violet-soft))] p-6 sm:p-8 text-foreground">
 					<div className="flex items-center gap-3">
 						<span className="flex size-12 items-center justify-center rounded-2xl bg-card/20 text-2xl">
 							🚀
@@ -903,25 +902,26 @@ export default function TestGroupPage() {
 							<Loader2 className="animate-spin size-5" aria-hidden="true" />
 						) : (
 							<>
-								<Rocket className="size-5" strokeWidth={2.5} aria-hidden="true" />
+								<Rocket
+									className="size-5"
+									strokeWidth={2.5}
+									aria-hidden="true"
+								/>
 								Эхлэх
 							</>
 						)}
 					</Button>
 				</div>
 			</div>
-			<Button
-				variant="ghost"
-				className="w-full"
-				onClick={() => goToStep(1)}
-			>
+			<Button variant="ghost" className="w-full" onClick={() => goToStep(1)}>
 				<BookOpen className="size-4" strokeWidth={2.5} />
 				Өөр хичээлээс нэмэх
 			</Button>
 		</div>
 	);
 
-	const isLoading = selectedLesson ? isLoadingDetails : isLoadingLessons;
+	const isLoading =
+		!isStorageLoaded || (selectedLesson ? isLoadingDetails : isLoadingLessons);
 
 	if (!userId) {
 		return (
@@ -942,7 +942,7 @@ export default function TestGroupPage() {
 			<div className="mx-auto w-full flex flex-col gap-4 pb-44 lg:pb-28">
 				{/* Stepper */}
 				<WizardStepper
-					step={isMounted ? step : 1}
+					step={isStorageLoaded ? step : 1}
 					canReach={canReach}
 					onSelect={goToStep}
 				/>
@@ -996,7 +996,7 @@ export default function TestGroupPage() {
 			</div>
 
 			{/* Floating wizard bar */}
-			{isMounted && (step > 1 || totals.questionCount > 0) && (
+			{isStorageLoaded && (step > 1 || totals.questionCount > 0) && (
 				<section
 					className="fixed bottom-24 lg:bottom-6 left-1/2 -translate-x-1/2 w-[calc(100%-1rem)] sm:w-[calc(100%-2rem)] max-w-2xl z-50 animate-pop-in"
 					aria-label="Тестийн хураангуй"
@@ -1127,7 +1127,10 @@ function WizardStepper({
 					return (
 						<li
 							key={s.label}
-							className={cn("flex items-center gap-1 sm:gap-2", i < 3 && "flex-1")}
+							className={cn(
+								"flex items-center gap-1 sm:gap-2",
+								i < 3 && "flex-1",
+							)}
 						>
 							<button
 								type="button"
@@ -1143,8 +1146,9 @@ function WizardStepper({
 									className={cn(
 										"flex size-8 sm:size-9 shrink-0 items-center justify-center rounded-xl border-2 text-sm font-black transition-colors",
 										isActive &&
-											"border-primary bg-primary text-primary-foreground shadow-[0_3px_0_0_var(--primary-shade)]",
-										isDone && "border-pop-mint bg-pop-mint-soft text-pop-mint-ink",
+											"border-primary-soft-shade bg-primary-soft text-primary-soft-foreground shadow-[0_3px_0_0_var(--primary-soft-shade)]",
+										isDone &&
+											"border-pop-mint bg-pop-mint-soft text-pop-mint-ink",
 										!isActive &&
 											!isDone &&
 											"border-border bg-card text-muted-foreground",

@@ -1,10 +1,18 @@
 "use client";
 
-import { AlertCircle, Edit2, Send } from "lucide-react";
-import { type ChangeEvent, useEffect, useState } from "react";
-import { Button } from "@/components/ui/button";
+import { AlertCircle } from "lucide-react";
+import {
+	type ChangeEvent,
+	useCallback,
+	useEffect,
+	useRef,
+	useState,
+} from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+
+/** Бичиж дууссанаас хойш хариултыг parent руу илгээх хугацаа (ms). */
+const DRAFT_DELAY = 600;
 
 interface FillInTheBlankQuestionProps {
 	questionId: number;
@@ -15,6 +23,10 @@ interface FillInTheBlankQuestionProps {
 	showValidation?: boolean;
 }
 
+/**
+ * Нөхөх асуулт. Бичсэн текст debounce-оор автоматаар илгээгдэнэ; blur,
+ * Enter болон unmount (асуулт солих) үед шууд илгээнэ. Хоосолж болно.
+ */
 export default function FillInTheBlankQuestion({
 	questionId,
 	value = "",
@@ -23,58 +35,57 @@ export default function FillInTheBlankQuestion({
 	showValidation = false,
 }: FillInTheBlankQuestionProps) {
 	const [answer, setAnswer] = useState<string>(value);
-	const [isSubmitted, setIsSubmitted] = useState<boolean>(!!value);
-	const [isEditing, setIsEditing] = useState<boolean>(!value);
+	const draftRef = useRef(value);
+	/** Parent-д мэдэгдсэн сүүлийн утга. */
+	const lastSentRef = useRef(value);
+	const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+	const onAnswerChangeRef = useRef(onAnswerChange);
 
 	useEffect(() => {
+		onAnswerChangeRef.current = onAnswerChange;
+	}, [onAnswerChange]);
+
+	// Гаднаас (серверээс сэргээх г.м.) утга өөрчлөгдвөл харуулна. Хэрэглэгч
+	// илгээгдээгүй текст бичиж байвал түүнийг дарахгүй.
+	useEffect(() => {
+		if (value === lastSentRef.current) return;
+		lastSentRef.current = value;
+		if (timerRef.current) return;
+		draftRef.current = value;
 		setAnswer(value);
-		if (value) {
-			setIsSubmitted(true);
-			setIsEditing(false);
-		}
 	}, [value]);
 
+	const send = useCallback(() => {
+		if (timerRef.current) {
+			clearTimeout(timerRef.current);
+			timerRef.current = null;
+		}
+		const next = draftRef.current;
+		if (next === lastSentRef.current) return;
+		lastSentRef.current = next;
+		onAnswerChangeRef.current?.(questionId, next);
+	}, [questionId]);
+
+	// Асуулт солиход (unmount) бичсэн текст алдагдахгүй.
+	useEffect(() => () => send(), [send]);
+
 	const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
-		if (readOnly || (isSubmitted && !isEditing)) return;
-
-		const newAnswer = event.target.value;
-		setAnswer(newAnswer);
+		if (readOnly) return;
+		const next = event.target.value;
+		setAnswer(next);
+		draftRef.current = next;
+		if (timerRef.current) clearTimeout(timerRef.current);
+		timerRef.current = setTimeout(send, DRAFT_DELAY);
 	};
 
-	const handleSubmit = () => {
-		if (!answer.trim()) {
-			alert("⚠ Хариултаа бичээд дараа нь илгээх товч дарна уу!");
-			return;
-		}
+	const isEmpty = !answer.trim();
+	const isInvalid = showValidation && isEmpty;
 
-		setIsSubmitted(true);
-		setIsEditing(false);
-
-		// Backend-рүү хадгалах
-		if (onAnswerChange) {
-			onAnswerChange(questionId, answer);
-		}
-	};
-
-	const handleEdit = () => {
-		setIsEditing(true);
-		setIsSubmitted(false);
-	};
-
-	const isNotSubmitted = showValidation && !isSubmitted;
-	const hasAnswerButNotSubmitted = answer.trim() && !isSubmitted && isEditing;
-
-	const inputClassName = isNotSubmitted
+	const inputClassName = isInvalid
 		? "border-destructive bg-destructive/10"
-		: hasAnswerButNotSubmitted
-			? "border-destructive"
-			: isSubmitted && !isEditing
-				? "border-primary bg-primary/10 text-primary"
-				: "border-primary/50 focus-visible:ring-primary/30";
-
-	const canEdit = !readOnly;
-	const showSubmitButton = canEdit && isEditing;
-	const showEditButton = canEdit && isSubmitted && !isEditing;
+		: !isEmpty
+			? "border-primary/45 bg-primary-soft/40 text-foreground"
+			: "border-primary/50 focus-visible:ring-primary/30";
 
 	return (
 		<div className="space-y-3">
@@ -83,70 +94,42 @@ export default function FillInTheBlankQuestion({
 					htmlFor={`input-${questionId}`}
 					className="flex-wrap text-sm font-bold text-foreground"
 				>
-					Хариултаа бичнэ үү: <span className="text-destructive">*</span>
+					Хариултаа бичнэ үү:
 					<span className="ml-1 text-xs font-semibold text-muted-foreground">
-						(Заавал илгээх товч дарна уу)
+						(автоматаар хадгалагдана)
 					</span>
 				</Label>
 
-				<div className="flex gap-2">
-					<div className="relative flex-1">
-						<Input
-							type="text"
-							id={`input-${questionId}`}
-							placeholder={readOnly ? "" : "Таны хариулт..."}
-							value={answer}
-							onChange={handleChange}
-							readOnly={readOnly || (isSubmitted && !isEditing)}
-							disabled={readOnly}
-							className={`h-12 w-full rounded-xl border-2 text-base font-bold transition-colors ${inputClassName} ${
-								readOnly || (isSubmitted && !isEditing)
-									? "cursor-not-allowed"
-									: ""
-							}`}
-							onKeyDown={(e) => {
-								if (e.key === "Enter" && showSubmitButton) {
-									handleSubmit();
-								}
-							}}
-						/>
+				<div className="relative">
+					<Input
+						type="text"
+						id={`input-${questionId}`}
+						placeholder={readOnly ? "" : "Таны хариулт..."}
+						value={answer}
+						onChange={handleChange}
+						onBlur={send}
+						onKeyDown={(e) => {
+							if (e.key === "Enter") send();
+						}}
+						readOnly={readOnly}
+						disabled={readOnly}
+						autoComplete="off"
+						className={`h-12 w-full rounded-xl border-2 text-base font-bold transition-colors ${inputClassName} ${
+							readOnly ? "cursor-not-allowed" : ""
+						}`}
+					/>
 
-						{isNotSubmitted && (
-							<div className="absolute right-3 top-1/2 -translate-y-1/2">
-								<AlertCircle className="size-5 text-destructive" />
-							</div>
-						)}
-					</div>
-
-					{showSubmitButton && (
-						<Button
-							onClick={handleSubmit}
-							size="icon-lg"
-							className="rounded-xl"
-							title="Илгээх"
-							disabled={!answer.trim()}
-						>
-							<Send className="w-4 h-4" />
-						</Button>
-					)}
-
-					{showEditButton && (
-						<Button
-							onClick={handleEdit}
-							size="icon-lg"
-							variant="outline"
-							className="rounded-xl text-primary hover:text-primary"
-							title="Засах"
-						>
-							<Edit2 className="w-4 h-4" />
-						</Button>
+					{isInvalid && (
+						<div className="absolute right-3 top-1/2 -translate-y-1/2">
+							<AlertCircle className="size-5 text-destructive" />
+						</div>
 					)}
 				</div>
 
-				{isNotSubmitted && (
+				{isInvalid && (
 					<div className="rounded-2xl border-2 border-destructive/30 bg-destructive/10 p-3">
 						<p className="text-sm font-bold text-destructive">
-							⚠ Хариултаа заавал илгээх шаардлагатай!
+							⚠ Хариултаа бичнэ үү!
 						</p>
 					</div>
 				)}
