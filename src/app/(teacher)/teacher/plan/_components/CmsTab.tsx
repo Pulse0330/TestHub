@@ -240,7 +240,7 @@ export function CmsTab({ lessonId }: { lessonId: number }) {
 				<DataTable
 					columns={columns}
 					rows={rows}
-					rowKey={(r) => str(r.curr_code)}
+					rowKey={(r, i) => str(r.curr_code) || i}
 					isLoading={isLoading}
 					emptyText="CMS-д энэ хичээлийн хөтөлбөр олдсонгүй"
 					onRowClick={(r) =>

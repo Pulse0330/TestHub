@@ -150,15 +150,17 @@ function CourseCard({
 						isShelf ? "aspect-16/9" : "aspect-4/2",
 					)}
 				>
-					<Image
-						src={course.filename}
-						alt={course.title}
-						fill
-						loading="lazy"
-						placeholder="blur"
-						blurDataURL={BLUR_PLACEHOLDER}
-						className="object-cover transition-transform duration-500 group-hover:scale-105"
-					/>
+					{course.filename && (
+						<Image
+							src={course.filename}
+							alt={course.title}
+							fill
+							loading="lazy"
+							placeholder="blur"
+							blurDataURL={BLUR_PLACEHOLDER}
+							className="object-cover transition-transform duration-500 group-hover:scale-105"
+						/>
+					)}
 
 					{/* Purchased check */}
 					{isPurchased && (

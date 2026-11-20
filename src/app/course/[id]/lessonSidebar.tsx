@@ -70,7 +70,7 @@ export function LessonSidebar({
 
 						return (
 							<button
-								key={item.content_id}
+								key={item.content_id ?? index}
 								onClick={() => onLessonSelect(index)}
 								type="button"
 								className={`

@@ -224,6 +224,11 @@ export default function CoursePage() {
 		);
 	}
 
+	// Хичээлгүй сургалт (эсвэл index хэтэрсэн) — хоосон lesson-оор унахаас сэргийлнэ
+	if (!currentLesson) {
+		return <ErrorMessage message="Энэ сургалтад одоогоор хичээл алга байна" />;
+	}
+
 	const isFirstLesson = currentLessonIndex === 0;
 	const isLastLesson = currentLessonIndex === contents.length - 1;
 

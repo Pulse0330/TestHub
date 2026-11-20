@@ -282,14 +282,14 @@ export const SectionTabs: React.FC = () => {
 							key={l.href}
 							href={l.href}
 							className={cn(
-								"flex flex-1 items-center justify-center gap-2 rounded-xl px-4 py-2 text-sm font-extrabold whitespace-nowrap transition-all sm:flex-none",
+								"flex min-w-0 flex-1 items-center justify-center gap-1.5 rounded-xl px-2 py-2 text-[13px] font-extrabold whitespace-nowrap transition-all sm:flex-none sm:gap-2 sm:px-4 sm:text-sm",
 								active
 									? section.tone
 									: "text-muted-foreground hover:bg-muted hover:text-foreground",
 							)}
 						>
-							<Icon className="size-4" strokeWidth={2.5} />
-							{l.label}
+							<Icon className="size-4 shrink-0" strokeWidth={2.5} />
+							<span className="truncate">{l.label}</span>
 						</Link>
 					);
 				})}

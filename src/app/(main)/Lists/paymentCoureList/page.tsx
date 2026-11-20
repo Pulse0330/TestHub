@@ -260,13 +260,17 @@ function SidebarContent({
 							key={id}
 							className="flex items-center gap-3 p-2.5 rounded-2xl bg-muted border-2 border-border animate-pop-in"
 						>
-							<Image
-								src={course.filename}
-								alt={course.title}
-								width={56}
-								height={56}
-								className="size-14 rounded-xl object-cover"
-							/>
+							{course.filename ? (
+								<Image
+									src={course.filename}
+									alt={course.title}
+									width={56}
+									height={56}
+									className="size-14 rounded-xl object-cover"
+								/>
+							) : (
+								<div className="size-14 shrink-0 rounded-xl bg-pop-coral-soft" />
+							)}
 							<p className="flex-1 min-w-0 text-sm font-bold text-foreground truncate">
 								{course.title}
 							</p>
